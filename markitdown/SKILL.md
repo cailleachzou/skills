@@ -4,65 +4,65 @@ description: "Use this skill whenever the user wants to convert files to Markdow
 license: MIT
 ---
 
-# MarkItDown - File to Markdown Converter
+# MarkItDown - 文件转 Markdown 转换器
 
 > [!TIP]
-> On this machine, use `/c/Users/59620/AppData/Local/Python/bin/python.exe` instead of bare `python` command to avoid Windows Store redirect issues.
+> 在本机上，请使用 `/c/Users/59620/AppData/Local/Python/bin/python.exe` 而非裸 `python` 命令，以避免 Windows 应用商店重定向问题。
 
-## Overview
+## 概述
 
-MarkItDown is a Microsoft utility that converts various file formats to Markdown for use with LLMs. It preserves document structure including headings, lists, tables, links, and more.
+MarkItDown 是微软出品的一个工具，可将各种文件格式转换为 Markdown，以便与大语言模型配合使用。它能保留文档结构，包括标题、列表、表格、链接等。
 
-## Supported Formats
+## 支持的格式
 
-| Format     | Extension        | Description                          |
+| 格式      | 扩展名           | 说明                                |
 | ---------- | ---------------- | ------------------------------------ |
-| PDF        | .pdf             | Portable Document Format             |
-| Word       | .docx            | Microsoft Word documents             |
-| Excel      | .xlsx, .xls      | Microsoft Excel spreadsheets         |
-| PowerPoint | .pptx            | Microsoft PowerPoint presentations   |
-| Images     | .jpg, .png, etc. | EXIF metadata + OCR                  |
-| Audio      | .mp3, .wav, .m4a | EXIF metadata + speech transcription |
-| HTML       | .html, .htm      | Raw web pages                        |
-| **Web/URL**| URL               | Use **Defuddle** instead（见下方）    |
-| EPUB       | .epub            | E-books                              |
-| CSV        | .csv             | Comma-separated values               |
-| JSON       | .json            | JavaScript Object Notation           |
-| XML        | .xml             | Extensible Markup Language           |
-| ZIP        | .zip             | Archive (iterates over contents)     |
-| Jupyter    | .ipynb           | Jupyter notebooks                    |
-| Outlook    | .msg             | Outlook messages                     |
-| YouTube    | URL              | Video transcripts                    |
-| Wikipedia  | URL              | Wikipedia articles                   |
+| PDF        | .pdf             | 便携式文档格式                       |
+| Word       | .docx            | Microsoft Word 文档                  |
+| Excel      | .xlsx, .xls      | Microsoft Excel 电子表格            |
+| PowerPoint | .pptx            | Microsoft PowerPoint 演示文稿        |
+| 图片       | .jpg, .png 等     | EXIF 元数据 + OCR                    |
+| 音频       | .mp3, .wav, .m4a | EXIF 元数据 + 语音转录               |
+| HTML       | .html, .htm      | 原始网页                             |
+| **网页/URL** | URL              | 请使用 **Defuddle**（见下方）         |
+| EPUB       | .epub            | 电子书                              |
+| CSV        | .csv             | 逗号分隔值                          |
+| JSON       | .json            | JavaScript 对象表示法                |
+| XML        | .xml             | 可扩展标记语言                       |
+| ZIP        | .zip             | 压缩包（遍历内部内容）               |
+| Jupyter    | .ipynb           | Jupyter 笔记本                      |
+| Outlook    | .msg             | Outlook 邮件                        |
+| YouTube    | URL              | 视频字幕                            |
+| Wikipedia  | URL              | Wikipedia 文章                       |
 
-## Installation
+## 安装
 
 ```bash
-# Install with all dependencies (recommended)
+# 安装所有依赖（推荐）
 /c/Users/59620/AppData/Local/Python/bin/python.exe -m pip install 'markitdown[all]'
 
-# Or install specific format support
+# 或仅安装特定格式支持
 /c/Users/59620/AppData/Local/Python/bin/python.exe -m pip install 'markitdown[pdf,docx,pptx]'
 ```
 
-## Quick Start
+## 快速入门
 
-### Command-Line Usage
+### 命令行用法
 
 ```bash
-# Basic conversion
+# 基本转换
 markitdown path-to-file.pdf -o output.md
 
-# Pipe from stdin
+# 从标准输入管道
 cat file.docx | markitdown > output.md
 
-# Specify format hint for stdin input
+# 为标准输入指定格式提示
 cat file.xyz | markitdown -x .pdf > output.md
 
-# Use plugins
+# 使用插件
 markitdown path-to-file.pdf --use-plugins -o output.md
 
-# List available plugins
+# 列出可用插件
 markitdown --list-plugins
 ```
 
@@ -76,7 +76,7 @@ result = md.convert("document.pdf")
 print(result.text_content)
 ```
 
-### With Azure Document Intelligence
+### 配合 Azure Document Intelligence 使用
 
 ```python
 from markitdown import MarkItDown
@@ -86,7 +86,7 @@ result = md.convert("document.pdf")
 print(result.text_content)
 ```
 
-### With LLM Image Descriptions
+### 配合 LLM 图片描述使用
 
 ```python
 from markitdown import MarkItDown
@@ -98,9 +98,9 @@ result = md.convert("photo.jpg")
 print(result.text_content)
 ```
 
-## Common Tasks
+## 常见任务
 
-### Convert a URL / Web Page → MD（首选 Defuddle）
+### 转换 URL / 网页 → MD（首选 Defuddle）
 
 对于在线文档、文章、博客、标准网页，**优先使用 Defuddle**，它能去除导航、广告等噪音，节省 token：
 
@@ -129,25 +129,25 @@ result = md.convert("document.pdf")
 print(result.text_content)
 ```
 
-### Convert a Word Document
+### 转换 Word 文档
 
 ```bash
 markitdown document.docx -o document.md
 ```
 
-### Convert an Excel Spreadsheet
+### 转换 Excel 电子表格
 
 ```bash
 markitdown spreadsheet.xlsx -o spreadsheet.md
 ```
 
-### Convert a PowerPoint
+### 转换 PowerPoint 演示文稿
 
 ```bash
 markitdown presentation.pptx -o presentation.md
 ```
 
-### Convert Multiple Files
+### 批量转换多个文件
 
 ```python
 from markitdown import MarkItDown
@@ -161,7 +161,7 @@ for filepath in glob.glob("*.pdf"):
         f.write(result.text_content)
 ```
 
-### Batch Convert Directory
+### 批量转换整个目录
 
 ```python
 from markitdown import MarkItDown
@@ -179,23 +179,23 @@ for file in Path(".").rglob("*"):
             print(f"Skipped {file}: {e}")
 ```
 
-### Convert from URL
+### 从 URL 转换
 
 ```python
 from markitdown import MarkItDown
 
 md = MarkItDown()
-# Convert web page
+# 转换网页
 result = md.convert("https://example.com/page.html")
 
-# Convert Wikipedia article
+# 转换 Wikipedia 文章
 result = md.convert("https://en.wikipedia.org/wiki/Python_(programming_language)")
 
-# Convert YouTube video (transcript)
+# 转换 YouTube 视频（字幕）
 result = md.convert("https://www.youtube.com/watch?v=example")
 ```
 
-### Extract from ZIP Archive
+### 从 ZIP 压缩包提取内容
 
 ```python
 from markitdown import MarkItDown
@@ -206,7 +206,7 @@ result = md.convert("archive.zip")
 print(result.text_content)
 ```
 
-### Custom LLM Prompt for Images
+### 自定义 LLM 图片提示词
 
 ```python
 from markitdown import MarkItDown
@@ -222,11 +222,11 @@ result = md.convert("screenshot.png")
 print(result.text_content)
 ```
 
-## Advanced Usage
+## 高级用法
 
-### Keep Data URIs (Base64 Images)
+### 保留 Data URI（Base64 图片）
 
-By default, data URIs are truncated. Use `--keep-data-uris` to keep them:
+默认情况下，Data URI 会被截断。使用 `--keep-data-uris` 可保留完整内容：
 
 ```bash
 markitdown document.pptx --keep-data-uris -o output.md
@@ -236,17 +236,17 @@ markitdown document.pptx --keep-data-uris -o output.md
 result = md.convert("document.pptx", keep_data_uris=True)
 ```
 
-### Plugin System
+### 插件系统
 
-MarkItDown supports 3rd-party plugins. To enable:
+MarkItDown 支持第三方插件。启用方式：
 
 ```bash
 markitdown file.pdf --use-plugins -o output.md
 ```
 
-Find plugins by searching for `#markitdown-plugin` on GitHub.
+可在 GitHub 上搜索 `#markitdown-plugin` 查找插件。
 
-### Stream Conversion (Binary IO)
+### 流式转换（二进制 IO）
 
 ```python
 from markitdown import MarkItDown
@@ -254,33 +254,33 @@ import io
 
 md = MarkItDown()
 
-# Convert from binary stream
+# 从二进制流转换
 with open("document.pdf", "rb") as f:
     result = md.convert_stream(f)
     print(result.text_content)
 
-# Convert from BytesIO
+# 从 BytesIO 转换
 data = open("document.pdf", "rb").read()
 buffer = io.BytesIO(data)
 result = md.convert_stream(buffer)
 ```
 
-## Result Object
+## 结果对象
 
-The `convert()` method returns a `DocumentConverterResult` with:
+`convert()` 方法返回一个 `DocumentConverterResult` 对象，包含：
 
-- `text_content`: The converted Markdown text
-- `markdown`: Alias for text_content
-- Additional metadata depending on converter
+- `text_content`：转换后的 Markdown 文本
+- `markdown`：`text_content` 的别名
+- 具体元数据因转换器而异
 
-## Quick Reference
+## 快速参考
 
-| Task | Command |
+| 任务               | 命令                                |
 |------|---------|
-| Convert PDF | `markitdown file.pdf -o out.md` |
-| Convert DOCX | `markitdown file.docx -o out.md` |
-| Convert XLSX | `markitdown file.xlsx -o out.md` |
-| Convert from stdin | `cat file.pdf \| markitdown > out.md` |
-| Specify format | `cat file \| markitdown -x .pdf > out.md` |
-| Enable plugins | `markitdown file.pdf --use-plugins -o out.md` |
-| List plugins | `markitdown --list-plugins` |
+| 转换 PDF           | `markitdown file.pdf -o out.md`     |
+| 转换 DOCX          | `markitdown file.docx -o out.md`    |
+| 转换 XLSX          | `markitdown file.xlsx -o out.md`    |
+| 从标准输入转换      | `cat file.pdf \| markitdown > out.md` |
+| 指定格式           | `cat file \| markitdown -x .pdf > out.md` |
+| 启用插件           | `markitdown file.pdf --use-plugins -o out.md` |
+| 列出插件           | `markitdown --list-plugins`         |

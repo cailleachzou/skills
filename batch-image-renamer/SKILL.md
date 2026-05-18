@@ -1,9 +1,9 @@
 ---
 name: batch-image-renamer
-description: Batch rename images with company naming convention. Use this skill whenever the user wants to rename multiple images in a folder, especially when they mention batch renaming, renaming photos, organizing images, or applying a naming pattern like "Tendo - XXX". **Always delegate to a subagent to handle the full workflow** — spawn a general-purpose subagent with the full SKILL.md context and the target folder path. Handles folder-level batch operations, deduplication with auto-incrementing suffixes, and image content understanding. Make sure to use this skill whenever the user is trying to organize, rename, or batch-process image files — even if they don't explicitly say "skill" or use the exact command.
+description: 按公司命名规范批量重命名图片。当用户想要重命名文件夹中的多张图片时使用此技能，尤其是当他们提到批量重命名、照片重命名、整理图片或应用" Tendo - XXX"等命名模式时。**始终委托 subagent 处理完整工作流程** — 使用完整的 SKILL.md 上下文和目标文件夹路径启动一个通用 subagent。支持文件夹级批量操作、自动递增后缀去重以及图片内容理解。当用户尝试整理、重命名或批量处理图片文件时，务必使用此技能——即使他们没有明确说"skill"或使用精确的命令。
 ---
 
-# Batch Image Renamer
+# 批量图片重命名
 
 批量将文件夹内的图片命名为 `Tendo - <描述>-NNN.<ext>` 格式。
 

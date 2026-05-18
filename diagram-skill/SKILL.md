@@ -5,7 +5,7 @@ description: 生成或编辑 Mermaid 图表代码。当用户提到「画图」�
 
 # Diagram Skill — Mermaid 图表生成
 
-本 skill 根据用户需求生成符合 Mermaid 10.x 语法标准的图表代码，嵌入 Markdown 文件的 `mermaid` 代码块中。
+本 skill 根据用户需求生成符合 Mermaid 10.x 语法标准的图表代码，嵌入 Markdown 文件的 ` ```mermaid ` 代码块中。
 
 ## 核心原则
 
