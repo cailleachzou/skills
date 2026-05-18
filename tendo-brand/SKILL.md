@@ -3,153 +3,153 @@ name: tendo-brand
 description: Official Tendo Technology brand theme for presentations and artifacts. Use whenever the user mentions Tendo, applies Tendo styling, or creates company profile / sales / technical proposal documents for Tendo Technology. Based on the 2025 company profile visual identity.
 ---
 
-# Tendo Brand Theme
+# Tendo 品牌主题
 
-Official Tendo Technology brand theme, extracted from the 2025 Company Profile PDF. Defines precise color palette, typography hierarchy, and visual patterns used across all Tendo collateral.
+Tendo Technology 官方品牌主题，提取自 2025 年公司介绍 PDF。定义了精确的色彩体系、排版层级及贯穿所有 Tendo 宣传材料的视觉规范。
 
-## Color Palette
+## 色彩体系
 
-### Primary Brand Colors
-| Name | Hex | Usage |
-|------|-----|-------|
-| **Tendo Blue** | `#00AEEF` | Logo "TECHNOLOGY" wordmark, icon bars, primary accent |
-| **Tendo Black** | `#000000` | Logo "TENDO" wordmark, maximum contrast elements |
-| **Corporate Navy** | `#1A608F` | Section headers (OUR VISION, COMPANY BACKGROUND), primary titles |
-| **Deep Navy** | `#215A81` | Body text, bullet points, secondary headers |
+### 主品牌色
+| 名称 | 色值 | 用途 |
+|------|-----|------|
+| **Tendo 蓝** | `#00AEEF` | Logo "TECHNOLOGY" 字标、图标线条、主强调色 |
+| **Tendo 黑** | `#000000` | Logo "TENDO" 字标、最高对比度元素 |
+| **企业藏青** | `#1A608F` | 分节标题（OUR VISION、COMPANY BACKGROUND）、主标题 |
+| **深藏青** | `#215A81` | 正文、要点列表、次级标题 |
 
-### Secondary Colors
-| Name | Hex | Usage |
-|------|-----|-------|
-| **Accent Cyan** | `#98F2F4` | Photo borders, glow effects, circular masks |
-| **Bright Blue** | `#009AF9` | Timeline boxes, process elements, CTAs |
-| **Light Background Blue** | `#E0EAF4` | Decorative wave patterns, subtle backgrounds |
-| **Neutral Gray** | `#A6A6A6` | Decorative arcs, sub-bullets, background elements |
-| **Text Gray** | `#333333` | Body paragraphs on light backgrounds |
-| **White** | `#FFFFFF` | Primary background, text on dark elements |
-| **Light Gray** | `#F5F7FA` | Subtle section backgrounds |
+### 辅助色
+| 名称 | 色值 | 用途 |
+|------|-----|------|
+| **强调青** | `#98F2F4` | 照片边框、光晕效果、圆形遮罩 |
+| **亮蓝** | `#009AF9` | 时间线框、流程元素、行动号召按钮 |
+| **浅背景蓝** | `#E0EAF4` | 装饰波浪纹理、柔和背景 |
+| **中性灰** | `#A6A6A6` | 装饰弧线、次级圆点、背景元素 |
+| **文字灰** | `#333333` | 浅色背景上的正文段落 |
+| **白色** | `#FFFFFF` | 主背景、深色元素上的文字 |
+| **浅灰** | `#F5F7FA` | 柔和分节背景 |
 
-### Color Application Rules
-- **Tendo Blue** (`#00AEEF`): Logo, key icons, CTAs, accent lines, timeline elements
-- **Corporate Navy** (`#1A608F`): Section headers, title text, primary dividers
-- **Deep Navy** (`#215A81`): Body text, bullet points, descriptive paragraphs
-- **Accent Cyan** (`#98F2F4`): Photo/circular image borders, glow treatments
-- **Neutral Gray** (`#A6A6A6`): Decorative arcs, background elements only
-- Maximum 3-4 colors from palette in any single composition
+### 色彩应用规则
+- **Tendo 蓝**（`#00AEEF`）：Logo、重点图标、行动号召、强调线条、时间线元素
+- **企业藏青**（`#1A608F`）：分节标题、标题文字、主分隔线
+- **深藏青**（`#215A81`）：正文、要点列表、描述性段落
+- **强调青**（`#98F2F4`）：照片/圆形图片边框、光晕处理
+- **中性灰**（`#A6A6A6`）：装饰弧线、背景元素（仅限）
+- 单一画面中最多使用 3-4 种颜色
 
-## Typography
+## 排版规范
 
-### Font Stack
-- **Headers (H1, Display)**: Montserrat Bold — bold, all-caps, slightly condensed for impact
-- **Subheaders (H2, H3)**: Montserrat SemiBold — title case, medium weight
-- **Body Text**: Montserrat Regular — clean, high legibility
-- **Accent/Labels**: Montserrat Medium — navigation, tags, metadata
+### 字体组合
+- **标题（H1、Display）**：Montserrat Bold — 加粗、全大写、略微收紧以增强冲击力
+- **副标题（H2、H3）**：Montserrat SemiBold — 首字母大写、中等字重
+- **正文**：Montserrat Regular — 清晰、高可读性
+- **强调/标签**：Montserrat Medium — 导航、标签、元数据
 
-### Type Scale
-| Element | Weight | Case | Style |
-|---------|--------|------|-------|
-| Logo Wordmark | Bold/Black | All-Caps | Wide, geometric, slightly rounded corners |
-| Page Title | Bold | All-Caps | Extra bold, condensed (Bebas Neue feel) |
-| Section Header | Bold | Title Case | Large, clean sans-serif |
-| Subheader | SemiBold | Title Case | Medium size |
-| Body | Regular | Sentence | Standard weight, high line-height |
-| Bullet Text | SemiBold | Title Case | List items |
-| Caption/Meta | Medium | Sentence | Small, subtle |
+### 字号层级
+| 元素 | 字重 | 大小写 | 风格 |
+|------|------|--------|------|
+| Logo 字标 | Bold/Black | 全大写 | 宽体、几何、略带圆角 |
+| 页面标题 | Bold | 全大写 | 超粗、紧凑（Bebas Neue 风格） |
+| 分节标题 | Bold | 首字母大写 | 大号、清晰无衬线 |
+| 副标题 | SemiBold | 首字母大写 | 中等尺寸 |
+| 正文 | Regular | 句子大小写 | 标准字重、高行高 |
+| 要点文字 | SemiBold | 首字母大写 | 列表项 |
+| 注释/元数据 | Medium | 句子大小写 | 小号、低调 |
 
-### Why Montserrat
-Geometric sans-serif with OpenType support for multilingual content. Futuristic yet professional — aligns with Tendo's tech/ELV positioning. Wide letter-spacing on headers creates clean, premium corporate aesthetic.
+### 为什么选择 Montserrat
+几何无衬线字体，支持 OpenType 多语言内容。科技感与专业感兼具——与 Tendo 的科技/弱电定位高度吻合。标题的宽松字间距营造出精致、高端的企业美学。
 
-## Visual Style
+## 视觉风格
 
-### Core Characteristics
-- **High contrast**: Blue on white / White on navy / Blue on black
-- **Geometric**: Rectangles, circles, horizontal bars — no organic shapes
-- **Futuristic tech**: Circuit board patterns, wave/signal line backgrounds, circular image masks with cyan borders
-- **Minimalist**: Generous whitespace, limited palette, clean compositions
-- **No gradients** in primary brand elements — solid color blocks only
+### 核心特征
+- **高对比度**：白底蓝 / 深蓝底白 / 黑底蓝
+- **几何化**：矩形、圆形、水平线条——无有机形态
+- **未来科技感**：电路板纹理、波浪/信号线背景、蓝色边框圆形图片遮罩
+- **极简主义**：大量留白、限制用色、干净的构图
+- **主品牌元素不使用渐变**——仅用纯色色块
 
-### Design Patterns
-1. **Circular image masks**: Photos inside circles with thin `#98F2F4` cyan borders
-2. **Decorative arcs**: Large gray (`#A6A6A6`) partial circles in bottom corners — frame-breaking depth elements
-3. **Wave patterns**: Light blue (`#E0EAF4`) flowing diagonal lines suggesting connectivity/data flow
-4. **Horizontal dividers**: Thin navy lines ending with small circular "nodes"
-5. **Timeline blocks**: Left-aligned vertical stack of bright blue rectangles for history/milestones
+### 设计模式
+1. **圆形图片遮罩**：照片置于圆形内，带有细的 `#98F2F4` 青色边框
+2. **装饰弧线**：底部角落的大号灰色（`#A6A6A6`）半圆——打破框架的层次元素
+3. **波浪纹理**：浅蓝色（`#E0EAF4`）流动对角线，暗示连接/数据流动
+4. **水平分隔线**：细藏青线条，末端带有小圆形"节点"
+5. **时间线色块**：左对齐的亮蓝色矩形垂直堆叠，用于历史/里程碑展示
 
-### Logo Reference
-- Icon: Square shape with 5-6 horizontal bars of varying lengths (data stream / modular architecture motif)
-- Wordmark: Heavy geometric sans-serif "TENDO" in black
-- Descriptor: "TECHNOLOGY" in `#00AEEF` bright blue, aligned to match TENDO width
-- Tagline: Italicized sans-serif, medium weight, all-caps ("TECHNOLOGY THAT MOVES YOU FORWARD")
+### Logo 参考
+- 图标：方形，内含 5-6 条不同长度的水平线条（数据流/模块化架构主题）
+- 字标：厚几何无衬线 "TENDO"，黑色
+- 说明文字："TECHNOLOGY"，`#00AEEF` 亮蓝色，宽度与 TENDO 对齐
+- 标语：斜体无衬线，中等字重，全大写（"TECHNOLOGY THAT MOVES YOU FORWARD"）
 
-### Background Treatments
-- White (`#FFFFFF`) primary background with generous whitespace
-- Subtle circuit board / motherboard graphic with gradient fade (opacity 20-40%) for hero sections
-- Corner accent gradients (dark blue, subtle) to frame page content
-- Light gray wave patterns in corners suggesting connectivity
+### 背景处理
+- 白色（`#FFFFFF`）主背景，配合大量留白
+- 微妙的电路板/主板图形，带渐变淡出（透明度 20-40%），用于英雄区域
+- 角落强调渐变（深蓝色，微妙）用于框定页面内容
+- 角落的浅灰色波浪纹理，暗示连接性
 
-## Component Guidelines
+## 组件指南
 
-### Headers
+### 标题
 ```
-Background: White
-Text: Corporate Navy (#1A608F) or Tendo Blue (#00AEEF)
-Decoration: Thin underline + thicker accent bar (right-aligned)
+背景：白色
+文字：企业藏青（#1A608F）或 Tendo 蓝（#00AEEF）
+装饰：细下划线 + 粗强调条（右对齐）
 ```
 
-### Bullet Lists
-- Primary bullets: Solid navy circles (`#215A81`)
-- Sub-bullets: Small dots in neutral gray (`#A6A6A6`)
-- Text: Deep Navy (#215A81) or Corporate Navy (#1A608F) based on hierarchy
+### 要点列表
+- 主要要点：实心藏青圆点（`#215A81`）
+- 次级要点：小圆点，中性灰（`#A6A6A6`）
+- 文字：深藏青（#215A81）或企业藏青（#1A608F），视层级而定
 
-### Photo/Cards
-- Border: 2px solid `#98F2F4` (Accent Cyan)
-- Shape: Circular mask or rounded rectangle
-- Shadow: None (clean flat design)
+### 照片/卡片
+- 边框：2px 实线 `#98F2F4`（强调青）
+- 形状：圆形遮罩或圆角矩形
+- 阴影：无（干净扁平设计）
 
-### Timeline
-- Box fill: `#009AF9` (Bright Blue)
-- Box text: White (`#FFFFFF`)
-- Connector: Small navy squares between blocks
+### 时间线
+- 色块填充：`#009AF9`（亮蓝）
+- 色块文字：白色（`#FFFFFF`）
+- 连接线：色块之间的藏青小方块
 
-### Process Diagrams
-- 5-column horizontal layout with circular image + header + centered paragraph per column
-- Wave-shaped navy divider separating visual and text sections
+### 流程图
+- 5 列水平布局，每列包含圆形图片 + 标题 + 居中段落
+- 波浪形藏青分隔线，区分视觉区和文字区
 
-## Application Notes
+## 应用说明
 
-**Use Tendo Blue** (`#00AEEF`) for:
-- Logo wordmark and icon
-- Key accent lines and CTAs
-- Timeline and process elements
+**使用 Tendo 蓝**（`#00AEEF`）于：
+- Logo 字标和图标
+- 重点强调线条和行动号召
+- 时间线和流程元素
 
-**Use Corporate Navy** (`#1A608F`) for:
-- Section headers and page titles
-- Primary dividers
+**使用企业藏青**（`#1A608F`）于：
+- 分节标题和页面标题
+- 主分隔线
 
-**Use Deep Navy** (`#215A81`) for:
-- Body text and bullet points
-- Descriptive paragraphs
+**使用深藏青**（`#215A81`）于：
+- 正文和要点列表
+- 描述性段落
 
-**Use Accent Cyan** (`#98F2F4`) for:
-- Photo borders and circular masks
-- Glow effects on dark backgrounds
+**使用强调青**（`#98F2F4`）于：
+- 照片边框和圆形遮罩
+- 深色背景上的光晕效果
 
-## Tendo Table Style
+## Tendo 表格样式
 
-A professional 3-column table component styled for Tendo Technology proposals and technical documents. Based on Word's `ListTable3-Accent4` structure, adapted with Tendo Blue.
+专为 Tendo Technology 提案和技术文档设计的专业 3 列表格组件。基于 Word 的 `ListTable3-Accent4` 结构改造，融入 Tendo 蓝色风格。
 
-### Visual Specs
-| Element | Value |
-|---------|-------|
-| Border color | `#00AEEF` (Tendo Blue) |
-| Header fill | `#00AEEF` (Tendo Blue) |
-| Header text | White, Bold, 10pt Montserrat |
-| Body text | Deep Navy `#215A81`, 10pt |
-| Body fill | White `#FFFFFF` |
-| Last-row top border | Double-line `#00AEEF` |
-| First/last column | Inner borders removed |
-| Row banding | Via horizontal borders only (no fill) |
+### 视觉规格
+| 元素 | 值 |
+|------|-----|
+| 边框颜色 | `#00AEEF`（Tendo 蓝） |
+| 表头填充 | `#00AEEF`（Tendo 蓝） |
+| 表头文字 | 白色、加粗、10pt Montserrat |
+| 正文文字 | 深藏青 `#215A81`，10pt |
+| 正文填充 | 白色 `#FFFFFF` |
+| 末行上边框 | 双线 `#00AEEF` |
+| 首列/末列 | 去除内部边框 |
+| 行间纹 | 仅通过水平边框实现（不填充） |
 
-### docx-js Usage
+### docx-js 用法
 
 ```javascript
 const { BorderStyle, ShadingType, WidthType, Table, TableRow, TableCell,
@@ -158,14 +158,14 @@ const TENDO_BLUE = "00AEEF";
 const TENDO_NAVY = "215A81";
 const WHITE = "FFFFFF";
 
-// Helper: single border
+// 辅助函数：单线边框
 const border = (color) => ({ style: BorderStyle.SINGLE, size: 4, color });
-// Helper: no border
+// 辅助函数：无边框
 const noBorder = () => ({ style: BorderStyle.NIL, size: 0, color: "auto" });
-// Helper: double top border (for last row)
+// 辅助函数：双线上边框（末行用）
 const doubleTopBorder = (color) => ({ style: BorderStyle.DOUBLE, size: 4, color });
 
-// Build a header row
+// 构建表头行
 function headerRow(cells) {
   return new TableRow({
     tableHeader: true,
@@ -183,7 +183,7 @@ function headerRow(cells) {
   });
 }
 
-// Build a body row (isLast = true adds double top border)
+// 构建正文行（isLast = true 时添加双线上边框）
 function bodyRow(cells, isLast = false) {
   return new TableRow({
     children: cells.map((text, i) => new TableCell({
@@ -202,11 +202,11 @@ function bodyRow(cells, isLast = false) {
   });
 }
 
-// Example: 3-column application summary table
-// Total width = 9026 DXA (A4 with 1800 margins each side)
+// 示例：3 列应用汇总表
+// 总宽度 = 9026 DXA（左右各 1800 边距的 A4）
 const table = new Table({
   width: { size: 9026, type: WidthType.DXA },
-  columnWidths: [2000, 4513, 2513],  // must sum to 9026
+  columnWidths: [2000, 4513, 2513],  // 总和必须为 9026
   rows: [
     headerRow(["应用领域", "主要内容", "典型案例"]),
     bodyRow(["智能家居", "家居设备的互联与自动化控制", "智能灯光、空调、门锁"]),
@@ -217,53 +217,53 @@ const table = new Table({
 });
 ```
 
-**Width calculation (A4, 1800 DXA margins):**
-- Content width = 11906 − 3600 = **9026 DXA**
-- Column widths must sum to 9026
-- For Letter (12240 − 3600 = 8640 DXA), adjust columnWidths accordingly
+**宽度计算（A4，左右各 1800 DXA 边距）：**
+- 内容宽度 = 11906 − 3600 = **9026 DXA**
+- 各列宽度之和必须为 9026
+- Letter 尺寸（12240 − 3600 = 8640 DXA），请相应调整 columnWidths
 
-### Column Width Quick Reference
+### 列宽快速参考
 
-| Columns | Total Width | Suggested splits (DXA) |
-|---------|-------------|----------------------|
-| 2 | 9026 | 3000 + 6026, or 4513 + 4513 |
-| 3 | 9026 | 2000 + 4513 + 2513 (shown above) |
+| 列数 | 总宽度 | 建议分割（DXA）|
+|------|--------|----------------|
+| 2 | 9026 | 3000 + 6026，或 4513 + 4513 |
+| 3 | 9026 | 2000 + 4513 + 2513（如上所示）|
 | 3 | 9026 | 2500 + 3500 + 3026 |
 | 4 | 9026 | 1800 + 2700 + 2526 + 2000 |
 
-## Brand Colors in Context (from PDF pages)
+## PDF 各页品牌色彩应用
 
-| Page | Primary Use | Color(s) |
-|------|-------------|----------|
-| Cover | Logo, tagline | `#000000` / `#00AEEF` |
-| Vision/Mission | Headers, dividers | `#1A5B7F` / `#98F2F4` |
-| Company Background | Timeline, headers | `#009AF9` / `#215A81` |
-| Innovative Strategy | Wave divider, process circles | `#13527D` / `#00A8E1` |
-| ELV/ICT Solutions | Section headers, bullets | `#1A4B6D` / `#2571A2` / `#2D7FB4` |
-| References | Dark frame border, text | `#1A4B6D` |
+| 页码 | 主要用途 | 色彩 |
+|------|---------|------|
+| 封面 | Logo、标语 | `#000000` / `#00AEEF` |
+| 愿景/使命 | 标题、分隔线 | `#1A5B7F` / `#98F2F4` |
+| 公司背景 | 时间线、标题 | `#009AF9` / `#215A81` |
+| 创新战略 | 波浪分隔线、流程圆圈 | `#13527D` / `#00A8E1` |
+| 弱电/ICT 解决方案 | 分节标题、要点 | `#1A4B6D` / `#2571A2` / `#2D7FB4` |
+| 参考案例 | 深色边框、文字 | `#1A4B6D` |
 
-## Best Used For
-- Company profile presentations
-- IT/ELV services proposals
-- Cloud infrastructure decks
-- Managed services pitches
-- Security solution proposals
-- Tendo Technology sales collateral
+## 最适用场景
+- 公司介绍演示文稿
+- IT/弱电服务提案
+- 云基础设施方案
+- 托管服务推介
+- 安防解决方案提案
+- Tendo Technology 销售宣传材料
 
-## Logo Assets (in `assets/` folder)
-Available for direct use when applying the theme:
-- `Logo Transparent.png` — Main logo on transparent background
-- `Logo Transparent (Header).png` — Header-optimized logo variant
-- `Logo2Dec24 (Big).png` — Updated logo (December 2024 version)
-- `White Logo.png` — For use on dark backgrounds
-- `Tendo Colour Code.jpg` — Official color reference swatch
-- `APAC Map (Tendo Blue).png` — Regional coverage map graphic
-- `Business Card Front - AC.ai` / `Business Card Back.ai` — Business card template
-- `Tendo CN - Businees Card (Amendment).pdf` — CN business card reference
+## Logo 资源（位于 `assets/` 文件夹）
+可直接使用以应用品牌主题：
+- `Logo Transparent.png` — 透明背景主 Logo
+- `Logo Transparent (Header).png` — 页眉优化版 Logo 变体
+- `Logo2Dec24 (Big).png` — 更新版 Logo（2024 年 12 月版）
+- `White Logo.png` — 用于深色背景
+- `Tendo Colour Code.jpg` — 官方色值参考色卡
+- `APAC Map (Tendo Blue).png` — 区域覆盖地图
+- `Business Card Front - AC.ai` / `Business Card Back.ai` — 名片模板
+- `Tendo CN - Businees Card (Amendment).pdf` — 中文名片参考
 
-## Font Loading
+## 字体加载
 ```html
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 ```
 
-Font: **Montserrat** (400, 500, 600, 700 weights) — loaded via Google Fonts
+字体：**Montserrat**（400、500、600、700 字重）— 通过 Google Fonts 加载
