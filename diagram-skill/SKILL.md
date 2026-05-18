@@ -373,19 +373,26 @@ architecture-beta
 
 ## 6. 区块图 (block)
 
+> **版本要求**：`block` 图表类型仅在 Mermaid 11.x+ 支持，Mermaid 10.x 不兼容。如需在 10.x 环境中生成机柜/布局图，请使用下方的 flowchart 替代方案。
+
 ### 基本语法
 
 ```
 block
 columns 列数
   块A  块B  块C
-  块D:2  块E 块F:2
+  块D:2  块E 块F
 ```
 
 ### 跨列语法
 
+用 `:数字` 指定元素跨越列数（不含冒号空格）：
+
 ```
-  wide_block:2
+block
+columns 4
+  A  B  C  D
+  WideItem:2  E  F:1
 ```
 
 ### 示例 — 机柜布局
@@ -393,9 +400,30 @@ columns 列数
 ```mermaid
 block
 columns 4
-  UPS:1     PDU:1    PatchPanel:1   Switch:1
-  Server:2  Switch:1  PatchPanel:1  FiberBox:1
+  UPS  PDU  PatchPanel  Switch
+  Server:2  Switch  PatchPanel  FiberBox
 ```
+
+### Mermaid 10.x 替代方案 — 机柜布局 (flowchart)
+
+```mermaid
+flowchart LR
+    accTitle: 机柜设备布局
+    accDescr: 4列机柜布局，从UPS到光纤配线盒
+
+    subgraph 机柜[机柜布局 — 4列]
+        direction LR
+        UPS["🔋 UPS"] --- PDU["⚡ PDU"] --- PP["🔌 Patch Panel"] --- SW["🌐 Switch"]
+        SRV["🖥 Server:2U"] -.- SW2["🌐 Switch"] --- PP2["🔌 Patch Panel"] --- FB["🔶 FiberBox"]
+    end
+
+    style UPS fill:#f9f,stroke:#333,stroke-width:2px
+    style SRV fill:#ff9,stroke:#333
+    style PDU fill:#f9f,stroke:#333,stroke-width:2px
+    style SW fill:#9f9,stroke:#333,stroke-width:2px
+```
+
+> **提示**：flowchart 替代方案中，`-.-` 表示水平对齐（不显式连接），元素按书写顺序从左到右排列。跨行元素需手动控制宽度。
 
 ---
 
