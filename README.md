@@ -7,12 +7,10 @@
 | 技能 | 触发关键词 | 功能 |
 |------|-----------|------|
 | **batch-image-renamer** | 批量重命名、Tendo - XXX | 批量重命名图片，AI 识别内容，自动去重冲突 |
-| **claude-api** | anthropic SDK、Claude API | 调用 Claude API 构建 LLM 应用 |
 | **diagram-skill** | 画图、mermaid、甘特图、时序图 | 生成 Mermaid 图表代码 |
 | **docx** | .docx Word 文档 | Word 文档创建/编辑（pandoc、docx-js、XML） |
 | **email-eml** | 生成邮件、.eml | 生成 .eml 邮件文件 |
 | **markitdown** | 转换 md、PDF 转 markdown | 多格式文件转 Markdown |
-| **mcp-builder** | MCP server、构建 MCP | 创建 MCP 服务器 |
 | **minimaxi-mmx** | MiniMax、mmx、图片生成、TTS | MiniMax 多模态 AI CLI |
 | **pdf** | PDF 操作、建筑图纸 | PDF 处理 + 建筑图纸 AI 审查 |
 | **pptx** | .pptx PowerPoint | PowerPoint 创建/编辑 |
