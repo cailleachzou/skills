@@ -1,1 +1,0 @@
-# cli_anything.ffmpeg — no __init__ at this level (namespace package)
