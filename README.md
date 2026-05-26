@@ -6,12 +6,17 @@
 
 | 技能 | 触发关键词 | 功能 |
 |------|-----------|------|
+| **bailian-cli** | 通义、阿里云、bl | 阿里云百炼 AI CLI（文字对话、多模态） |
 | **batch-image-renamer** | 批量重命名、Tendo - XXX | 批量重命名图片，AI 识别内容，自动去重冲突 |
+| **cad2x-converter** | CAD、DXF、DWG、CAD转换 | CAD 文件格式转换（DXF/DWG ↔ PDF/PNG/SVG） |
+| **cli-anything-ffmpeg** | FFmpeg、视频转换、音频处理 | FFmpeg CLI 封装，支持预设、转码、批量处理 |
 | **diagram-skill** | 画图、mermaid、甘特图、时序图 | 生成 Mermaid 图表代码 |
 | **docx** | .docx Word 文档 | Word 文档创建/编辑（pandoc、docx-js、XML） |
+| **dxf-text-translate** | DXF翻译、CAD文字翻译 | 提取并翻译 DXF 文件中的文字实体 |
 | **email-eml** | 生成邮件、.eml | 生成 .eml 邮件文件 |
 | **markitdown** | 转换 md、PDF 转 markdown | 多格式文件转 Markdown |
 | **minimaxi-mmx** | MiniMax、mmx、图片生成、TTS | MiniMax 多模态 AI CLI |
+| **mmx-cli** | mmx 命令行 | MiniMax 多模态 CLI（文字、图片、视频、语音、音乐） |
 | **pdf** | PDF 操作、建筑图纸 | PDF 处理 + 建筑图纸 AI 审查 |
 | **pptx** | .pptx PowerPoint | PowerPoint 创建/编辑 |
 | **skill-creator** | 创建 skill | 开发新技能的完整工作流 |
@@ -53,4 +58,5 @@ cat SKILLS.md
 
 ## 更新日志
 
+- **2026/05/26** 新增 bailian-cli、cli-anything-ffmpeg、dxf-text-translate、mmx-cli；同步 SKILLS.md 与 README.md
 - **2026/05/18** 初始导入：14 个技能 + SKILLS.md 清单
