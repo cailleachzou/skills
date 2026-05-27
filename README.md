@@ -34,17 +34,6 @@ skill-name/
 └── evals/            # 测试用例
 ```
 
-## 工作流
-
-```
-Pandoc/markitdown  →  转换源文件为 Markdown
-↓                  →  在 Obsidian 中编辑
-docx/xlsx/pptx     →  生成最终交付物
-minimaxi-mmx       →  生成图片/视频/语音
-tendo-brand/theme  →  应用视觉样式
-git               →  版本控制
-```
-
 ## 快速开始
 
 ```bash
@@ -98,16 +87,6 @@ git clone https://github.com/cailleachzou/skills.git
 | **Montserrat 字体** | tendo-brand（Google Fonts CDN） |
 | **Mermaid** | diagram-skill（渲染：Obsidian / Mermaid Live Editor） |
 | **MiniMax MCP** | batch-image-renamer（图片内容理解）|
-
-### 一键安装（Python + pip）
-
-```bash
-C:\Users\59620\AppData\Local\Python\python.exe -m pip install \
-  'markitdown[all]' \
-  openpyxl pandas \
-  pypdf pdfplumber reportlab pypdfium2 pytesseract pdf2image \
-  click ezdxf
-```
 
 ---
 

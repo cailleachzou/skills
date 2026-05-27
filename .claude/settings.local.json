@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__MiniMax__web_search",
-      "mcp__MiniMax__understand_image"
+      "mcp__MiniMax__understand_image",
+      "Skill(minimaxi-mmx)"
     ]
   }
 }

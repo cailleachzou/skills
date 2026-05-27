@@ -267,3 +267,25 @@ const table = new Table({
 ```
 
 字体：**Montserrat**（400、500、600、700 字重）— 通过 Google Fonts 加载
+
+## Tendo 项目文档代理（agents/）
+
+当需要处理以下 Tendo 标准模板时，使用 `Agent` 工具调用对应代理指令：
+
+| 触发关键词 | 代理文件 | 模板 |
+|-----------|---------|------|
+| Q&A、勘察确认、现场勘察clarification | `agents/qa-sheet.md` | `TendoCN - Q&A for (Client) (Project) - (Date).xlsx` |
+| 人员清单、worker name list、团队名单 | `agents/worker-list.md` | `TendoCN - Worker Name List.xlsx` |
+| 周报、项目状态报告、每周报告、weekly status | `agents/weekly-status-report.md` | `SBY - 每周项目状态报告 (中文).docx` |
+| Rack Elevation、机柜图、机柜布置、rack layout | `agents/rack-elevation.md` | `TendoCN - Proposed (Client) (Project) Rack Elevation.xls` |
+
+### 调用方式
+```
+Agent(
+  description="Fill Tendo Q&A sheet for {project}",
+  prompt="读取 tendo-brand/agents/qa-sheet.md，按模板填充以下字段：{client} {project} {date}",
+  subagent_type="general-purpose"
+)
+```
+
+代理指令文件位于 `tendo-brand/agents/`，每个文件包含：模板路径、固定结构说明、可填字段、输出规则。
