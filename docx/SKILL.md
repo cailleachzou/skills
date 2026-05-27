@@ -88,7 +88,7 @@ python scripts/strip_heading_numbers.py input.md input_clean.md
 然后转换：
 
 ```bash
-pandoc input_clean.md -o output.docx --reference-doc=references/TendoCN\ -\ Letterhead\ .docx
+pandoc input_clean.md -o output.docx --reference-doc=references/TendoCN\ -\ Letterhead.docx
 ```
 
 **⚠️ 关键：pandoc 转换后必须运行 `apply_template.py`。**
@@ -97,6 +97,7 @@ Pandoc 使用 `--reference-doc` 能正确应用段落样式，但其列表 numId
 ```bash
 cd <skill-dir>
 /c/Users/59620/AppData/Local/Python/bin/python.exe scripts/apply_template.py output.docx output_fixed.docx
+/c/Users/59620/AppData/Local/Python/bin/python.exe scripts/apply_table_borders.py output_fixed.docx output_final.docx
 ```
 
 **`apply_template.py` 的作用：**
@@ -229,6 +230,13 @@ const doc = new Document({
 ```
 
 ### 表格
+
+**Pandoc 生成的表格必须运行 `apply_table_borders.py`。**
+Pandoc 的 `Table` 样式仅对首行（firstRow）定义边框，数据行单元格的边框全部缺失。运行边框修复脚本注入所有缺失的 `<w:tcBorders>`：
+
+```bash
+python scripts/apply_table_borders.py output_fixed.docx output_final.docx
+```
 
 **关键：表格需要双向宽度设置**——表格上设置 `columnWidths`，同时每个单元格上设置 `width`。两者缺一不可，否则在不同平台上渲染异常。
 

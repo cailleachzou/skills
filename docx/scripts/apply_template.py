@@ -110,7 +110,7 @@ def main():
 
     # --- Step 3: repack ---
     print(f"Packing to {output_path}...")
-    pack(input_directory=work_dir, output_file=output_path, original_file=input_path)
+    pack(input_directory=work_dir, output_file=output_path, original_file=None)
     shutil.rmtree(work_dir)
     print("Done.")
 
