@@ -6,23 +6,22 @@
 
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
-| **bailian-cli**         | 通义、阿里云、bl            | 阿里云百炼 AI CLI（文字对话、多模态）            |
-| **batch-image-renamer** | 批量重命名、Tendo - XXX    | 批量重命名图片，AI 识别内容，自动去重冲突            |
-| **cad2x-converter**     | CAD、DXF、DWG、CAD转换    | CAD 文件格式转换（DXF/DWG ↔ PDF/PNG/SVG） |
-| **cli-anything-ffmpeg** | FFmpeg、视频转换、音频处理     | FFmpeg CLI 封装，支持预设、转码、批量处理        |
-| **diagram-skill**       | 画图、mermaid、甘特图、时序图   | 生成 Mermaid 图表代码                   |
-| **docx**                | .docx Word 文档        | Word 文档创建/编辑（pandoc、docx-js、XML）  |
-| **dxf-text-translate**  | DXF翻译、CAD文字翻译        | 提取并翻译 DXF 文件中的文字实体                |
-| **email-eml**           | 生成邮件、.eml            | 生成 .eml 邮件文件                      |
-| **markitdown**          | 转换 md、PDF 转 markdown | 多格式文件转 Markdown                   |
-| **minimaxi-mmx**        | MiniMax、mmx、图片生成、TTS | MiniMax 多模态 AI CLI                |
-| **mmx-cli**             | mmx 命令行              | MiniMax 多模态 CLI（文字、图片、视频、语音、音乐）   |
-| **pdf**                 | PDF 操作、建筑图纸          | PDF 处理 + 建筑图纸 AI 审查               |
-| **pptx**                | .pptx PowerPoint     | PowerPoint 创建/编辑                  |
-| **skill-creator**       | 创建 skill             | 开发新技能的完整工作流                       |
-| **tendo-brand**         | Tendo、品牌样式           | Tendo 官方品牌主题                      |
-| **theme-factory**       | 主题、styling           | 10 种预设主题 + 自定义生成                  |
-| **xlsx**                | .xlsx Excel          | Excel 创建/编辑（openpyxl、pandas）      |
+| **bailian-cli**         | 通义、阿里云、bl            | Aliyun Model Studio CLI (`bl`) — ASR speech-to-text only (RESTRICTED); other tasks use Claude/mmx-cli |
+| **batch-image-renamer** | 批量重命名、Tendo - XXX    | Renames images to `Tendo - <description>-NNN.<ext>` format, uses AI to understand image content and deduplicates conflicts |
+| **cli-anything-ffmpeg** | FFmpeg、视频转换、音频处理     | AI-friendly FFmpeg CLI harness — transcoding, probing, batch processing with presets, session management, JSON output |
+| **diagram-skill**       | 画图、mermaid、甘特图、时序图   | Generates and edits Mermaid diagram code — flowchart, sequence, gantt, mindmap, architecture, ER, state, C4, and more |
+| **docx**                | .docx Word 文档        | Full Word doc workflow via pandoc templates, docx-js scripting, or XML editing — tracked changes, comments, footnotes, tables, images, TOC, letterhead |
+| **dxf-dwg-converter**   | DWG转DXF、CAD转换、图层列表、DXF翻译    | CAD全家桶 — DWG↔DXF转换、文字提取翻译、图层管理、SVG导出、批量处理 |
+| **email-eml**           | 生成邮件、.eml            | Generates .eml email files with To/Subject/Body (user adds signature in Outlook manually) |
+| **markitdown**          | 转换 md、PDF 转 markdown | Converts 20+ file formats to Markdown using Microsoft MarkItDown, preserves document structure |
+| **minimaxi-mmx**        | MiniMax、mmx、图片生成、TTS | Multi-modal AI CLI tool via mmx — text chat, image/video generation, TTS, music, web search, image understanding, batch analysis |
+| **mmx-cli**             | mmx 命令行              | MiniMax multi-modal CLI — text, image generation, video, speech synthesis, music creation |
+| **pdf**                 | PDF 操作、建筑图纸          | Full PDF operations — text/table extraction, merge/split/rotate, watermarks, forms, OCR, AI vision-based drawing review |
+| **pptx**                | .pptx PowerPoint     | Template-based editing (unpack/edit/pack) or pptxgenjs from-scratch — design guidelines, color palettes, visual QA |
+| **skill-creator**       | 创建 skill             | Full lifecycle skill development — drafting, subagent testing, human review, iteration, benchmarking, description optimization |
+| **tendo-brand**         | Tendo、品牌样式           | Applies official Tendo Technology brand theme (colors, fonts, visual patterns) to presentations and collateral |
+| **theme-factory**       | 主题、styling           | Toolkit of 10 professional color/font themes + custom theme generation for slides, docs, reports, HTML pages |
+| **xlsx**                | .xlsx Excel          | Excel via openpyxl and pandas — formulas, financial color-coding, LibreOffice recalculation, zero-error requirement |
 
 ## 目录结构
 
@@ -52,8 +51,7 @@ git               →  版本控制
 # 克隆仓库
 git clone https://github.com/cailleachzou/skills.git
 
-# 查看所有技能
-cat SKILLS.md
+# 查看所有技能 — 直接看本文件即可
 ```
 
 ## 环境依赖
@@ -71,8 +69,7 @@ cat SKILLS.md
 | **pptx** | `markitdown[pptx]`, `Pillow` | LibreOffice, Poppler (`pdftoppm`), npm `pptxgenjs` |
 | **docx** | — | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`) |
 | **cli-anything-ffmpeg** | `click >= 8.0` | ffmpeg, ffprobe |
-| **dxf-dwg-converter** | `ezdxf` | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) |
-| **dxf-text-translate** | `ezdxf` | — |
+| **dxf-dwg-converter** | `ezdxf` | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + 文字提取/翻译 |
 | **skill-creator** | — | （Eval 工具，脚本见 skill 内部） |
 
 ### Node.js / npm 包
@@ -116,6 +113,6 @@ C:\Users\59620\AppData\Local\Python\python.exe -m pip install \
 
 ## 更新日志
 
-- **2026/05/27** 新增环境依赖说明；bailian-cli 限制为 ASR only
+- **2026/05/27** 合并 dxf-text-translate 至 dxf-dwg-converter；新增环境依赖说明；bailian-cli 限制为 ASR only
 - **2026/05/26** 新增 bailian-cli、cli-anything-ffmpeg、dxf-text-translate、mmx-cli；同步 SKILLS.md 与 README.md
 - **2026/05/18** 初始导入：14 个技能 + SKILLS.md 清单
