@@ -8,11 +8,11 @@ license: Proprietary. LICENSE.txt has complete terms
 
 ## 快速参考
 
-| 任务 | 指南 |
-|------|-------|
-| 读取/分析内容 | `/c/Users/59620/AppData/Local/Python/bin/python.exe -m markitdown presentation.pptx` |
-| 编辑或从模板创建 | 阅读 [editing.md](editing.md) |
-| 从零开始创建 | 阅读 [pptxgenjs.md](pptxgenjs.md) |
+| 任务       | 指南                                                                                   |
+| -------- | ------------------------------------------------------------------------------------ |
+| 读取/分析内容  | `/c/Users/59620/AppData/Local/Python/bin/python.exe -m markitdown presentation.pptx` |
+| 编辑或从模板创建 | 阅读 [editing.md](editing.md)                                                          |
+| 从零开始创建   | 阅读 [pptxgenjs.md](pptxgenjs.md)                                                      |
 
 ---
 
