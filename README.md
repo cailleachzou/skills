@@ -56,7 +56,66 @@ git clone https://github.com/cailleachzou/skills.git
 cat SKILLS.md
 ```
 
+## 环境依赖
+
+### Python 环境
+
+**Python 路径**（Windows）：`C:\Users\59620\AppData\Local\Python\python.exe`
+> 所有 Python 技能均使用此路径（不要用裸 `python`，Windows 上不存在）
+
+| 技能 | Python 包 | 其他依赖 |
+|------|-----------|---------|
+| **markitdown** | `pip install 'markitdown[all]'` | markitdown CLI |
+| **xlsx** | `openpyxl`, `pandas` | LibreOffice (`soffice`) |
+| **pdf** | `pypdf`, `pdfplumber`, `reportlab`, `pypdfium2`, `pytesseract`, `pdf2image` | Poppler utils (`pdftotext`, `pdfimages`), qpdf |
+| **pptx** | `markitdown[pptx]`, `Pillow` | LibreOffice, Poppler (`pdftoppm`), npm `pptxgenjs` |
+| **docx** | — | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`) |
+| **cli-anything-ffmpeg** | `click >= 8.0` | ffmpeg, ffprobe |
+| **dxf-dwg-converter** | `ezdxf` | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) |
+| **dxf-text-translate** | `ezdxf` | — |
+| **skill-creator** | — | （Eval 工具，脚本见 skill 内部） |
+
+### Node.js / npm 包
+
+| 技能 | 安装命令 |
+|------|---------|
+| **mmx-cli** | `npm install -g mmx-cli` |
+| **docx** | `npm install -g docx` |
+| **pptx** | `npm install -g pptxgenjs` |
+
+### CLI 工具
+
+| 工具 | 技能 | 说明 |
+|------|------|------|
+| **pandoc** | docx | Markdown → docx 转换 |
+| **LibreOffice** (`soffice`) | xlsx, pptx, docx | 公式重算、格式转换、接受修订 |
+| **ffmpeg / ffprobe** | cli-anything-ffmpeg | 音视频转码 |
+| **Poppler utils** (`pdftotext`, `pdftoppm`, `pdfimages`) | pptx, docx, pdf | PDF 文本提取 / 渲染 |
+| **LibreDWG** | dxf-dwg-converter | DWG ↔ DXF 转换、SVG 导出、图层读取 |
+| **bl** (bailian-cli) | bailian-cli | ASR 语音转文字（唯一用途）|
+
+### 其他环境
+
+| 工具 | 用途 |
+|------|------|
+| **Montserrat 字体** | tendo-brand（Google Fonts CDN） |
+| **Mermaid** | diagram-skill（渲染：Obsidian / Mermaid Live Editor） |
+| **MiniMax MCP** | batch-image-renamer（图片内容理解）|
+
+### 一键安装（Python + pip）
+
+```bash
+C:\Users\59620\AppData\Local\Python\python.exe -m pip install \
+  'markitdown[all]' \
+  openpyxl pandas \
+  pypdf pdfplumber reportlab pypdfium2 pytesseract pdf2image \
+  click ezdxf
+```
+
+---
+
 ## 更新日志
 
+- **2026/05/27** 新增环境依赖说明；bailian-cli 限制为 ASR only
 - **2026/05/26** 新增 bailian-cli、cli-anything-ffmpeg、dxf-text-translate、mmx-cli；同步 SKILLS.md 与 README.md
 - **2026/05/18** 初始导入：14 个技能 + SKILLS.md 清单
