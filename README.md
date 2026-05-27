@@ -6,22 +6,22 @@
 
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
-| **bailian-cli**         | 通义、阿里云、bl            | Aliyun Model Studio CLI (`bl`) — ASR speech-to-text only (RESTRICTED); other tasks use Claude/mmx-cli |
-| **batch-image-renamer** | 批量重命名、Tendo - XXX    | Renames images to `Tendo - <description>-NNN.<ext>` format, uses AI to understand image content and deduplicates conflicts |
-| **cli-anything-ffmpeg** | FFmpeg、视频转换、音频处理     | AI-friendly FFmpeg CLI harness — transcoding, probing, batch processing with presets, session management, JSON output |
-| **diagram-skill**       | 画图、mermaid、甘特图、时序图   | Generates and edits Mermaid diagram code — flowchart, sequence, gantt, mindmap, architecture, ER, state, C4, and more |
-| **docx**                | .docx Word 文档        | Full Word doc workflow via pandoc templates, docx-js scripting, or XML editing — tracked changes, comments, footnotes, tables, images, TOC, letterhead |
-| **dxf-dwg-converter**   | DWG转DXF、CAD转换、图层列表、DXF翻译    | CAD全家桶 — DWG↔DXF转换、文字提取翻译、图层管理、SVG导出、批量处理 |
-| **email-eml**           | 生成邮件、.eml            | Generates .eml email files with To/Subject/Body (user adds signature in Outlook manually) |
-| **markitdown**          | 转换 md、PDF 转 markdown | Converts 20+ file formats to Markdown using Microsoft MarkItDown, preserves document structure |
-| **minimaxi-mmx**        | MiniMax、mmx、图片生成、TTS | Multi-modal AI CLI tool via mmx — text chat, image/video generation, TTS, music, web search, image understanding, batch analysis |
-| **mmx-cli**             | mmx 命令行              | MiniMax multi-modal CLI — text, image generation, video, speech synthesis, music creation |
-| **pdf**                 | PDF 操作、建筑图纸          | Full PDF operations — text/table extraction, merge/split/rotate, watermarks, forms, OCR, AI vision-based drawing review |
-| **pptx**                | .pptx PowerPoint     | Template-based editing (unpack/edit/pack) or pptxgenjs from-scratch — design guidelines, color palettes, visual QA |
-| **skill-creator**       | 创建 skill             | Full lifecycle skill development — drafting, subagent testing, human review, iteration, benchmarking, description optimization |
-| **tendo-brand**         | Tendo、品牌样式           | Applies official Tendo Technology brand theme (colors, fonts, visual patterns) to presentations and collateral |
-| **theme-factory**       | 主题、styling           | Toolkit of 10 professional color/font themes + custom theme generation for slides, docs, reports, HTML pages |
-| **xlsx**                | .xlsx Excel          | Excel via openpyxl and pandas — formulas, financial color-coding, LibreOffice recalculation, zero-error requirement |
+| **bailian-cli**         | 通义、阿里云、bl            | 阿里云百炼 AI CLI（`bl`）— 仅限 ASR 语音转文字，其他任务使用 Claude/mmx-cli |
+| **batch-image-renamer** | 批量重命名、Tendo - XXX    | 按 `Tendo - <描述>-NNN.<ext>` 格式批量重命名图片，AI 识别内容，自动去重冲突 |
+| **cli-anything-ffmpeg** | FFmpeg、视频转换、音频处理     | FFmpeg CLI 封装 — 转码、探测、批量处理，预设管理、会话管理、JSON 输出 |
+| **diagram-skill**       | 画图、mermaid、甘特图、时序图   | 生成和编辑 Mermaid 图表代码 — 流程图、时序图、甘特图、思维导图、架构图、ER 图、状态图、C4 等 |
+| **docx**                | .docx Word 文档        | Word 文档完整工作流 — pandoc 模板、docx-js 脚本、XML 编辑，支持修订、批注、脚注、表格、图片、目录、信纸 |
+| **dxf-dwg-converter**   | DWG转DXF、CAD转换、图层列表、DXF翻译    | CAD 全家桶 — DWG↔DXF 转换、文字提取/翻译、图层管理、SVG 导出、批量处理 |
+| **email-eml**           | 生成邮件、.eml            | 生成 .eml 邮件文件，支持收件人/主题/正文（签名由用户在 Outlook 手动添加） |
+| **markitdown**          | 转换 md、PDF 转 markdown | 使用 Microsoft MarkItDown 将 20+ 格式转换为 Markdown，保留文档结构 |
+| **minimaxi-mmx**        | MiniMax、mmx、图片生成、TTS | MiniMax 多模态 AI CLI — 文字对话、图片/视频生成、TTS、音乐、网页搜索、图像理解、批量分析 |
+| **mmx-cli**             | mmx 命令行              | MiniMax 多模态 CLI — 文字、图片生成、视频、语音合成、音乐创作 |
+| **pdf**                 | PDF 操作、建筑图纸          | PDF 完整操作 — 文本/表格提取、合并/分割/旋转、水印、表单、OCR、AI 视觉图纸审查 |
+| **pptx**                | .pptx PowerPoint     | 模板编辑（解包/编辑/打包）或 pptxgenjs 从零创建 — 设计指南、配色方案、视觉 QA |
+| **skill-creator**       | 创建 skill             | 完整技能开发周期 — 起草、子代理测试、人工审查、迭代、基准测试、描述优化 |
+| **tendo-brand**         | Tendo、品牌样式           | 应用 Tendo Technology 官方品牌主题（色彩、字体、视觉样式）至演示和文稿 |
+| **theme-factory**       | 主题、styling           | 10 种专业配色/字体主题工具包 + 自定义主题生成，适用于幻灯片、文档、报告、HTML 页面 |
+| **xlsx**                | .xlsx Excel          | Excel via openpyxl 和 pandas — 公式、财务配色、LibreOffice 重算、零错误要求 |
 
 ## 目录结构
 
