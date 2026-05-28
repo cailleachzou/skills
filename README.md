@@ -21,6 +21,7 @@
 | **skill-creator**       | 创建 skill             | 完整技能开发周期 — 起草、子代理测试、人工审查、迭代、基准测试、描述优化 |
 | **tendo-brand**         | Tendo、品牌样式           | 应用 Tendo Technology 官方品牌主题（色彩、字体、视觉样式）至演示和文稿 |
 | **theme-factory**       | 主题、styling           | 10 种专业配色/字体主题工具包 + 自定义主题生成，适用于幻灯片、文档、报告、HTML 页面 |
+| **umi-ocr**             | OCR、文字识别、图片转文字     | 离线 OCR — 截图/照片/PDF 文字提取，基于 Umi-OCR HTTP API，纯文本输出 |
 | **xlsx**                | .xlsx Excel          | Excel via openpyxl 和 pandas — 公式、财务配色、LibreOffice 重算、零错误要求 |
 
 ## 目录结构
