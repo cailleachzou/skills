@@ -16,7 +16,7 @@
 | **markitdown**          | 转换 md、PDF 转 markdown | 使用 Microsoft MarkItDown 将 20+ 格式转换为 Markdown，保留文档结构 |
 | **minimaxi-mmx**        | MiniMax、mmx、图片生成、TTS | MiniMax 多模态 AI CLI — 文字对话、图片/视频生成、TTS、音乐、网页搜索、图像理解、批量分析 |
 | **mmx-cli**             | mmx 命令行              | MiniMax 多模态 CLI — 文字、图片生成、视频、语音合成、音乐创作 |
-| **pdf**                 | PDF 操作、建筑图纸          | PDF 完整操作 — 文本/表格提取、合并/分割/旋转、水印、表单、OCR、AI 视觉图纸审查 |
+| **pdf**                 | PDF 操作、建筑图纸          | PDF 完整操作 — 文本/表格提取、合并/分割/旋转、水印、表单、自动 OCR/MCP fallback（pdfplumber → UMI-OCR → vision）、AI 视觉图纸审查 |
 | **pptx**                | .pptx PowerPoint     | 模板编辑（解包/编辑/打包）或 pptxgenjs 从零创建 — 设计指南、配色方案、视觉 QA |
 | **skill-creator**       | 创建 skill             | 完整技能开发周期 — 起草、子代理测试、人工审查、迭代、基准测试、描述优化 |
 | **tendo-brand**         | Tendo、品牌样式           | 应用 Tendo Technology 官方品牌主题（色彩、字体、视觉样式）至演示和文稿 |
@@ -55,7 +55,7 @@ git clone https://github.com/cailleachzou/skills.git
 | ----------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --- |
 | **markitdown**          | `pip install 'markitdown[all]'`                                             | markitdown CLI                                                               |     |
 | **xlsx**                | `openpyxl`, `pandas`                                                        | LibreOffice (`soffice`)                                                      |     |
-| **pdf**                 | `pypdf`, `pdfplumber`, `reportlab`, `pypdfium2`, `pytesseract`, `pdf2image` | Poppler utils (`pdftotext`, `pdfimages`), qpdf                               |     |
+| **pdf**                 | `pypdf`, `pdfplumber`, `reportlab`, `pypdfium2`, `pdf2image`, `pytest`     | Poppler utils (`pdftotext`, `pdfimages`); Umi-OCR (本地 HTTP API :1224)        |     |
 | **pptx**                | `markitdown[pptx]`, `Pillow`                                                | LibreOffice, Poppler (`pdftoppm`), npm `pptxgenjs`                           |     |
 | **docx**                | —                                                                           | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`)                        |     |
 | **cli-anything-ffmpeg** | `click >= 8.0`                                                              | ffmpeg, ffprobe                                                              |     |
@@ -93,6 +93,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/06/03** pdf skill 新增自动 OCR/MCP fallback 链：`pdf/scripts/extract_with_fallback.py` 按页判定 `pdfplumber` → `UMI-OCR` → `mcp__MiniMax__understand_image`，输出带 `(source: ...)` 标签的合并 TXT；17 个测试 + 3 个 evals 场景；修复 `text_threshold` no-op 与加密 PDF 未检测两个 spec 合规 bug
 - **2026/06/03** diagram-skill 升级为 subagent 架构：新增 `agents/mermaid-agent.md` 路由 15 种语法、`agents/examples-agent.md` 维护范本、`examples/` 6 个范本文件；新增 `.gitignore` 屏蔽 Slidev 符号链接、Python/Node 缓存
 - **2026/05/27** 合并 dxf-text-translate 至 dxf-dwg-converter；新增环境依赖说明；bailian-cli 限制为 ASR only
 - **2026/05/26** 新增 bailian-cli、cli-anything-ffmpeg、dxf-text-translate、mmx-cli；同步 SKILLS.md 与 README.md
