@@ -96,3 +96,28 @@ def run_ocr_fallback(pages, ocr_lang="简体中文"):
         except Exception as e:
             print(f"[warn] OCR failed on page {p.page_num}: {e}", file=sys.stderr)
             p.source = "needs-vision"
+
+
+class OutputMerger:
+    """Assemble extracted_text.txt with per-page source tags."""
+
+    def __init__(self, pages):
+        self.pages = pages
+
+    def _render_block(self, page):
+        header = f"=== Page {page.page_num} (source: {page.source}) ==="
+        if page.source == "pdfplumber":
+            body = page.text
+        elif page.source == "umi-ocr":
+            body = page.ocr_text
+        elif page.source == "needs-vision":
+            body = f"[image: {page.image_path} — please run mcp__MiniMax__understand_image for semantic understanding]"
+        else:
+            body = page.text
+        return f"{header}\n{body}\n"
+
+    def write(self, output_path):
+        content = "\n".join(self._render_block(p) for p in self.pages)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return output_path
