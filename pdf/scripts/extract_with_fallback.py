@@ -9,6 +9,10 @@ from dataclasses import dataclass
 
 import pdfplumber
 
+# Allow `python pdf/scripts/extract_with_fallback.py ...` direct invocation
+# by adding the parent (pdf/) dir to sys.path so `from scripts.ocr_client import ...` works.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from scripts.ocr_client import OCRClient, OCRUnavailable
 
 
@@ -121,3 +125,80 @@ class OutputMerger:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(content)
         return output_path
+
+
+def extract_tables(pdf_path, output_path):
+    """Extract tables to extracted_tables.txt. Returns True if any tables found."""
+    all_tables = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for i, page in enumerate(pdf.pages, start=1):
+            for j, table in enumerate(page.extract_tables() or []):
+                non_empty = [row for row in table if any(cell for cell in row if cell)]
+                if not non_empty:
+                    continue
+                rows = [" | ".join(str(c).strip() if c else "" for c in row) for row in non_empty]
+                all_tables.append(f"=== Page {i} - Table {j+1} ===\n" + "\n".join(rows))
+    if not all_tables:
+        return False
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("\n\n".join(all_tables))
+    return True
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Extract text from PDF with per-page fallback: pdfplumber → UMI-OCR → vision marker."
+    )
+    parser.add_argument("pdf_path")
+    parser.add_argument("output_dir")
+    parser.add_argument("--ocr-lang", default="简体中文", help="UMI-OCR language (default: 简体中文)")
+    parser.add_argument("--text-threshold", type=int, default=50, help="Min chars/page to skip OCR (default: 50)")
+    parser.add_argument("--scale", type=float, default=2.0, help="PNG export scale (default: 2.0)")
+    parser.add_argument("--skip-ocr", action="store_true", help="Skip UMI-OCR phase (debug)")
+    args = parser.parse_args()
+
+    if not os.path.exists(args.pdf_path):
+        print(f"Error: PDF not found: {args.pdf_path}", file=sys.stderr)
+        sys.exit(1)
+
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    # Phase 1: text extract
+    print(f"[1/4] Extracting text from {args.pdf_path} ...", file=sys.stderr)
+    extractor = TextExtractor(args.pdf_path, text_threshold=args.text_threshold)
+    pages = extractor.extract()
+    no_text = [p for p in pages if not p.is_text_page()]
+    print(f"      {len(pages)} page(s), {len(no_text)} need fallback", file=sys.stderr)
+
+    # Export PNGs for fallback pages
+    if no_text:
+        print(f"[2/4] Exporting {len(no_text)} no-text page(s) to PNG ...", file=sys.stderr)
+        extractor.export_images(no_text, args.output_dir, scale=args.scale)
+
+    # Phase 2: OCR fallback
+    if not args.skip_ocr and no_text:
+        print(f"[3/4] Running UMI-OCR fallback ...", file=sys.stderr)
+        run_ocr_fallback(pages, ocr_lang=args.ocr_lang)
+
+    # Tables
+    tables_path = os.path.join(args.output_dir, "extracted_tables.txt")
+    if extract_tables(args.pdf_path, tables_path):
+        print(f"[4/4] Tables written to {tables_path}", file=sys.stderr)
+    else:
+        print("[4/4] No tables found", file=sys.stderr)
+
+    # Output merger
+    text_path = os.path.join(args.output_dir, "extracted_text.txt")
+    OutputMerger(pages).write(text_path)
+    print(f"\nDone. Wrote: {text_path}", file=sys.stderr)
+
+    needs_vision = [p for p in pages if p.source == "needs-vision"]
+    if needs_vision:
+        print(f"\n{len(needs_vision)} page(s) marked 'needs-vision'.", file=sys.stderr)
+        print("Claude: read extracted_text.txt, find '=== Page N (source: needs-vision) ===' markers,", file=sys.stderr)
+        print("        call mcp__MiniMax__understand_image for each, write results back to the file.", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
