@@ -44,3 +44,18 @@ class TextExtractor:
                     )
                 )
         return results
+
+    def export_images(self, pages, output_dir, scale=2.0):
+        """Render each page to PNG using pypdfium2; set page.image_path."""
+        import pypdfium2 as pdfium
+        os.makedirs(output_dir, exist_ok=True)
+        pdf = pdfium.PdfDocument(self.pdf_path)
+        for page_result in pages:
+            idx = page_result.page_num - 1
+            if idx < 0 or idx >= len(pdf):
+                continue
+            bitmap = pdf[idx].render(scale=scale)
+            img = bitmap.to_pil()
+            out = os.path.join(output_dir, f"page_{page_result.page_num:03d}.png")
+            img.save(out, "PNG")
+            page_result.image_path = out
