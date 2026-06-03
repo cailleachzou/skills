@@ -170,3 +170,24 @@ def test_skip_ocr_marks_no_text_pages_as_needs_vision(scanned_pdf, tmp_path):
     assert "=== Page 3 (source: needs-vision) ===" in text
     # And no page should be mislabeled as pdfplumber
     assert "(source: pdfplumber)" not in text
+
+
+def test_corrupt_pdf_exits_clean_with_no_output_dir(tmp_path):
+    """Regression: encrypted/corrupt PDFs must fail fast (exit 1) and leave no
+    half-written output directory. Spec: 'PDF 加密/损坏 | 启动时检测，stderr 报错退出，不留半成品'.
+
+    Final code review caught: previously only `os.path.exists` was checked, so a
+    corrupt PDF would crash mid-pipeline and leave a partial extracted_text.txt.
+    """
+    corrupt = tmp_path / "corrupt.pdf"
+    corrupt.write_bytes(b"this is not a PDF, just garbage bytes")
+    out_dir = tmp_path / "out_should_not_exist"
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    result = subprocess.run(
+        [sys.executable, "pdf/scripts/extract_with_fallback.py", str(corrupt), str(out_dir)],
+        capture_output=True, text=True, cwd=repo_root,
+    )
+    assert result.returncode != 0, f"Expected non-zero exit for corrupt PDF, got 0. stderr: {result.stderr}"
+    assert "Error" in result.stderr, f"Expected error message on stderr, got: {result.stderr}"
+    # Output directory should NOT have been created (no half-baked output)
+    assert not out_dir.exists(), f"Output dir was created despite failure: {out_dir}"

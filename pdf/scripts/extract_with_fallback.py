@@ -164,6 +164,16 @@ def main():
         print(f"Error: PDF not found: {args.pdf_path}", file=sys.stderr)
         sys.exit(1)
 
+    # Fail fast on encrypted/corrupt PDFs so we never leave a half-written output
+    # directory. Per spec: "PDF 加密/损坏 | 启动时检测，stderr 报错退出，不留半成品".
+    try:
+        with pdfplumber.open(args.pdf_path) as _pdf:
+            _ = len(_pdf.pages)
+    except Exception as e:
+        print(f"Error: cannot read PDF ({type(e).__name__}: {e}). "
+              f"If encrypted, decrypt it first; if corrupt, re-export the source.", file=sys.stderr)
+        sys.exit(1)
+
     os.makedirs(args.output_dir, exist_ok=True)
 
     # Phase 1: text extract
