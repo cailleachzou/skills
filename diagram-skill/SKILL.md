@@ -1,6 +1,6 @@
 ---
 name: diagram-skill
-description: 生成或编辑 Mermaid 图表代码。当用户提到「画图」「生成图表」「mermaid」「甘特图」「流程图」「时序图」「思维导图」「架构图」「ER图」「状态图」「修改图表」「调整图表」时触发。**始终优先委托 subagent 处理** — 将需求和 SKILL.md 上下文一并交给 subagent 生成或修改图表代码。支持 flowchart、sequenceDiagram、gantt、mindmap、architecture-beta、block、classChart、erDiagram、stateDiagram、pie、timeline、journey、requirement、C4Context、C4Deployment、C4Container、C4Component、C4Dynamic、dataflow 等所有 Mermaid 图表类型。提供标准语法、常用模板、样式配置。
+description: 生成或编辑 Mermaid 图表代码。当用户提到「画图」「生成图表」「mermaid」「甘特图」「流程图」「时序图」「思维导图」「架构图」「ER图」「状态图」「修改图表」「调整图表」时触发。**始终优先委托 subagent 处理** — 将需求、图表类型、输出位置打包后调用 `agents/mermaid-agent.md`，由 subagent 路由 15 种语法类型生成代码。需要生成/维护范本时调用 `agents/examples-agent.md` 写入 `examples/` 目录。支持 flowchart、sequenceDiagram、gantt、mindmap、architecture-beta、block、classChart、erDiagram、stateDiagram、pie、timeline、journey、requirement、C4Context、C4Deployment、C4Container、C4Component、C4Dynamic、dataflow 等所有 Mermaid 图表类型。提供标准语法、常用模板、样式配置。详细调度协议见正文「Subagent 调度协议」一节。
 ---
 
 # Diagram Skill — Mermaid 图表生成
@@ -694,6 +694,75 @@ flowchart LR
 5. **避免超长节点文本**，长文本用 `\n` 换行
 6. **甘特图日期用 `YYYY-MM-DD`**，进度条格式：`🔵 完成` / `🔴 未开始`
 7. **思维导图最多三层**，不展开细节
+
+---
+
+## Subagent 调度协议
+
+本节定义主 agent 何时、如何把任务委托给 `agents/` 下的 subagent。**所有 Mermaid 图表生成/编辑一律走 subagent**，主 agent 不直接手写 mermaid 代码。
+
+### 触发条件
+
+满足任一即触发派单：
+
+- 用户提到「画图/生成图表/mermaid/甘特图/流程图/时序图/架构图/ER图/状态图/思维导图/饼图/时间线/旅程/需求图/C4」等关键词
+- 用户给出主题要求可视化（如「给我画个弱电项目立项流程」）
+- 用户提供现有 mermaid 代码要求「调整/修改/翻译/优化」
+- 用户要求新增/修改 `examples/` 下的范本文件
+
+### 上下文打包
+
+主 agent 按 `type` 从 `references/` 加载对应语法段，**按需取用**：
+
+1. SKILL.md 核心原则全文（约 8 行）
+2. SKILL.md 输出规范 7 条
+3. 路由表对应 `references/*.md` 文件全文
+4. 常见错误排查表（可选）
+
+**不**全文塞 708 行 SKILL.md，单次上下文 ≤ 1500 行。避免重复塞同类型图表的语法段（每 type 只塞自己对应的 references）。
+
+### 派单模板
+
+照 `agents/mermaid-agent.md` 的 Dispatch prompt 模板填入 4 个变量：
+
+| 变量 | 来源 |
+|------|------|
+| `{type}` | 用户需求推断（flowchart / gantt / sequence …） |
+| `{user_requirement}` | 用户原始需求（中文/英文） |
+| `{output_target}` | 嵌入位置（`<文件路径> §<段落>`） |
+| `{塞入的上下文}` | 按上节打包 |
+
+**返回结构必须是 JSON**，不是 Markdown 解释。subagent 自检后再返回。
+
+### 回收验证
+
+主 agent 收到 JSON 后做 3 步验证：
+
+1. **结构验证**：JSON 包含 4 个字段（`mermaid_code` / `type` / `node_summary` / `risks`）
+2. **节点数验证**：`node_summary` 节点 ≤ 25（超出则在 `risks` 警告用户拆分）
+3. **嵌入验证**：把 `mermaid_code` 嵌入 `output_target` 位置，向用户展示
+
+可选：调用 `npx -p @mermaid-js/mermaid-cli mmdc -i input.mmd -o out.svg` 跑渲染验证语法（若有 mmdc）。
+
+### 错误处理
+
+| 情况 | 处理 |
+|------|------|
+| subagent 返回 `risks` 非空 | 主 agent 主动提示用户（节点超长/语法限制/可读性问题） |
+| JSON 解析失败 | 重派一次，要求自检后重发 |
+| 重派仍失败 | 主 agent 自行 fallback 修语法，记录到变更日志 |
+| 用户提供 `existing_code` 改图 | 派单时传 `existing_code` 字段，subagent 在原代码上 diff 修改 |
+| C4 类型歧义（用户说"C4"没说哪种） | 追问用户：Context / Container / Component / Dynamic / Deployment |
+
+### examples/ 范本维护
+
+需要新增/修改范本时派 `agents/examples-agent.md`：
+
+- `mode=bootstrap` — 首次建 6 个范本
+- `mode=extend` — 新增图表类型范本
+- `mode=update` — 改单个范本
+
+**范本与 `references/*.md` 不重复**：references 是语法字典，范本是 Tendo 弱电业务示例。范本主题要贴近实际工作（如弱电立项流程、门禁时序、CCTV 架构、四大系统 mindmap、设备 ER）。
 
 ---
 

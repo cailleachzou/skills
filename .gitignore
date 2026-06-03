@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node
+node_modules/
+
+# 本地 Slidev 项目（符号链接到 .agents/skills/slidev，非 skill）
+slidev/
+
+# umi-ocr 源码子仓库（独立 .git，非本仓库内容）
+umi-ocr-src/
+
+# Claude Code 本地配置（每个 skill 下若有 .claude/settings.local.json）
+.claude/settings.local.json
+**/.claude/settings.local.json
