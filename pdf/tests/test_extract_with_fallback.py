@@ -1,7 +1,9 @@
 """Integration tests for extract_with_fallback pipeline."""
 import os
+from unittest.mock import patch
 
-from scripts.extract_with_fallback import TextExtractor
+from scripts.extract_with_fallback import TextExtractor, run_ocr_fallback
+from scripts.ocr_client import OCRUnavailable
 
 
 def test_text_extractor_returns_per_page_results(text_only_pdf):
@@ -35,3 +37,61 @@ def test_text_extractor_exports_images_for_no_text_pages(scanned_pdf, output_dir
         assert p.image_path is not None
         assert os.path.exists(p.image_path)
         assert p.image_path.endswith(f"page_{p.page_num:03d}.png")
+
+
+def test_run_ocr_fallback_calls_ocr_for_no_text_pages(scanned_pdf, output_dir):
+    extractor = TextExtractor(scanned_pdf, text_threshold=50)
+    pages = extractor.extract()
+    extractor.export_images([p for p in pages if not p.is_text_page()], output_dir)
+    with patch("scripts.extract_with_fallback.OCRClient") as MockClient:
+        instance = MockClient.return_value
+        instance.ensure_running.return_value = True
+        instance.recognize_image.return_value = "OCR'd text for page"
+        run_ocr_fallback(pages, ocr_lang="简体中文")
+    for p in pages:
+        if not p.is_text_page():
+            assert p.source == "umi-ocr"
+            assert p.ocr_text == "OCR'd text for page"
+
+
+def test_run_ocr_fallback_marks_pages_when_ocr_unavailable(scanned_pdf, output_dir):
+    extractor = TextExtractor(scanned_pdf, text_threshold=50)
+    pages = extractor.extract()
+    extractor.export_images([p for p in pages if not p.is_text_page()], output_dir)
+    with patch("scripts.extract_with_fallback.OCRClient") as MockClient:
+        instance = MockClient.return_value
+        instance.ensure_running.side_effect = OCRUnavailable("OCR not available")
+        run_ocr_fallback(pages)
+    for p in pages:
+        if not p.is_text_page():
+            assert p.source == "needs-vision"
+
+
+def test_run_ocr_fallback_marks_pages_on_empty_result(scanned_pdf, output_dir):
+    extractor = TextExtractor(scanned_pdf, text_threshold=50)
+    pages = extractor.extract()
+    extractor.export_images([p for p in pages if not p.is_text_page()], output_dir)
+    with patch("scripts.extract_with_fallback.OCRClient") as MockClient:
+        instance = MockClient.return_value
+        instance.ensure_running.return_value = True
+        instance.recognize_image.return_value = ""  # empty
+        run_ocr_fallback(pages)
+    for p in pages:
+        if not p.is_text_page():
+            assert p.source == "needs-vision"
+
+
+def test_run_ocr_fallback_marks_pages_with_missing_image_path(scanned_pdf):
+    extractor = TextExtractor(scanned_pdf, text_threshold=50)
+    pages = extractor.extract()
+    # Intentionally skip export_images so image_path stays None
+    with patch("scripts.extract_with_fallback.OCRClient") as MockClient:
+        instance = MockClient.return_value
+        instance.ensure_running.return_value = True
+        instance.recognize_image.return_value = "should not be called"
+        run_ocr_fallback(pages)
+    for p in pages:
+        if not p.is_text_page():
+            assert p.source == "needs-vision"
+            # recognize_image should NOT have been called because image_path was None
+            instance.recognize_image.assert_not_called()

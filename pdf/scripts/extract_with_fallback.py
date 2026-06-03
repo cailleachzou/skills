@@ -9,6 +9,8 @@ from dataclasses import dataclass
 
 import pdfplumber
 
+from scripts.ocr_client import OCRClient, OCRUnavailable
+
 
 @dataclass
 class PageResult:
@@ -59,3 +61,38 @@ class TextExtractor:
             out = os.path.join(output_dir, f"page_{page_result.page_num:03d}.png")
             img.save(out, "PNG")
             page_result.image_path = out
+
+
+def run_ocr_fallback(pages, ocr_lang="简体中文"):
+    """Phase 2: for pages that pdfplumber couldn't read, try UMI-OCR.
+
+    Mutates each PageResult in-place:
+      - Sets source='umi-ocr' and ocr_text on success
+      - Sets source='needs-vision' if OCR unavailable or returns empty
+    Never raises; logs to stderr on failure.
+    """
+    no_text = [p for p in pages if not p.is_text_page()]
+    if not no_text:
+        return
+    try:
+        client = OCRClient()
+        client.ensure_running()
+    except (OCRUnavailable, OSError) as e:
+        print(f"[warn] Umi-OCR unavailable, marking {len(no_text)} page(s) for vision: {e}", file=sys.stderr)
+        for p in no_text:
+            p.source = "needs-vision"
+        return
+    for p in no_text:
+        if not p.image_path or not os.path.exists(p.image_path):
+            p.source = "needs-vision"
+            continue
+        try:
+            text = client.recognize_image(p.image_path, language=ocr_lang)
+            if text:
+                p.source = "umi-ocr"
+                p.ocr_text = text
+            else:
+                p.source = "needs-vision"
+        except Exception as e:
+            print(f"[warn] OCR failed on page {p.page_num}: {e}", file=sys.stderr)
+            p.source = "needs-vision"
