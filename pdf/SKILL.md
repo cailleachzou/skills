@@ -308,50 +308,65 @@ with open("encrypted.pdf", "wb") as output:
 | 扫描件 OCR | pytesseract | 先转为图片 |
 | 填写 PDF 表单 | pdf-lib 或 pypdf（见 FORMS.md） | 参见 FORMS.md |
 
-## AI 视觉审图
+## AI 视觉审图（带 OCR/MCP fallback）
 
-两阶段 AI 审图流程 — 文字提取 + 视觉复核，比单独看图或单独读文字更准确。
+新脚本 `extract_with_fallback.py` 把整个审图流程串起来：先用 pdfplumber 逐页抽文，**抽不到文字的页自动调 UMI-OCR**，**OCR 也抽不到的页标记为 `needs-vision`**，由 Claude 在主会话里调 `mcp__MiniMax__understand_image` 做语义理解。
 
-### 步骤 1：提取文本并生成审图提示
+### 调用方式
 
 ```bash
-python scripts/extract_and_prompt.py <input.pdf> <output_dir>
+python scripts/extract_with_fallback.py <input.pdf> <output_dir> \
+    [--ocr-lang 简体中文] [--text-threshold 50] [--scale 2.0] \
+    [--skip-ocr]
 ```
 
-输出两个文件：
-- `<output_dir>/extracted_text.txt` — PDF 原始文字提取
-- `<output_dir>/review_prompt.md` — 可直接发给 mcp 的结构化 prompt
+输出到 `<output_dir>/`：
+- `extracted_text.txt` — 合并结果，每页带来源标签
+- `extracted_tables.txt` — 表格（如果有）
+- `page_NNN.png` — 导出的页面图（OCR 和 vision 共用）
 
-### 步骤 2：将 PDF 页面导出为图片
-
-使用 pypdfium2 将 PDF 转为图片（用于视觉复核）：
-
-```python
-import pypdfium2 as pdfium
-
-pdf = pdfium.PdfDocument("input.pdf")
-for i, page in enumerate(pdf):
-    bitmap = page.render(scale=2.0)  # 2x 缩放 ≈ 144 DPI，适合视觉 AI
-    img = bitmap.to_pil()
-    img.save(f"page_{i+1:03d}.png", "PNG")
-```
-
-### 步骤 3：AI 视觉核验
-
-读取 `review_prompt.md` 内容，调用 mcp 做双模态核验：
+### 决策树
 
 ```
-mcp__MiniMax__understand_image(
-    prompt="<从 review_prompt.md 复制的 prompt>",
-    image_source="./output_dir/page_001.png"
-)
+每页 pdfplumber 抽文
+   ├─ char_count ≥ 阈值（默认 50）→ 标签 (source: pdfplumber)
+   └─ char_count < 阈值 → 导出 PNG → UMI-OCR
+                              ├─ OCR 成功 → 标签 (source: umi-ocr)
+                              └─ OCR 失败/空 → 标签 (source: needs-vision)
+                                                  ↓
+                                        Claude 调 mcp__MiniMax__understand_image
+                                                  ↓
+                                        Claude 把结果回写到 extracted_text.txt
 ```
 
-### 多页审图
+### 逐页标签格式
 
-1. 先用 `extract_and_prompt.py` 生成一份 prompt（内容通用）
-2. 将所有页面导出为图片
-3. 逐页调用 mcp 视觉复核
+```
+=== Page 1 (source: pdfplumber) ===
+[正文...]
+
+=== Page 2 (source: umi-ocr) ===
+[OCR 抽出的文字...]
+
+=== Page 3 (source: needs-vision) ===
+[image: page_003.png — please run mcp__MiniMax__understand_image for semantic understanding]
+```
+
+### Claude 侧：处理 `needs-vision` 标记
+
+1. 读 `extracted_text.txt`，正则匹配 `=== Page (\d+) \(source: needs-vision\) ===` 块
+2. 对每个匹配，取 `image:` 后的 PNG 路径
+3. 调 `mcp__MiniMax__understand_image`，prompt 用下面模板（针对弱电/建筑审图）：
+   ```
+   你在看一份弱电/建筑专业图纸。请描述：
+   - 图中可见的设备、机房、管井、点位
+   - 系统标注（CCTV/门禁/BA/网络/消防等）
+   - 房间名称、功能区
+   - 标高、尺寸、比例尺
+   - 任何文字标注（精确转写）
+   ```
+4. 把 vision 输出**就地替换**对应 `needs-vision` 块的内容（保留 `=== Page N (source: mcp-vision) ===` 头）
+5. 改完保存回 `extracted_text.txt`
 
 ### 弱电/建筑审图增强
 
