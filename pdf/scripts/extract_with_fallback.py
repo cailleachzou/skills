@@ -176,8 +176,12 @@ def main():
         print(f"[2/4] Exporting {len(no_text)} no-text page(s) to PNG ...", file=sys.stderr)
         extractor.export_images(no_text, args.output_dir, scale=args.scale)
 
-    # Phase 2: OCR fallback
-    if not args.skip_ocr and no_text:
+    # Phase 2: OCR fallback (or skip → mark needs-vision)
+    if args.skip_ocr and no_text:
+        print(f"[3/4] --skip-ocr set: marking {len(no_text)} no-text page(s) as needs-vision ...", file=sys.stderr)
+        for p in no_text:
+            p.source = "needs-vision"
+    elif no_text:
         print(f"[3/4] Running UMI-OCR fallback ...", file=sys.stderr)
         run_ocr_fallback(pages, ocr_lang=args.ocr_lang)
 

@@ -1,5 +1,7 @@
 """Integration tests for extract_with_fallback pipeline."""
 import os
+import subprocess
+import sys
 from unittest.mock import patch
 
 from scripts.extract_with_fallback import PageResult, TextExtractor, run_ocr_fallback
@@ -123,3 +125,25 @@ def test_output_merger_writes_per_page_blocks(tmp_path):
     p2 = content.index("Page 2")
     p3 = content.index("Page 3")
     assert p1 < p2 < p3
+
+
+def test_skip_ocr_marks_no_text_pages_as_needs_vision(scanned_pdf, tmp_path):
+    """Regression: --skip-ocr must re-label no-text pages as needs-vision, not pdfplumber.
+
+    Found in Task 10 smoke test: scanned PDF run with --skip-ocr left source='pdfplumber'
+    on empty pages, breaking the output contract that downstream MCP consumers rely on.
+    """
+    out_dir = tmp_path / "out"
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    result = subprocess.run(
+        [sys.executable, "pdf/scripts/extract_with_fallback.py", "--skip-ocr", scanned_pdf, str(out_dir)],
+        capture_output=True, text=True, cwd=repo_root,
+    )
+    assert result.returncode == 0, f"CLI failed: {result.stderr}"
+    text = (out_dir / "extracted_text.txt").read_text(encoding="utf-8")
+    # Every page in a scanned PDF should be marked needs-vision when OCR is skipped
+    assert "=== Page 1 (source: needs-vision) ===" in text
+    assert "=== Page 2 (source: needs-vision) ===" in text
+    assert "=== Page 3 (source: needs-vision) ===" in text
+    # And no page should be mislabeled as pdfplumber
+    assert "(source: pdfplumber)" not in text
