@@ -51,35 +51,35 @@ git clone https://github.com/cailleachzou/skills.git
 **Python 路径**（Windows）：`C:\Users\59620\AppData\Local\Python\python.exe`
 > 所有 Python 技能均使用此路径（不要用裸 `python`，Windows 上不存在）
 
-| 技能 | Python 包 | 其他依赖 |
-|------|-----------|---------|
-| **markitdown** | `pip install 'markitdown[all]'` | markitdown CLI |
-| **xlsx** | `openpyxl`, `pandas` | LibreOffice (`soffice`) |
-| **pdf** | `pypdf`, `pdfplumber`, `reportlab`, `pypdfium2`, `pytesseract`, `pdf2image` | Poppler utils (`pdftotext`, `pdfimages`), qpdf |
-| **pptx** | `markitdown[pptx]`, `Pillow` | LibreOffice, Poppler (`pdftoppm`), npm `pptxgenjs` |
-| **docx** | — | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`) |
-| **cli-anything-ffmpeg** | `click >= 8.0` | ffmpeg, ffprobe |
-| **dxf-dwg-converter** | `ezdxf` | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + 文字提取/翻译 |
-| **skill-creator** | — | （Eval 工具，脚本见 skill 内部） |
+| 技能                      | Python 包                                                                    | 其他依赖                                                                         |     |
+| ----------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --- |
+| **markitdown**          | `pip install 'markitdown[all]'`                                             | markitdown CLI                                                               |     |
+| **xlsx**                | `openpyxl`, `pandas`                                                        | LibreOffice (`soffice`)                                                      |     |
+| **pdf**                 | `pypdf`, `pdfplumber`, `reportlab`, `pypdfium2`, `pytesseract`, `pdf2image` | Poppler utils (`pdftotext`, `pdfimages`), qpdf                               |     |
+| **pptx**                | `markitdown[pptx]`, `Pillow`                                                | LibreOffice, Poppler (`pdftoppm`), npm `pptxgenjs`                           |     |
+| **docx**                | —                                                                           | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`)                        |     |
+| **cli-anything-ffmpeg** | `click >= 8.0`                                                              | ffmpeg, ffprobe                                                              |     |
+| **dxf-dwg-converter**   | `ezdxf`                                                                     | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + 文字提取/翻译 |     |
+| **skill-creator**       | —                                                                           | （Eval 工具，脚本见 skill 内部）                                                       |     |
 
 ### Node.js / npm 包
 
-| 技能 | 安装命令 |
-|------|---------|
-| **mmx-cli** | `npm install -g mmx-cli` |
-| **docx** | `npm install -g docx` |
-| **pptx** | `npm install -g pptxgenjs` |
+| 技能          | 安装命令                       |
+| ----------- | -------------------------- |
+| **mmx-cli** | `npm install -g mmx-cli`   |
+| **docx**    | `npm install -g docx`      |
+| **pptx**    | `npm install -g pptxgenjs` |
 
 ### CLI 工具
 
-| 工具 | 技能 | 说明 |
-|------|------|------|
-| **pandoc** | docx | Markdown → docx 转换 |
-| **LibreOffice** (`soffice`) | xlsx, pptx, docx | 公式重算、格式转换、接受修订 |
-| **ffmpeg / ffprobe** | cli-anything-ffmpeg | 音视频转码 |
-| **Poppler utils** (`pdftotext`, `pdftoppm`, `pdfimages`) | pptx, docx, pdf | PDF 文本提取 / 渲染 |
-| **LibreDWG** | dxf-dwg-converter | DWG ↔ DXF 转换、SVG 导出、图层读取 |
-| **bl** (bailian-cli) | bailian-cli | ASR 语音转文字（唯一用途）|
+| 工具                                                       | 技能                  | 说明                       |
+| -------------------------------------------------------- | ------------------- | ------------------------ |
+| **pandoc**                                               | docx                | Markdown → docx 转换       |
+| **LibreOffice** (`soffice`)                              | xlsx, pptx, docx    | 公式重算、格式转换、接受修订           |
+| **ffmpeg / ffprobe**                                     | cli-anything-ffmpeg | 音视频转码                    |
+| **Poppler utils** (`pdftotext`, `pdftoppm`, `pdfimages`) | pptx, docx, pdf     | PDF 文本提取 / 渲染            |
+| **LibreDWG**                                             | dxf-dwg-converter   | DWG ↔ DXF 转换、SVG 导出、图层读取 |
+| **bl** (bailian-cli)                                     | bailian-cli         | ASR 语音转文字（唯一用途）          |
 
 ### 其他环境
 
