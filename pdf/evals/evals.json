@@ -1,0 +1,39 @@
+{
+  "evals": [
+    {
+      "id": "text_only_pdf",
+      "name": "全文字 PDF — pdfplumber path only",
+      "description": "验证当 pdfplumber 能抽到文字时，OCR 和 vision 都不会被触发。",
+      "input_fixture": "tests/conftest.py:text_only_pdf",
+      "command": "python scripts/extract_with_fallback.py <pdf> <out>",
+      "expected": {
+        "all_pages_have_source": "pdfplumber",
+        "no_ocr_invocation": true,
+        "no_needs_vision_markers": true
+      }
+    },
+    {
+      "id": "scanned_pdf",
+      "name": "扫描件 PDF — UMI-OCR path",
+      "description": "验证无文字页自动走 UMI-OCR，结果写入 (source: umi-ocr)。",
+      "input_fixture": "tests/conftest.py:scanned_pdf",
+      "command": "python scripts/extract_with_fallback.py <pdf> <out>",
+      "expected": {
+        "all_pages_have_source": "umi-ocr",
+        "ocr_invocation_count_equals_page_count": true
+      }
+    },
+    {
+      "id": "mixed_pdf",
+      "name": "混合 PDF — text + scanned pages interleaved",
+      "description": "验证逐页判定正确：文字页走 pdfplumber，扫描页走 OCR（或 needs-vision）。",
+      "input_fixture": "tests/conftest.py:mixed_pdf + manual page masking",
+      "command": "python scripts/extract_with_fallback.py <pdf> <out>",
+      "expected": {
+        "text_pages_have_source": "pdfplumber",
+        "scanned_pages_have_source_in": ["umi-ocr", "needs-vision"],
+        "page_order_preserved": true
+      }
+    }
+  ]
+}
