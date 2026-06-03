@@ -29,6 +29,29 @@ def test_text_extractor_marks_scanned_pages(scanned_pdf):
         assert page.is_text_page() is False
 
 
+def test_text_threshold_actually_filters_pages(text_only_pdf):
+    """Regression: --text-threshold must actually gate is_text_page(), not be a no-op.
+
+    Bug found in final code review: is_text_page() hard-coded `> 0`, so the threshold
+    was set on the extractor but never consulted. This test sets a high threshold
+    so the existing ~80-char fixture text falls below it.
+    """
+    extractor = TextExtractor(text_only_pdf, text_threshold=200)
+    pages = extractor.extract()
+    for page in pages:
+        # All pages have ~80 chars, which is below the 200 threshold
+        assert 50 < page.char_count < 200
+        assert page.is_text_page() is False
+
+
+def test_low_threshold_keeps_text_page_as_text(text_only_pdf):
+    """Counter-test: text_threshold=10 should still accept ~80-char text pages."""
+    extractor = TextExtractor(text_only_pdf, text_threshold=10)
+    pages = extractor.extract()
+    for page in pages:
+        assert page.is_text_page() is True
+
+
 def test_text_extractor_exports_images_for_no_text_pages(scanned_pdf, output_dir):
     extractor = TextExtractor(scanned_pdf, text_threshold=50)
     pages = extractor.extract()

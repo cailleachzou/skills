@@ -22,11 +22,12 @@ class PageResult:
     text: str
     char_count: int
     image_path: str | None  # path to exported PNG, or None if not exported
+    text_threshold: int = 0  # threshold captured at extraction time
     source: str = "pdfplumber"  # one of: pdfplumber, umi-ocr, needs-vision
     ocr_text: str = ""
 
     def is_text_page(self):
-        return self.source == "pdfplumber" and self.char_count > 0
+        return self.source == "pdfplumber" and self.char_count >= self.text_threshold
 
 
 class TextExtractor:
@@ -47,6 +48,7 @@ class TextExtractor:
                         text=text,
                         char_count=len(text.strip()),
                         image_path=None,
+                        text_threshold=self.text_threshold,
                     )
                 )
         return results
