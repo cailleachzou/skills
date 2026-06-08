@@ -1,17 +1,17 @@
 ---
 name: "cli-anything-pdf2zh"
-description: "CLI harness for the PDFMathTranslate Windows EXE — translate PDFs (with layout preserved) from scripts and AI agents. Ships with a MiniMax translator patch that adds a new OpenAI-compatible service to the bundled pdf2zh.exe."
+description: "CLI harness for the PDFMathTranslate Windows EXE — translate PDFs (with layout preserved) from scripts and AI agents. Ships with a Xiaomi MiMo translator patch that adds a new OpenAI-compatible service to the bundled pdf2zh.exe."
 ---
 
 # cli-anything-pdf2zh
 
 > Translate PDFs from scripts / agents. Wraps `pdf2zh.exe` (PDFMathTranslate)
-> and adds a **MiniMax** translator via a one-shot patch into the bundled
+> and adds a **Xiaomi MiMo** translator via a one-shot patch into the bundled
 > `build/site-packages/pdf2zh/`.
 
 The harness **calls the real software** (the `pdf2zh.exe` bundled with
 PDFMathTranslate) for all translation. It does not reimplement the
-translator pipeline in Python. The MiniMax engine is added by patching
+translator pipeline in Python. The MiMo engine is added by patching
 `translator.py`, `pdf2zh.py`, and `converter.py` inside the bundled
 site-packages (idempotent — `.harness.bak` backups are written).
 
@@ -23,7 +23,7 @@ Use this CLI when you need to:
 
 * Translate a PDF (or batch of PDFs) from a script / agent
 * Switch between 23+ translation services (Google, OpenAI, DeepL,
-  MiniMax, …) without touching the pdf2zh GUI
+  MiMo, …) without touching the pdf2zh GUI
 * Inspect a PDF's page count / size / validity before translating
 * Inspect the SQLite translation cache (`~/.cache/pdf2zh/cache.v1.db`)
 * Read / write the JSON translator config (`~/.config/PDFMathTranslate/`)
@@ -45,12 +45,12 @@ beyond the bundled PDFMathTranslate surface — those are out of scope.
 cd "C:/Program Files/pdf2zh/agent-harness"
 pip install -e .
 #
-# 3. Install the MiniMax translator patch + set the API key
-#    (minimax is the default service — required for out-of-the-box translation)
+# 3. Install the Xiaomi MiMo translator patch + set the API key
+#    (mimo is the default service — required for out-of-the-box translation)
 cli-anything-pdf2zh patch install
-cli-anything-pdf2zh config set-key minimax MINIMAX_API_KEY <key>
-cli-anything-pdf2zh config set-key minimax MINIMAX_BASE_URL https://api.minimaxi.com/v1
-cli-anything-pdf2zh config set-key minimax MINIMAX_MODEL MiniMax-Text-01
+cli-anything-pdf2zh config set-key mimo MIMO_API_KEY <key>
+cli-anything-pdf2zh config set-key mimo MIMO_BASE_URL https://token-plan-cn.xiaomimimo.com/v1
+cli-anything-pdf2zh config set-key mimo MIMO_MODEL mimo-v2.5-pro
 #
 #    To use a different service, pass --service <name> (e.g. --service google
 #    for the no-key-needed fallback).
@@ -75,7 +75,7 @@ cli-anything-pdf2zh patch uninstall   # restores the original translator.py
 | `config`    | `list`, `get`, `set`, `delete`, `set-key`, `show-translator` | Read/write `~/.config/PDFMathTranslate/config.json` |
 | `inspect`   | —               | Detailed PDF inspection (alias of `info` with more fields) |
 | `cache`     | `summary`, `list`, `clear` | Query/clear the SQLite translation cache |
-| `patch`     | `status`, `install`, `uninstall` | Manage the MiniMax translator patch |
+| `patch`     | `status`, `install`, `uninstall` | Manage the Xiaomi MiMo translator patch |
 | `mcp`       | —               | Launch the EXE's MCP server (passthrough) |
 | `repl`      | —               | Default when no subcommand is given |
 
@@ -89,11 +89,11 @@ cli-anything-pdf2zh patch uninstall   # restores the original translator.py
 ### One-shot translation
 
 ```bash
-# English → Chinese, MiniMax (the default — needs API key configured)
+# English → Chinese, MiMo (the default — needs API key configured)
 cli-anything-pdf2zh translate paper.pdf -o out/
 
-# English → Japanese, MiniMax, explicit
-cli-anything-pdf2zh translate paper.pdf -o out/ --service minimax --lang-in en --lang-out ja
+# English → Japanese, MiMo, explicit
+cli-anything-pdf2zh translate paper.pdf -o out/ --service mimo --lang-in en --lang-out ja
 
 # Google fallback (no API key needed)
 cli-anything-pdf2zh translate paper.pdf -o out/ --service google
@@ -112,7 +112,7 @@ cli-anything-pdf2zh --json services list
 # [
 #   {"name": "google", "kind": "free", "key": "no", "desc": "Google Translate (web endpoint)"},
 #   ...
-#   {"name": "minimax", "kind": "key", "key": "yes", "desc": "MiniMax (added by harness patch)"}
+#   {"name": "mimo", "kind": "key", "key": "yes", "desc": "Xiaomi MiMo (added by harness patch)"}
 # ]
 
 cli-anything-pdf2zh --json translate paper.pdf -o out/
@@ -140,8 +140,8 @@ pdf2zh> pdf paper.pdf
   ✓ current_pdf = paper.pdf
 pdf2zh> out ./translated
   ✓ output_dir = ./translated
-pdf2zh> use minimax
-  ✓ service = minimax
+pdf2zh> use mimo
+  ✓ service = mimo
 pdf2zh> lang en zh
   ✓ lang = en -> zh
 pdf2zh> translate
@@ -157,15 +157,15 @@ pdf2zh> exit
 ```bash
 cli-anything-pdf2zh info paper.pdf
 cli-anything-pdf2zh --json cache summary
-cli-anything-pdf2zh cache list --engine minimax --limit 10
-cli-anything-pdf2zh cache clear --engine minimax
+cli-anything-pdf2zh cache list --engine mimo --limit 10
+cli-anything-pdf2zh cache clear --engine mimo
 ```
 
-### MiniMax patch
+### Xiaomi MiMo patch
 
 ```bash
 cli-anything-pdf2zh patch status
-cli-anything-pdf2zh patch install         # adds MiniMax class to translator.py,
+cli-anything-pdf2zh patch install         # adds MiMo class to translator.py,
                                           # registers it in pdf2zh.py + converter.py
 cli-anything-pdf2zh patch uninstall       # restores from .harness.bak backups
 ```
@@ -176,16 +176,18 @@ cli-anything-pdf2zh patch uninstall       # restores from .harness.bak backups
 
 ### Default service
 
-* `minimax` is the default for both `translate` and `batch` (and the REPL
+* `mimo` is the default for both `translate` and `batch` (and the REPL
   `Session` defaults to it). Override with `--service <name>` if you need
   Google / OpenAI / DeepL / etc.
-* `minimax` requires the patch installed and the API key configured (see
+* `mimo` requires the patch installed and the API key configured (see
   Installation step 3). If the key is missing, the EXE raises
   `ValueError: ...` — the harness exits 1.
+* The API key falls back to `ANTHROPIC_AUTH_TOKEN` env var if `MIMO_API_KEY`
+  is not explicitly set in the pdf2zh config.
 
 ### Auto-fallback chain
 
-* If the **default** service (`minimax`) fails (non-zero exit), the
+* If the **default** service (`mimo`) fails (non-zero exit), the
   harness automatically retries once with the next service in
   `DEFAULT_FALLBACK_CHAIN` (currently `google`, the only key-free
   fallback). This way an unset API key degrades to a working translation
@@ -196,11 +198,11 @@ cli-anything-pdf2zh patch uninstall       # restores from .harness.bak backups
   would be more confusing than the original error.
 * The result dict carries four extra fields when fallback ran:
   * `fallback_used: bool`
-  * `fallback_from: str` — the service that failed (e.g. `"minimax"`)
+  * `fallback_from: str` — the service that failed (e.g. `"mimo"`)
   * `fallback_to: str` — the service actually used (e.g. `"google"`)
   * `fallback_reason: str` — last 300 chars of the first attempt's
     stdout+stderr, so you can see why it failed
-* In human output the user sees a `⚠ minimax failed — fell back to
+* In human output the user sees a `⚠ mimo failed — fell back to
   google` warning line before the success/error block. In JSON output
   the same info is in the result fields.
 
@@ -237,13 +239,13 @@ EXE picks these up on the next run. Secret values (keys containing
 output — even in `--json` mode — so they don't leak into agent
 transcripts.
 
-The MiniMax translator expects:
+The Xiaomi MiMo translator expects:
 
 | Env | Default | Required |
 |-----|---------|----------|
-| `MINIMAX_API_KEY` | — | yes |
-| `MINIMAX_BASE_URL` | `https://api.minimaxi.com/v1` | no |
-| `MINIMAX_MODEL` | `MiniMax-Text-01` | no |
+| `MIMO_API_KEY` | — | yes (falls back to `ANTHROPIC_AUTH_TOKEN` env var) |
+| `MIMO_BASE_URL` | `https://token-plan-cn.xiaomimimo.com/v1` | no |
+| `MIMO_MODEL` | `mimo-v2.5-pro` | no |
 
 ### Idempotency
 
@@ -289,5 +291,5 @@ unit tests don't fail — they skip — if the EXE is missing.
   API keys. Add it to your global `.gitignore`.
 * The harness's `config show-translator` masks secrets. Use it to verify
   what was stored without leaking the value.
-* The MiniMax patch makes a backup of each file it edits
+* The MiMo patch makes a backup of each file it edits
   (`<file>.harness.bak`). `patch uninstall` restores from these.
