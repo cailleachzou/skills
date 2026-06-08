@@ -3,15 +3,20 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "if": "Bash(git commit *)",
         "hooks": [
           {
             "type": "prompt",
+            "if": "Bash(git commit *)",
             "prompt": "The user is about to run a git commit. Check if CLAUDE.md and README.md in the repo root need updating based on recent changes (new/removed skills, dependency changes, changelog updates). If they look outdated, remind the user to update them first. If they're up to date, just say so briefly.",
             "statusMessage": "Checking CLAUDE.md & README.md..."
           }
         ]
       }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Skill(update-config)"
     ]
   }
 }
