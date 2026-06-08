@@ -88,7 +88,7 @@ git clone https://github.com/cailleachzou/skills.git
 |------|------|
 | **Montserrat 字体** | tendo-brand（Google Fonts CDN） |
 | **Mermaid** | diagram-skill（渲染：Obsidian / Mermaid Live Editor） |
-| **MiniMax MCP** | batch-image-renamer（图片内容理解）|
+| **mimo-multimodal** | batch-image-renamer（图片内容理解，小米 MiMo API）|
 
 ---
 

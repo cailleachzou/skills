@@ -25,10 +25,11 @@ description: 按公司命名规范批量重命名图片。当用户想要重命�
 
 ### Step 3: 识别每张图片内容（并行）
 
-对每张图片使用 `mcp__MiniMax__understand_image` 工具进行理解：
+对每张图片使用 `mimo-multimodal` skill 的 `image` 命令进行理解：
 
-- **image_source**: 图片的绝对路径
-- **prompt**: "用20字以内中文描述这张图片的主体内容，用于文件命名。直接输出描述文字，不要解释。"
+```bash
+python C:/Users/59620/.claude/skills/mimo-multimodal/mimo_multimodal.py image "<图片绝对路径>" --prompt "用20字以内中文描述这张图片的主体内容，用于文件命名。直接输出描述文字，不要解释。"
+```
 
 根据图片内容，用中文描述图片主体（限 20 字以内，简明扼要）。
 
