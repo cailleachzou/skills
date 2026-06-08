@@ -14,8 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 文档同步
 
-- `SKILLS.md` — 全量技能清单（英中双语），每次技能增删改同步更新
-- `README.md` — 对外展示入口（中文）
+- `README.md` — 全量技能清单 + 环境依赖 + 更新日志（中文），每次技能增删改同步更新
 
 ## Git 提交规范
 

@@ -6,16 +6,16 @@
 
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
-| **bailian-cli**         | 通义、阿里云、bl            | 阿里云百炼 AI CLI（`bl`）— 仅限 ASR 语音转文字，其他任务使用 Claude/mmx-cli |
 | **batch-image-renamer** | 批量重命名、Tendo - XXX    | 按 `Tendo - <描述>-NNN.<ext>` 格式批量重命名图片，AI 识别内容，自动去重冲突 |
 | **cli-anything-ffmpeg** | FFmpeg、视频转换、音频处理     | FFmpeg CLI 封装 — 转码、探测、批量处理，预设管理、会话管理、JSON 输出 |
+| **cli-anything-pdf2zh** | PDF翻译、pdf2zh、PDFMathTranslate | PDF 翻译 CLI — 调用 pdf2zh.exe 翻译 PDF（保留排版），支持 23+ 翻译引擎，内置小米 MiMo 翻译补丁 |
+| **cli-anything-web-search-fast** | 联网搜索、web search、网页查询 | 联网搜索 CLI — Camoufox 隐身浏览器，多引擎自动回退（Google→DuckDuckGo→Bing），JSON 输出 |
 | **diagram-skill**       | 画图、mermaid、甘特图、时序图   | 生成和编辑 Mermaid 图表代码 — 流程图、时序图、甘特图、思维导图、架构图、ER 图、状态图、C4 等 |
 | **docx**                | .docx Word 文档        | Word 文档完整工作流 — pandoc 模板、docx-js 脚本、XML 编辑，支持修订、批注、脚注、表格、图片、目录、信纸 |
 | **dxf-dwg-converter**   | DWG转DXF、CAD转换、图层列表、DXF翻译    | CAD 全家桶 — DWG↔DXF 转换、文字提取/翻译、图层管理、SVG 导出、批量处理 |
 | **email-eml**           | 生成邮件、.eml            | 生成 .eml 邮件文件，支持收件人/主题/正文（签名由用户在 Outlook 手动添加） |
 | **markitdown**          | 转换 md、PDF 转 markdown | 使用 Microsoft MarkItDown 将 20+ 格式转换为 Markdown，保留文档结构 |
-| **minimaxi-mmx**        | MiniMax、mmx、图片生成、TTS | MiniMax 多模态 AI CLI — 文字对话、图片/视频生成、TTS、音乐、网页搜索、图像理解、批量分析 |
-| **mmx-cli**             | mmx 命令行              | MiniMax 多模态 CLI — 文字、图片生成、视频、语音合成、音乐创作 |
+| **mimo-multimodal**     | MiMo多模态、图片分析、音频分析、视频分析 | 小米 MiMo 多模态理解 — 图片/音频/视频内容分析，支持 auto 自动检测媒体类型 |
 | **pdf**                 | PDF 操作、建筑图纸          | PDF 完整操作 — 文本/表格提取、合并/分割/旋转、水印、表单、自动 OCR/MCP fallback（pdfplumber → UMI-OCR → vision）、AI 视觉图纸审查 |
 | **pptx**                | .pptx PowerPoint     | 模板编辑（解包/编辑/打包）或 pptxgenjs 从零创建 — 设计指南、配色方案、视觉 QA |
 | **skill-creator**       | 创建 skill             | 完整技能开发周期 — 起草、子代理测试、人工审查、迭代、基准测试、描述优化 |
@@ -60,13 +60,15 @@ git clone https://github.com/cailleachzou/skills.git
 | **docx**                | —                                                                           | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`)                        |     |
 | **cli-anything-ffmpeg** | `click >= 8.0`                                                              | ffmpeg, ffprobe                                                              |     |
 | **dxf-dwg-converter**   | `ezdxf`                                                                     | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + 文字提取/翻译 |     |
+| **cli-anything-pdf2zh** | —                                                                           | pdf2zh.exe（PDFMathTranslate Windows EXE）                                          |     |
+| **cli-anything-web-search-fast** | `camoufox`, `web-search-fast`                                          | Camoufox 浏览器（`python -m camoufox fetch`）                                       |     |
+| **mimo-multimodal**     | —                                                                           | MIMO_API_KEY 环境变量                                                               |     |
 | **skill-creator**       | —                                                                           | （Eval 工具，脚本见 skill 内部）                                                       |     |
 
 ### Node.js / npm 包
 
 | 技能          | 安装命令                       |
 | ----------- | -------------------------- |
-| **mmx-cli** | `npm install -g mmx-cli`   |
 | **docx**    | `npm install -g docx`      |
 | **pptx**    | `npm install -g pptxgenjs` |
 
@@ -79,7 +81,6 @@ git clone https://github.com/cailleachzou/skills.git
 | **ffmpeg / ffprobe**                                     | cli-anything-ffmpeg | 音视频转码                    |
 | **Poppler utils** (`pdftotext`, `pdftoppm`, `pdfimages`) | pptx, docx, pdf     | PDF 文本提取 / 渲染            |
 | **LibreDWG**                                             | dxf-dwg-converter   | DWG ↔ DXF 转换、SVG 导出、图层读取 |
-| **bl** (bailian-cli)                                     | bailian-cli         | ASR 语音转文字（唯一用途）          |
 
 ### 其他环境
 
@@ -93,6 +94,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/06/08** 移除 bailian-cli、mmx-cli；新增 cli-anything-pdf2zh（PDF 翻译，内置 MiMo 补丁）、cli-anything-web-search-fast（联网搜索）、mimo-multimodal（小米多模态理解）；同步更新 CLAUDE.md 与 README.md
 - **2026/06/03** pdf skill 新增自动 OCR/MCP fallback 链：`pdf/scripts/extract_with_fallback.py` 按页判定 `pdfplumber` → `UMI-OCR` → `mcp__MiniMax__understand_image`，输出带 `(source: ...)` 标签的合并 TXT；17 个测试 + 3 个 evals 场景；修复 `text_threshold` no-op 与加密 PDF 未检测两个 spec 合规 bug
 - **2026/06/03** diagram-skill 升级为 subagent 架构：新增 `agents/mermaid-agent.md` 路由 15 种语法、`agents/examples-agent.md` 维护范本、`examples/` 6 个范本文件；新增 `.gitignore` 屏蔽 Slidev 符号链接、Python/Node 缓存
 - **2026/05/27** 合并 dxf-text-translate 至 dxf-dwg-converter；新增环境依赖说明；bailian-cli 限制为 ASR only
