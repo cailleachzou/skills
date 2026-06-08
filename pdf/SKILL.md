@@ -310,7 +310,7 @@ with open("encrypted.pdf", "wb") as output:
 
 ## AI 视觉审图（带 OCR/MCP fallback）
 
-新脚本 `extract_with_fallback.py` 把整个审图流程串起来：先用 pdfplumber 逐页抽文，**抽不到文字的页自动调 UMI-OCR**，**OCR 也抽不到的页标记为 `needs-vision`**，由 Claude 在主会话里调 `mcp__MiniMax__understand_image` 做语义理解。
+新脚本 `extract_with_fallback.py` 把整个审图流程串起来：先用 pdfplumber 逐页抽文，**抽不到文字的页自动调 UMI-OCR**，**OCR 也抽不到的页标记为 `needs-vision`**，由 Claude 在主会话里调 `mimo-multimodal image` 做语义理解。
 
 ### 调用方式
 
@@ -334,7 +334,7 @@ python scripts/extract_with_fallback.py <input.pdf> <output_dir> \
                               ├─ OCR 成功 → 标签 (source: umi-ocr)
                               └─ OCR 失败/空 → 标签 (source: needs-vision)
                                                   ↓
-                                        Claude 调 mcp__MiniMax__understand_image
+                                        Claude 调 mimo-multimodal image
                                                   ↓
                                         Claude 把结果回写到 extracted_text.txt
 ```
@@ -349,14 +349,14 @@ python scripts/extract_with_fallback.py <input.pdf> <output_dir> \
 [OCR 抽出的文字...]
 
 === Page 3 (source: needs-vision) ===
-[image: page_003.png — please run mcp__MiniMax__understand_image for semantic understanding]
+[image: page_003.png — please run mimo-multimodal image for semantic understanding]
 ```
 
 ### Claude 侧：处理 `needs-vision` 标记
 
 1. 读 `extracted_text.txt`，正则匹配 `=== Page (\d+) \(source: needs-vision\) ===` 块
 2. 对每个匹配，取 `image:` 后的 PNG 路径
-3. 调 `mcp__MiniMax__understand_image`，prompt 用下面模板（针对弱电/建筑审图）：
+3. 调 `mimo-multimodal` skill 的 `image` 命令（`python C:/Users/59620/.claude/skills/mimo-multimodal/mimo_multimodal.py image "<PNG路径>" --prompt "..."`），prompt 用下面模板（针对弱电/建筑审图）：
    ```
    你在看一份弱电/建筑专业图纸。请描述：
    - 图中可见的设备、机房、管井、点位
@@ -365,7 +365,7 @@ python scripts/extract_with_fallback.py <input.pdf> <output_dir> \
    - 标高、尺寸、比例尺
    - 任何文字标注（精确转写）
    ```
-4. 把 vision 输出**就地替换**对应 `needs-vision` 块的内容（保留 `=== Page N (source: mcp-vision) ===` 头）
+4. 把 vision 输出**就地替换**对应 `needs-vision` 块的内容（保留 `=== Page N (source: mimo-vision) ===` 头）
 5. 改完保存回 `extracted_text.txt`
 
 ### 弱电/建筑审图增强

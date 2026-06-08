@@ -117,7 +117,7 @@ class OutputMerger:
         elif page.source == "umi-ocr":
             body = page.ocr_text
         elif page.source == "needs-vision":
-            body = f"[image: {page.image_path} — please run mcp__MiniMax__understand_image for semantic understanding]"
+            body = f"[image: {page.image_path} — please run mimo-multimodal image for semantic understanding]"
         else:
             body = page.text
         return f"{header}\n{body}\n"
@@ -213,7 +213,7 @@ def main():
     if needs_vision:
         print(f"\n{len(needs_vision)} page(s) marked 'needs-vision'.", file=sys.stderr)
         print("Claude: read extracted_text.txt, find '=== Page N (source: needs-vision) ===' markers,", file=sys.stderr)
-        print("        call mcp__MiniMax__understand_image for each, write results back to the file.", file=sys.stderr)
+        print("        call mimo-multimodal image for each, write results back to the file.", file=sys.stderr)
 
 
 if __name__ == "__main__":
