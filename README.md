@@ -24,6 +24,18 @@
 | **umi-ocr**             | OCR、文字识别、图片转文字     | 离线 OCR — 截图/照片/PDF 文字提取，基于 Umi-OCR HTTP API，纯文本输出 |
 | **xlsx**                | .xlsx Excel          | Excel via openpyxl 和 pandas — 公式、财务配色、LibreOffice 重算、零错误要求 |
 
+## 已安装插件（Plugins）
+
+| 插件 | 源地址 | 说明 |
+|------|--------|------|
+| **claude-hud** | [jarrodwatts/claude-hud](https://github.com/jarrodwatts/claude-hud) | 实时状态栏 HUD — 显示 token 用量、模型、上下文窗口等 |
+| **cli-anything** | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | CLI 工具集成框架 — 通过 CLI-Hub 安装管理各类 CLI 技能 |
+| **ecc** (Everything Claude Code) | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | Claude Code 全能增强包 — 命令、规则、技能、Agent 模板 |
+| **obsidian-skills** | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | Obsidian 集成技能 — 笔记管理、Defuddle 网页提取等 |
+| **skill-creator** | claude-plugins-official | 官方技能创建工具 |
+| **frontend-design** | claude-plugins-official | 前端设计辅助工具 |
+| **superpowers** | claude-plugins-official | Claude Code 超级能力增强 |
+
 ## 目录结构
 
 ```
@@ -94,6 +106,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/06/10** 新增「已安装插件」章节，列出 4 个第三方插件 + 3 个官方插件的源地址和说明
 - **2026/06/08** 移除 bailian-cli、mmx-cli；新增 cli-anything-pdf2zh（PDF 翻译，内置 MiMo 补丁）、cli-anything-web-search-fast（联网搜索）、mimo-multimodal（小米多模态理解）；同步更新 CLAUDE.md 与 README.md
 - **2026/06/03** pdf skill 新增自动 OCR/MCP fallback 链：`pdf/scripts/extract_with_fallback.py` 按页判定 `pdfplumber` → `UMI-OCR` → `mcp__MiniMax__understand_image`，输出带 `(source: ...)` 标签的合并 TXT；17 个测试 + 3 个 evals 场景；修复 `text_threshold` no-op 与加密 PDF 未检测两个 spec 合规 bug
 - **2026/06/03** diagram-skill 升级为 subagent 架构：新增 `agents/mermaid-agent.md` 路由 15 种语法、`agents/examples-agent.md` 维护范本、`examples/` 6 个范本文件；新增 `.gitignore` 屏蔽 Slidev 符号链接、Python/Node 缓存
