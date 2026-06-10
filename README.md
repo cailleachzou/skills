@@ -26,15 +26,15 @@
 
 ## 已安装插件（Plugins）
 
-| 插件 | 源地址 | 说明 |
-|------|--------|------|
-| **claude-hud** | [jarrodwatts/claude-hud](https://github.com/jarrodwatts/claude-hud) | 实时状态栏 HUD — 显示 token 用量、模型、上下文窗口等 |
-| **cli-anything** | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | CLI 工具集成框架 — 通过 CLI-Hub 安装管理各类 CLI 技能 |
+| 插件                               | 源地址                                                                                   | 说明                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------- |
+| **claude-hud**                   | [jarrodwatts/claude-hud](https://github.com/jarrodwatts/claude-hud)                   | 实时状态栏 HUD — 显示 token 用量、模型、上下文窗口等     |
+| **cli-anything**                 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything)                           | CLI 工具集成框架 — 通过 CLI-Hub 安装管理各类 CLI 技能 |
 | **ecc** (Everything Claude Code) | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | Claude Code 全能增强包 — 命令、规则、技能、Agent 模板 |
-| **obsidian-skills** | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | Obsidian 集成技能 — 笔记管理、Defuddle 网页提取等 |
-| **skill-creator** | claude-plugins-official | 官方技能创建工具 |
-| **frontend-design** | claude-plugins-official | 前端设计辅助工具 |
-| **superpowers** | claude-plugins-official | Claude Code 超级能力增强 |
+| **obsidian-skills**              | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills)                   | Obsidian 集成技能 — 笔记管理、Defuddle 网页提取等   |
+| **skill-creator**                | claude-plugins-official                                                               | 官方技能创建工具                              |
+| **frontend-design**              | claude-plugins-official                                                               | 前端设计辅助工具                              |
+| **superpowers**                  | claude-plugins-official                                                               | Claude Code 超级能力增强                    |
 
 ## 目录结构
 
@@ -56,6 +56,15 @@ git clone https://github.com/cailleachzou/skills.git
 # 查看所有技能 — 直接看本文件即可
 ```
 
+## 学习资料
+
+新手上路？查看 [`learning/`](learning/) 目录：
+
+- [`learning/knowledge/skill-overview.md`](learning/knowledge/skill-overview.md) — 技能全景图（38 个技能按功能域分类）
+- [`learning/knowledge/workflow-examples.md`](learning/knowledge/workflow-examples.md) — 6 个真实工作流场景（从简单到复杂）
+- [`learning/knowledge/tips-and-tricks.md`](learning/knowledge/tips-and-tricks.md) — 使用技巧、常见坑、组合模式
+- [`learning/prompts/self-assessment.md`](learning/prompts/self-assessment.md) — 渐进式自测提示词（4 个关卡，直接粘贴使用）
+
 ## 环境依赖
 
 ### Python 环境
@@ -63,19 +72,19 @@ git clone https://github.com/cailleachzou/skills.git
 **Python 路径**（Windows）：`C:\Users\59620\AppData\Local\Python\python.exe`
 > 所有 Python 技能均使用此路径（不要用裸 `python`，Windows 上不存在）
 
-| 技能                      | Python 包                                                                    | 其他依赖                                                                         |     |
-| ----------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --- |
-| **markitdown**          | `pip install 'markitdown[all]'`                                             | markitdown CLI                                                               |     |
-| **xlsx**                | `openpyxl`, `pandas`                                                        | LibreOffice (`soffice`)                                                      |     |
-| **pdf**                 | `pypdf`, `pdfplumber`, `reportlab`, `pypdfium2`, `pdf2image`, `pytest`     | Poppler utils (`pdftotext`, `pdfimages`); Umi-OCR (本地 HTTP API :1224)        |     |
-| **pptx**                | `markitdown[pptx]`, `Pillow`                                                | LibreOffice, Poppler (`pdftoppm`), npm `pptxgenjs`                           |     |
-| **docx**                | —                                                                           | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`)                        |     |
-| **cli-anything-ffmpeg** | `click >= 8.0`                                                              | ffmpeg, ffprobe                                                              |     |
-| **dxf-dwg-converter**   | `ezdxf`                                                                     | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + 文字提取/翻译 |     |
-| **cli-anything-pdf2zh** | —                                                                           | pdf2zh.exe（PDFMathTranslate Windows EXE）                                          |     |
-| **cli-anything-web-search-fast** | `camoufox`, `web-search-fast`                                          | Camoufox 浏览器（`python -m camoufox fetch`）                                       |     |
-| **mimo-multimodal**     | —                                                                           | MIMO_API_KEY 环境变量                                                               |     |
-| **skill-creator**       | —                                                                           | （Eval 工具，脚本见 skill 内部）                                                       |     |
+| 技能                               | Python 包                                                               | 其他依赖                                                                         |
+| -------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **markitdown**                   | `pip install 'markitdown[all]'`                                        | markitdown CLI                                                               |
+| **xlsx**                         | `openpyxl`, `pandas`                                                   | LibreOffice (`soffice`)                                                      |
+| **pdf**                          | `pypdf`, `pdfplumber`, `reportlab`, `pypdfium2`, `pdf2image`, `pytest` | Poppler utils (`pdftotext`, `pdfimages`); Umi-OCR (本地 HTTP API :1224)        |
+| **pptx**                         | `markitdown[pptx]`, `Pillow`                                           | LibreOffice, Poppler (`pdftoppm`), npm `pptxgenjs`                           |
+| **docx**                         | —                                                                      | pandoc, npm `docx`, LibreOffice, Poppler (`pdftoppm`)                        |
+| **cli-anything-ffmpeg**          | `click >= 8.0`                                                         | ffmpeg, ffprobe                                                              |
+| **dxf-dwg-converter**            | `ezdxf`                                                                | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + 文字提取/翻译 |
+| **cli-anything-pdf2zh**          | —                                                                      | pdf2zh.exe（PDFMathTranslate Windows EXE）                                     |
+| **cli-anything-web-search-fast** | `camoufox`, `web-search-fast`                                          | Camoufox 浏览器（`python -m camoufox fetch`）                                     |
+| **mimo-multimodal**              | —                                                                      | MIMO_API_KEY 环境变量                                                            |
+| **skill-creator**                | —                                                                      | （Eval 工具，脚本见 skill 内部）                                                       |
 
 ### Node.js / npm 包
 
