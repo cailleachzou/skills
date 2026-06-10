@@ -50,7 +50,7 @@ pip install -e .
 cli-anything-pdf2zh patch install
 cli-anything-pdf2zh config set-key mimo MIMO_API_KEY <key>
 cli-anything-pdf2zh config set-key mimo MIMO_BASE_URL https://token-plan-cn.xiaomimimo.com/v1
-cli-anything-pdf2zh config set-key mimo MIMO_MODEL mimo-v2.5-pro
+cli-anything-pdf2zh config set-key mimo MIMO_MODEL mimo-v2.5
 #
 #    To use a different service, pass --service <name> (e.g. --service google
 #    for the no-key-needed fallback).
