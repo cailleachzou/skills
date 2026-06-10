@@ -12,8 +12,22 @@ AI-friendly CLI harness wrapping [web-search-fast](https://github.com/uk0/web-se
 
 - Python 3.10+
 - Camoufox browser fetched: `python -m camoufox fetch`
-- web-search-fast installed: `pip install -e .` (in the repo root)
-- CLI harness installed: `pip install -e .` (in `agent-harness/`)
+- web-search-fast installed: `pip install -e .` (in the repo root, e.g. `C:\Users\...\AppData\Local\Temp\web-search-fast`)
+- CLI harness installed: `pip install -e .` (in `C:\Users\...\AppData\Local\cli-anything-web-search-fast`)
+
+## Invocation
+
+The CLI is installed as `cli-anything-web-search-fast` via pip console_scripts. Two ways to call:
+
+```bash
+# Option 1: Direct command (if Scripts/ is in PATH)
+cli-anything-web-search-fast search "query"
+
+# Option 2: Via python module (always works)
+python -m cli_anything.web_search_fast.web_search_fast_cli search "query"
+```
+
+**Note:** Both `web-search-fast` and `cli-anything-web-search-fast` must be pip-installed (not just cloned). Run `pip install -e .` in both repo roots.
 
 ## Commands
 
@@ -21,6 +35,7 @@ AI-friendly CLI harness wrapping [web-search-fast](https://github.com/uk0/web-se
 
 ```bash
 cli-anything-web-search-fast search "QUERY" [OPTIONS]
+# or: python -m cli_anything.web_search_fast.web_search_fast_cli search "QUERY" [OPTIONS]
 ```
 
 **Options:**
