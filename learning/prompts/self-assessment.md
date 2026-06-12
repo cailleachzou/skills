@@ -46,26 +46,21 @@
 
 出题方式：给一个具体场景，让用户说出应该使用哪些技能。
 
-可用技能列表（共 38 个）：
+可用技能列表（共 31 个）：
 
-自建技能（17个）：
+自建技能（10个）：
 - batch-image-renamer（批量重命名图片）
 - cli-anything-ffmpeg（音视频转码）
 - cli-anything-pdf2zh（PDF 翻译）
 - cli-anything-web-search-fast（联网搜索）
 - diagram-skill（Mermaid 图表）
-- docx（Word 文档）
 - dxf-dwg-converter（CAD 转换翻译）
 - email-eml（生成邮件）
-- markitdown（格式转换）
 - mimo-multimodal（多模态分析）
-- pdf（PDF 操作）
-- pptx（PowerPoint）
-- skill-creator（技能开发）
 - tendo-brand（品牌主题）
-- theme-factory（配色主题）
 - umi-ocr（离线 OCR）
-- xlsx（Excel）
+
+插件技能（含 document-skills 插件提供的 docx/pdf/pptx/xlsx/skill-creator/theme-factory）
 
 插件技能（21个）：
 - brainstorming（需求探索）
@@ -136,7 +131,7 @@
 
 测试结束后，输出以下格式的评估报告：
 
-```
+
 ## 能力评估报告
 
 | 维度 | 等级 | 通过率 | 评价 |

@@ -1,6 +1,6 @@
 # 技能全景图
 
-> 38 个技能，按功能域分为 6 大类。每个技能标注触发关键词和典型场景。
+> 31 个技能（10 自建 + 21 插件），按功能域分为 6 大类。每个技能标注触发关键词和典型场景。
 
 ---
 
@@ -8,16 +8,17 @@
 
 | 技能                    | 来源  | 触发关键词                                | 典型场景                                                  |
 | --------------------- | --- | ------------------------------------ | ----------------------------------------------------- |
-| **docx**              | 自建  | `.docx`、Word 文档                      | 创建/编辑 Word 文档，支持 pandoc 模板、修订批注、脚注表格、目录信纸             |
-| **pdf**               | 自建  | `.pdf`、PDF 操作、建筑图纸                   | PDF 提取/合并/分割/旋转/水印/表单，OCR 扫描件，AI 视觉审查图纸               |
-| **markitdown**        | 自建  | 转换 md、PDF 转 markdown                 | 20+ 格式转 Markdown（Word/PPT/Excel/PDF/图片等）              |
+| **docx**              | 插件  | `.docx`、Word 文档                      | 创建/编辑 Word 文档，支持 pandoc 模板、修订批注、脚注表格、目录信纸             |
+| **pdf**               | 插件  | `.pdf`、PDF 操作、建筑图纸                   | PDF 提取/合并/分割/旋转/水印/表单，OCR 扫描件，AI 视觉审查图纸               |
+| **pptx**              | 插件  | `.pptx`、PowerPoint                    | 模板编辑或从零创建，设计指南、配色方案、视觉 QA    |
+| **xlsx**              | 插件  | `.xlsx`、Excel                         | Excel 公式、财务配色、LibreOffice 重算 |
 | **email-eml**         | 自建  | 生成邮件、`.eml`                          | 生成 .eml 邮件文件，收件人/主题/正文                                |
 | **obsidian-markdown** | 插件  | `.md` in Obsidian、wikilinks、callouts | Obsidian 风格 Markdown：wikilinks、嵌入、callout、frontmatter |
 
 ### 典型串联
 
 ```
-PDF 资料 → markitdown 提取文字 → docx 生成方案文档
+PDF 资料 → markitdown 提取文字 → docx 生成方案文档（均通过 document-skills 插件）
 ```
 
 ---
@@ -28,14 +29,14 @@ PDF 资料 → markitdown 提取文字 → docx 生成方案文档
 | ------------------- | --- | ----------------------------- | ----------------------------------------------- |
 | **diagram-skill**   | 自建  | 画图、mermaid、甘特图、流程图、时序图        | 生成 Mermaid 图表：流程图、甘特图、思维导图、架构图、ER 图、状态图等 15+ 类型 |
 | **tendo-brand**     | 自建  | Tendo、品牌样式                    | 应用 Tendo Technology 官方品牌主题（色彩、字体）               |
-| **theme-factory**   | 自建  | 主题、styling                    | 10 种专业配色/字体主题 + 自定义主题生成                         |
+| **theme-factory**   | 插件  | 主题、styling                    | 10 种专业配色/字体主题 + 自定义主题生成                         |
 | **frontend-design** | 插件  | build web components、frontend | 创建高质量前端界面，避免 AI 通用审美                            |
 | **json-canvas**     | 插件  | `.canvas`、canvas、mind map     | Obsidian Canvas 文件：节点、连线、分组、可视化画布               |
 
 ### 典型串联
 
 ```
-diagram-skill 生成架构图 → tendo-brand 应用品牌色 → 嵌入 docx 方案文档
+diagram-skill 生成架构图 → tendo-brand 应用品牌色 → 嵌入 docx 方案文档（document-skills 插件）
 ```
 
 ---
@@ -83,25 +84,18 @@ DWG 图纸 → dxf-dwg-converter 提取中文 → 翻译 → 导出新 DXF
 ### 典型串联
 
 ```
-defuddle 提取网页内容 → 翻译 → docx 生成中文文档
+defuddle 提取网页内容 → 翻译 → docx 生成中文文档（document-skills 插件）
 ```
 
 ---
 
 ## 6. 开发工作流
 
-### 6.1 数据处理
-
-| 技能       | 来源  | 触发关键词              | 典型场景                         |
-| -------- | --- | ------------------ | ---------------------------- |
-| **xlsx** | 自建  | `.xlsx`、Excel      | Excel 公式、财务配色、LibreOffice 重算 |
-| **pptx** | 自建  | `.pptx`、PowerPoint | 模板编辑或从零创建，设计指南、配色方案、视觉 QA    |
-
-### 6.2 技能管理
+### 6.1 技能管理
 
 | 技能                | 来源    | 触发关键词    | 典型场景                       |
 | ----------------- | ----- | -------- | -------------------------- |
-| **skill-creator** | 自建+插件 | 创建 skill | 完整技能开发周期：起草→测试→审查→迭代→基准→优化 |
+| **skill-creator** | 插件 | 创建 skill | 完整技能开发周期：起草→测试→审查→迭代→基准→优化 |
 
 ### 6.3 Obsidian 生态
 
