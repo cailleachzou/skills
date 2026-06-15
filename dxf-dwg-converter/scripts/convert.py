@@ -15,13 +15,13 @@ TOOLS = {
 }
 
 VERSION_MAP = {
-    "R12": "ac1009",
-    "R2000": "ac1009",
-    "R2004": "ac1015",
-    "R2007": "ac1018",
-    "R2010": "ac1021",
-    "R2013": "ac1027",
-    "R2018": "ac1064",
+    "R12": "r12",
+    "R2000": "r2000",
+    "R2004": "r2004",
+    "R2007": "r2007",
+    "R2010": "r2010",
+    "R2013": "r2013",
+    "R2018": "r2018",
 }
 
 
@@ -30,13 +30,11 @@ def run_tool(tool_name, input_path, output_path, version=None, binary=False, dry
     if not tool_exe.exists():
         raise FileNotFoundError(f"LibreDWG not found at {LIBREDWG_PATH}. Install from https://github.com/LibreDWG/libredwg/releases")
 
-    cmd = [str(tool_exe)]
-    cmd.append(str(input_path))
-    cmd.append(str(output_path))
+    cmd = [str(tool_exe), str(input_path), "-o", str(output_path)]
 
     if version:
         ver_flag = VERSION_MAP.get(version, version)
-        cmd.extend(["--version", ver_flag])
+        cmd.extend(["--as", ver_flag])
 
     if binary and tool_name == "dwg2dxf":
         cmd.append("--binary")
@@ -84,7 +82,7 @@ def main():
         input_p,
         args.output,
         version=args.version,
-        binary=args.binary,
+        binary=getattr(args, "binary", False),
         dry_run=args.dry_run,
         overwrite=args.overwrite
     )
@@ -103,6 +101,15 @@ def main():
         sys.exit(result.returncode)
 
     output_p = Path(args.output)
+    if not output_p.exists() or output_p.stat().st_size == 0:
+        print(json.dumps({
+            "status": "error",
+            "code": 5,
+            "message": f"Output not created or empty: {output_p}",
+            "command": cmd
+        }))
+        sys.exit(5)
+
     print(json.dumps({
         "status": "success",
         "input": str(input_p),

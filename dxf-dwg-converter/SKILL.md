@@ -12,6 +12,10 @@ CAD file processing toolkit — wraps LibreDWG executables and ezdxf Python libr
 
 - **LibreDWG** — `C:\Program Files\libredwg-0.13.4-win32\` (Windows install)
 - **ezdxf** — `pip install ezdxf`
+- **MinGW runtime (libgcc_s_dw2-1.dll)** — Required on 64-bit Windows. The official
+  libredwg-0.13.4-win32 zip omits this DLL; copy `libgcc_s_dw2-1.dll` from any
+  MinGW-w64 distribution into `C:\Program Files\libredwg-0.13.4-win32\`.
+  Verify with `python scripts/info.py` (see `runtime` field).
 
 ## Commands
 
@@ -23,9 +27,8 @@ python scripts/convert.py dwg2dxf INPUT OUTPUT [OPTIONS]
 
 **Options:**
 - `--version` — DXF version output (default: `R2000`)
-- `--ascii` — Output ASCII DXF (default)
 - `--binary` — Output binary DXF
-- `--y` — Overwrite output file
+- `-y, --overwrite` — Overwrite output file
 - `--dry-run` — Show command without executing
 
 **Examples:**
@@ -48,7 +51,7 @@ python scripts/convert.py dxf2dwg INPUT OUTPUT [OPTIONS]
 
 **Options:**
 - `--version` — DWG version output (default: `R2000`)
-- `--y` — Overwrite output file
+- `-y, --overwrite` — Overwrite output file
 - `--dry-run` — Show command without executing
 
 **Examples:**
@@ -173,7 +176,7 @@ python scripts/batch.py "*.dwg" OUTPUT_DIR --operation dwg2dxf [OPTIONS]
 - `--operation` — `dwg2dxf` or `dxf2dwg`
 - `--pattern` — Glob pattern (default: `*.dwg`)
 - `--suffix` — Output suffix (default: `_converted`)
-- `--y` — Overwrite without asking
+- `-y, --overwrite` — Overwrite without asking
 - `--workers` — Parallel workers (default: 4)
 
 **Examples:**
@@ -251,6 +254,7 @@ python scripts/svg_export.py layout.dwg preview.svg --layers "0,ANNO-TEXT,WALLS"
 | 2 | Input file not found |
 | 3 | Invalid file format |
 | 4 | Output path not writable |
+| 5 | Output not created or empty (LibreDWG returned 0 but file is missing) |
 
 ## Error Handling
 

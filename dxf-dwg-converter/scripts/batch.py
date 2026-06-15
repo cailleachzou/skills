@@ -20,13 +20,15 @@ def convert_file(input_path, output_dir, operation, suffix="_converted", overwri
 
     tool_exe = Path(LIBREDWG_PATH) / ("dwg2dxf.exe" if operation == "dwg2dxf" else "dxf2dwg.exe")
 
-    cmd = [str(tool_exe), str(input_p), str(output_p)]
+    cmd = [str(tool_exe), str(input_p), "-o", str(output_p)]
     if overwrite:
         cmd.append("-y")
 
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         if result.returncode == 0:
+            if not output_p.exists() or output_p.stat().st_size == 0:
+                return {"status": "error", "input": str(input_p), "output": str(output_p), "message": f"Output not created or empty: {output_p}"}
             return {"status": "success", "input": str(input_p), "output": str(output_p)}
         else:
             return {"status": "error", "input": str(input_p), "message": result.stderr or result.stdout}

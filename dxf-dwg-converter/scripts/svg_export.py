@@ -32,7 +32,7 @@ def main():
         print(json.dumps({"status": "error", "message": f"LibreDWG not found at {LIBREDWG_PATH}"}))
         sys.exit(1)
 
-    cmd = [str(tool_exe), str(input_p), str(args.output)]
+    cmd = [str(tool_exe), str(input_p)]
 
     if args.width:
         cmd.extend(["--width", str(args.width)])
@@ -55,10 +55,21 @@ def main():
         }))
         sys.exit(result.returncode)
 
+    Path(args.output).write_text(result.stdout, encoding="utf-8")
+
+    out_p = Path(args.output)
+    if not out_p.exists() or out_p.stat().st_size == 0:
+        print(json.dumps({
+            "status": "error",
+            "code": 5,
+            "message": f"Output not created or empty: {args.output}"
+        }))
+        sys.exit(5)
+
     print(json.dumps({
         "status": "success",
         "input": str(input_p),
-        "output": args.output
+        "output": str(out_p)
     }))
 
 

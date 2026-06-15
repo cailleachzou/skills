@@ -16,7 +16,7 @@ except ImportError:
 def extract_text(dxf_path, layer_filter=None, type_filter=None, translate_dict=None, output_path=None):
     """Extract text entities from DXF file."""
     try:
-        doc, _ = ezdxf.recover.readfile(str(dxf_path))
+        doc = ezdxf.readfile(str(dxf_path))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -58,6 +58,7 @@ def extract_text(dxf_path, layer_filter=None, type_filter=None, translate_dict=N
             })
 
     result = {
+        "status": "success",
         "source": str(dxf_path),
         "version": doc.dxfversion,
         "count": len(texts),
@@ -67,9 +68,14 @@ def extract_text(dxf_path, layer_filter=None, type_filter=None, translate_dict=N
     # Save translated DXF
     if translate_dict and output_path:
         out_path = Path(output_path)
-        doc.saveas(str(out_path))
-        result["output"] = str(out_path)
-        result["updated"] = updated
+        try:
+            doc.saveas(str(out_path))
+            result["output"] = str(out_path)
+            result["updated"] = updated
+        except Exception as e:
+            result["status"] = "error"
+            result["message"] = f"saveas failed: {e}"
+            return result
 
     return result
 

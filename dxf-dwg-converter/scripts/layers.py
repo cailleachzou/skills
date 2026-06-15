@@ -16,19 +16,19 @@ except ImportError:
 def list_layers(dxf_path, pattern=None, json_output=False):
     """List all layers in a DXF file."""
     try:
-        doc, _ = ezdxf.recover.readfile(str(dxf_path))
+        doc = ezdxf.readfile(str(dxf_path))
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
     layers = []
     for layer in doc.layers:
         if pattern:
-            if pattern.lower() not in layer.name.lower():
+            if pattern.lower() not in layer.dxf.name.lower():
                 continue
         layers.append({
-            "name": layer.name,
+            "name": layer.dxf.name,
             "color": layer.color,
-            "line_type": layer.linetype or "CONTINUOUS",
+            "line_type": layer.dxf.linetype or "CONTINUOUS",
             "frozen": layer.is_frozen(),
             "locked": layer.is_locked()
         })
@@ -84,7 +84,7 @@ def main():
 
         if args.entities:
             # Count entities per layer
-            doc, _ = ezdxf.recover.readfile(str(input_p))
+            doc = ezdxf.readfile(str(input_p))
             counts = {}
             for entity in doc.modelspace():
                 layer = entity.dxf.layer

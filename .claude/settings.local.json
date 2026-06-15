@@ -1,4 +1,13 @@
 {
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Bash(rm -f package-lock.json)",
+      "Bash(npm install *)",
+      "Bash(rm -rf node_modules)",
+      "Bash(npm cache *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -6,17 +15,12 @@
         "hooks": [
           {
             "type": "prompt",
-            "if": "Bash(git commit *)",
             "prompt": "The user is about to run a git commit. Check if CLAUDE.md and README.md in the repo root need updating based on recent changes (new/removed skills, dependency changes, changelog updates). If they need changes, update them directly. If they're up to date, just say so briefly.",
+            "if": "Bash(git commit *)",
             "statusMessage": "Checking CLAUDE.md & README.md..."
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Skill(update-config)"
     ]
   }
 }
