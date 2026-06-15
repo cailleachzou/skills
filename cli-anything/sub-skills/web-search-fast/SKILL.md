@@ -1,7 +1,7 @@
 ---
 name: cli-anything-web-search-fast
 description: AI-friendly CLI harness for web-search-fast — direct web search from the command line with stealth browser (Camoufox), multi-engine fallback, and JSON output. Use when users ask to search the web, fetch web pages, or do real-time web queries from the CLI.
-type: skill
+type: cli-sub
 ---
 
 # cli-anything-web-search-fast

@@ -1,7 +1,7 @@
 ---
-name: dxf-dwg-converter
+name: dwg
 description: CAD file format converter and text extractor/translator for DWG/DXF files. Use when users want to convert DWG to DXF or DXF to DWG, extract text, translate text entities in CAD drawings (Chinese/English labels), list or filter CAD layers, export DWG to SVG, or batch process multiple CAD files. Triggers for "DWG转DXF", "CAD文字提取", "图层列表", "批量转换", "导出SVG", "dxf", "dwg", "CAD", "DXF翻译".
-type: skill
+type: cli-sub
 ---
 
 # dxf-dwg-converter

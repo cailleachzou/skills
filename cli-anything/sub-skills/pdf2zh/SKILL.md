@@ -1,6 +1,7 @@
 ---
 name: "cli-anything-pdf2zh"
 description: "CLI harness for the PDFMathTranslate Windows EXE — translate PDFs (with layout preserved) from scripts and AI agents. Ships with a Xiaomi MiMo translator patch that adds a new OpenAI-compatible service to the bundled pdf2zh.exe."
+type: cli-sub
 ---
 
 # cli-anything-pdf2zh

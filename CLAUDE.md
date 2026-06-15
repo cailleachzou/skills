@@ -16,6 +16,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `README.md` — 全量技能清单 + 环境依赖 + 更新日志（中文），每次技能增删改同步更新
 
+## CLI 工具统一入口（cli-anything 路由器）
+
+所有 CLI 工具（OCR / CAD / FFmpeg / PDF 翻译 / 联网搜索 / 多模态）统一通过 `cli-anything/` 路由器入口走：
+
+- **入口**：`cli-anything/SKILL.md`（唯一被 Claude 自动发现）
+- **子技能**：`cli-anything/sub-skills/<name>/SKILL.md`（嵌套，Claude 不会自动发现）
+- **工作流**：用户在 Claude 对话里说 CLI 需求 → router 触发 → Read 子技能 SKILL.md → 调命令
+- **添加新 CLI**：在 `cli-anything/sub-skills/<name>/` 放 SKILL.md + 在 router 索引表加一行
+
+不要直接 mv 出 `cli-anything/sub-skills/<name>/` 之外的位置 — router 依赖嵌套结构。
+
 ## Git 提交规范
 
 ```bash

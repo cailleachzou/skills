@@ -1,6 +1,7 @@
 ---
-name: mimo-multimodal
+name: mimo
 description: Xiaomi MiMo 多模态理解 — 图片/音频/视频内容分析。当用户需要分析图片内容、音频内容、视频内容时使用。
+type: cli-sub
 ---
 
 # MiMo Multimodal — 多模态理解

@@ -1,6 +1,7 @@
 ---
-name: umi-ocr
+name: ocr
 description: Use Umi-OCR to extract text from images (screenshots, photos, scanned documents) and PDFs/DOCX files. Make sure to use this skill whenever the user wants to recognize, extract, or read text from an image file, screenshot, PDF page, or any visual content — whether they explicitly mention "OCR", "文字识别", "图片转文字", "截图识字", or just ask to "extract text from [file]". Umi-OCR is an offline, free OCR engine that runs locally with a HTTP API.
+type: cli-sub
 compatibility: Umi-OCR Rapid v2.1.5+ installed at `C:\Users\59620\Downloads\Programs\Umi-OCR_Rapid_v2.1.5\Umi-OCR.exe`
 ---
 
