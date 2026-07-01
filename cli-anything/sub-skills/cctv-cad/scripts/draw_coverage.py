@@ -28,8 +28,8 @@ def parse_args():
                         help="俯角 (°), auto 按焦距推荐, 默认 auto")
     parser.add_argument("--direction", type=float, default=0,
                         help="摄像机朝向角度 (°), 0=右 90=上 180=左 270=下, 默认 0")
-    parser.add_argument("--output", "-o", required=True,
-                        help="输出 DXF 路径")
+    parser.add_argument("--output", "-o",
+                        help="输出 DXF 路径 (--dry-run 时可省略)")
     parser.add_argument("--dry-run", action="store_true",
                         help="显示计算参数但不生成文件")
     parser.add_argument("--no-dori", action="store_true",
@@ -216,6 +216,9 @@ def main():
     if args.dry_run:
         print_dry_run(args, calc)
         return
+    if not args.output:
+        print("错误: 生成文件需要指定 --output", file=sys.stderr)
+        sys.exit(1)
     doc = create_dxf(args, calc)
     doc.saveas(args.output)
     print(f"已生成: {args.output}")
