@@ -80,7 +80,7 @@ def create_dxf(args, calc):
         doc.layers.add(name, color=color)
 
     cx, cy = 0, 0
-    ca = args.direction
+    ca = args.direction + calc["h_fov"] / 2  # 整体旋转 FOV/2
 
     # 5 段线段沿中心线：原点 → I → R → O → D
     segments = [
