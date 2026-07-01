@@ -4,7 +4,7 @@ description: |
   CLI 工具统一入口路由器。当用户需要以下任一操作时触发本技能：
   OCR 文字识别、图片转文字、截图识字；DWG/DXF 转换、CAD 文字提取与翻译、图层管理；
   视频/音频转码、FFmpeg 编码；PDF 翻译（含 layout 保留）；
-  联网搜索、网页抓取；图片/音频/视频多模态内容分析。
+  摄像机覆盖范围 CAD 平面图生成（画覆盖图、cctv coverage、摄像机平面图）。
   命中后用 Read 工具读取 sub-skills/<name>/SKILL.md 获取详细命令。
 type: meta
 ---
@@ -24,14 +24,13 @@ type: meta
 
 ## 子技能索引（手动维护）
 
-| 触发词 | 子技能 | 一句话 |
-|--------|--------|--------|
-| OCR / 文字识别 / 图片转文字 / 截图识字 | `ocr` | 离线 OCR 文字提取（Umi-OCR HTTP API） |
-| DWG / DXF / CAD / 图层 / 文字提取与翻译 | `dwg` | CAD 格式转换、文字提取与翻译、SVG 导出、批量处理 |
-| FFmpeg / 转码 / 视频 / 音频 / 视频剪辑 | `ffmpeg` | 音视频转码、批量处理、预设管理、会话管理 |
-| PDF 翻译 / pdf2zh / PDFMathTranslate | `pdf2zh` | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
-| 联网搜索 / web search / 搜索 / 抓取网页 | `web-search-fast` | 联网搜索（Camoufox 隐身浏览器，多引擎回退） |
-| 多模态 / 图片理解 / 音频理解 / 视频理解 | `mimo` | MiMo 多模态内容分析（图片/音频/视频） |
+| 子技能 | 一句话 | 触发词 | 脚本 | 命令示例 | 依赖 |
+|--------|--------|--------|------|----------|------|
+| `ocr` | 离线 OCR 文字提取（Umi-OCR HTTP API） | OCR / 文字识别 / 图片转文字 / 截图识字 | ocr/sub-skills/ocr.py | `python scripts/ocr.py input.png` | Umi-OCR |
+| `dwg` | CAD 格式转换、文字提取与翻译、SVG 导出、批量处理 | DWG / DXF / CAD / 图层 / 文字提取与翻译 | dwg/sub-skills/dwg.py | `python scripts/dwg.py --input drawing.dwg --convert dxf` | ezdxf |
+| `ffmpeg` | 音视频转码、批量处理、预设管理、会话管理 | FFmpeg / 转码 / 视频 / 音频 / 视频剪辑 | ffmpeg/sub-skills/ffmpeg.py | `python scripts/ffmpeg.py --input video.mp4 --preset h264` | ffmpeg |
+| `pdf2zh` | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） | PDF 翻译 / pdf2zh / PDFMathTranslate | pdf2zh/sub-skills/pdf2zh.py | `python scripts/pdf2zh.py --input doc.pdf --target zh` | pdf2zh |
+| `cctv-cad` | 摄像机覆盖范围 CAD 平面图生成 | 画覆盖图、CAD摄像机覆盖、cctv coverage、摄像机平面图、点位覆盖、生成覆盖范围图 | cctv-cad/sub-skills/draw_coverage.py | `python scripts/draw_coverage.py --focal 4 --pixels 4mp --sensor 1/2.8 --height 3.0 --direction 0 --output output.dxf` | ezdxf |
 
 ## 触发词匹配失败时
 
