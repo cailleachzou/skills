@@ -9,14 +9,13 @@ import ezdxf
 
 from constants import SENSORS, DORI, PIXELS, DEFAULT_TILT, LAYER_COLORS
 
-
-# 透明度：DXF 编码 = 0x2000000 + alpha (alpha 0=透明 255=不透明)
+# 透明度：DXF 编码 = 0x2000000 + alpha
 TRANSPARENCY = {
-    "BLINDSPOT": 0x2000000 + 178,  # ~30% 透明
-    "DORI-I":    0x2000000 + 153,  # ~40% 透明
-    "DORI-R":    0x2000000 + 102,  # ~60% 透明
-    "DORI-O":    0x2000000 + 51,   # ~80% 透明
-    "DORI-D":    0x2000000 + 25,   # ~90% 透明
+    "BLINDSPOT": 0x2000000 + 178,
+    "DORI-I":    0x2000000 + 153,
+    "DORI-R":    0x2000000 + 102,
+    "DORI-O":    0x2000000 + 51,
+    "DORI-D":    0x2000000 + 25,
 }
 
 
@@ -34,17 +33,12 @@ def parse_args():
 
 
 def validate_args(args):
-    errors = []
     if args.focal not in [2.8, 4, 6, 8, 12]:
-        errors.append(f"焦距不支持: {args.focal}")
+        print(f"焦距不支持: {args.focal}", file=sys.stderr); sys.exit(1)
     if args.sensor not in SENSORS:
-        errors.append(f"传感器不支持: {args.sensor}")
+        print(f"传感器不支持: {args.sensor}", file=sys.stderr); sys.exit(1)
     if args.height <= 0:
-        errors.append(f"安装高度必须为正数")
-    if errors:
-        for e in errors:
-            print(f"  - {e}", file=sys.stderr)
-        sys.exit(1)
+        print("安装高度必须为正数", file=sys.stderr); sys.exit(1)
     if args.tilt == "auto":
         args.tilt = DEFAULT_TILT.get(args.focal, 30)
     else:
@@ -56,31 +50,32 @@ def calculate(args):
     sensor = SENSORS[args.sensor]
     focal = args.focal
     h_pixels = PIXELS[args.pixels]
-    height = args.height
-    tilt = args.tilt
     h_fov = math.degrees(2 * math.atan(sensor["w"] / (2 * focal)))
     v_fov = math.degrees(2 * math.atan(sensor["h"] / (2 * focal)))
-    dori_distances = {}
+    dori = {}
     for level, info in DORI.items():
-        d = (h_pixels * focal) / (sensor["w"] * info["px_per_m"])
-        dori_distances[level] = d
-    blind_depth = height / math.tan(math.radians(tilt + v_fov / 2))
-    return {"h_fov": h_fov, "v_fov": v_fov, "dori": dori_distances, "blind_depth": blind_depth}
+        dori[level] = (h_pixels * focal) / (sensor["w"] * info["px_per_m"])
+    blind = args.height / math.tan(math.radians(args.tilt + v_fov / 2))
+    return {"h_fov": h_fov, "v_fov": v_fov, "dori": dori, "blind": blind}
 
 
 def print_dry_run(args, calc):
-    print(f"焦距: {args.focal} mm | 像素: {args.pixels} | 传感器: {args.sensor}")
-    print(f"高度: {args.height} m | 俯角: {args.tilt}° | 朝向: {args.direction}°")
-    print(f"FOV: {calc['h_fov']:.1f}° | 盲区: {calc['blind_depth']:.2f} m")
-    for level, dist in calc["dori"].items():
-        print(f"  {level}: {dist:.1f} m")
+    print(f"焦距:{args.focal}mm 像素:{args.pixels} 传感器:{args.sensor}")
+    print(f"高度:{args.height}m 俯角:{args.tilt}° 朝向:{args.direction}°")
+    print(f"FOV:{calc['h_fov']:.1f}° 盲区:{calc['blind']:.2f}m")
+    for l, d in calc["dori"].items():
+        print(f"  {l}: {d:.1f}m")
 
 
-def get_arc_endpoints(cx, cy, radius, center_angle, half_fov):
-    a1 = math.radians(center_angle + half_fov)
-    a2 = math.radians(center_angle - half_fov)
-    return (cx + radius * math.cos(a1), cy + radius * math.sin(a1)), \
-           (cx + radius * math.cos(a2), cy + radius * math.sin(a2))
+def arc_point(cx, cy, r, angle_deg):
+    rad = math.radians(angle_deg)
+    return (cx + r * math.cos(rad), cy + r * math.sin(rad))
+
+
+def bulge_for_arc(start_angle, end_angle):
+    """计算 LWPOLYLINE bulge 值（弧段）"""
+    delta = end_angle - start_angle
+    return math.tan(math.radians(delta) / 4)
 
 
 def create_dxf(args, calc):
@@ -92,27 +87,56 @@ def create_dxf(args, calc):
         doc.layers.add(name, color=color)
 
     cx, cy = 0, 0
-    center_angle = args.direction
-    half_fov = calc["h_fov"] / 2
-    blind_r = calc["blind_depth"]
+    ca = args.direction  # 中心角
+    hf = calc["h_fov"] / 2  # 半 FOV
+    blind_r = calc["blind"]
 
-    # 盲区 M 三角形
-    (x1, y1), (x2, y2) = get_arc_endpoints(cx, cy, blind_r, center_angle, half_fov)
+    # 角度边界
+    a_top = ca + hf
+    a_bot = ca - hf
+
+    # 盲区 M：三角形（原点 → 弧两端）
+    p_origin = (cx, cy)
+    p_top = arc_point(cx, cy, blind_r, a_top)
+    p_bot = arc_point(cx, cy, blind_r, a_bot)
     msp.add_lwpolyline(
-        [(cx, cy), (x1, y1), (x2, y2)],
+        [p_origin, p_top, p_bot],
         dxfattribs={"layer": "BLINDSPOT", "transparency": TRANSPARENCY["BLINDSPOT"]}
     )
 
-    # DORI 梯形：D → O → R → I
+    # DORI 梯形：每层是 4 个点 + 弧形边
     prev_r = blind_r
     for level in ["D", "O", "R", "I"]:
         r = calc["dori"][level]
-        (ix1, iy1), (ix2, iy2) = get_arc_endpoints(cx, cy, prev_r, center_angle, half_fov)
-        (ox1, oy1), (ox2, oy2) = get_arc_endpoints(cx, cy, r, center_angle, half_fov)
+        layer = f"DORI-{level}"
+
+        # 4 个顶点：外弧两端 + 内弧两端
+        outer_top = arc_point(cx, cy, r, a_top)
+        outer_bot = arc_point(cx, cy, r, a_bot)
+        inner_top = arc_point(cx, cy, prev_r, a_top)
+        inner_bot = arc_point(cx, cy, prev_r, a_bot)
+
+        # 用 bulge 画弧形边
+        # 顺序：外弧上 → 内弧上 → 内弧下 → 外弧下
+        # 外弧边（上到下）：bulge > 0 逆时针
+        # 内弧边（下到上）：bulge > 0 逆时针
+        # 侧边（直线）：bulge = 0
+
+        half_arc = hf  # 弧的半角
+        bulge_val = bulge_for_arc(0, calc["h_fov"])  # 弧段 bulge
+
+        points = [
+            (outer_top[0], outer_top[1], 0),      # 外弧上端
+            (outer_bot[0], outer_bot[1], -bulge_val),  # 外弧下端（顺时针弧）
+            (inner_bot[0], inner_bot[1], 0),       # 内弧下端
+            (inner_top[0], inner_top[1], bulge_val),   # 内弧上端（逆时针弧）
+        ]
+
         msp.add_lwpolyline(
-            [(ox1, oy1), (ix1, iy1), (ix2, iy2), (ox2, oy2)],
-            dxfattribs={"layer": f"DORI-{level}", "transparency": TRANSPARENCY[f"DORI-{level}"]}
+            points,
+            dxfattribs={"layer": layer, "transparency": TRANSPARENCY[layer]}
         )
+
         prev_r = r
 
     return doc
@@ -126,8 +150,7 @@ def main():
         print_dry_run(args, calc)
         return
     if not args.output:
-        print("错误: 需要 --output", file=sys.stderr)
-        sys.exit(1)
+        print("错误: 需要 --output", file=sys.stderr); sys.exit(1)
     doc = create_dxf(args, calc)
     doc.saveas(args.output)
     print(f"已生成: {args.output}")
