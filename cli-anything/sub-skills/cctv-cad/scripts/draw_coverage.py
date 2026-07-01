@@ -15,26 +15,16 @@ def parse_args():
         description="生成摄像机覆盖范围 DXF 平面图",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--focal", type=float, default=4,
-                        help="焦距 (mm): 2.8/4/6/8/12, 默认 4")
-    parser.add_argument("--pixels", default="4mp", choices=["2mp", "4mp", "8mp"],
-                        help="像素: 2mp/4mp/8mp, 默认 4mp")
-    parser.add_argument("--sensor", default="1/2.8",
-                        help="传感器尺寸, 默认 1/2.8")
-    parser.add_argument("--height", type=float, default=3.0,
-                        help="安装高度 (m), 默认 3.0")
-    parser.add_argument("--tilt", default="auto",
-                        help="俯角 (°), auto 按焦距推荐, 默认 auto")
-    parser.add_argument("--direction", type=float, default=0,
-                        help="摄像机朝向角度 (°), 0=右 90=上 180=左 270=下, 默认 0")
-    parser.add_argument("--output", "-o",
-                        help="输出 DXF 路径 (--dry-run 时可省略)")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="显示计算参数但不生成文件")
-    parser.add_argument("--no-dori", action="store_true",
-                        help="去掉 DORI 分层")
-    parser.add_argument("--no-blindspot", action="store_true",
-                        help="去掉盲区标注")
+    parser.add_argument("--focal", type=float, default=4)
+    parser.add_argument("--pixels", default="4mp", choices=["2mp", "4mp", "8mp"])
+    parser.add_argument("--sensor", default="1/2.8")
+    parser.add_argument("--height", type=float, default=3.0)
+    parser.add_argument("--tilt", default="auto")
+    parser.add_argument("--direction", type=float, default=0)
+    parser.add_argument("--output", "-o")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--no-dori", action="store_true")
+    parser.add_argument("--no-blindspot", action="store_true")
     return parser.parse_args()
 
 
@@ -99,119 +89,104 @@ def print_dry_run(args, calc):
 
 def polar_to_cartesian(cx, cy, radius, angle_deg):
     angle_rad = math.radians(angle_deg)
-    x = cx + radius * math.cos(angle_rad)
-    y = cy + radius * math.sin(angle_rad)
-    return x, y
+    return cx + radius * math.cos(angle_rad), cy + radius * math.sin(angle_deg if False else angle_rad)
 
 
-def draw_dori_ring(msp, layer, cx, cy, inner_r, outer_r, start_angle, end_angle, segments=64):
-    """绘制环形扇形区域（带填充）"""
-    outer_points = []
-    for i in range(segments + 1):
-        angle = math.radians(start_angle + (end_angle - start_angle) * i / segments)
-        x = cx + outer_r * math.cos(angle)
-        y = cy + outer_r * math.sin(angle)
-        outer_points.append((x, y))
-
-    inner_points = []
-    for i in range(segments, -1, -1):
-        angle = math.radians(start_angle + (end_angle - start_angle) * i / segments)
-        x = cx + inner_r * math.cos(angle)
-        y = cy + inner_r * math.sin(angle)
-        inner_points.append((x, y))
-
-    all_points = outer_points + inner_points + [outer_points[0]]
-    msp.add_lwpolyline(all_points, dxfattribs={"layer": layer})
+def get_arc_endpoints(cx, cy, radius, center_angle, half_fov):
+    """获取弧的两个端点坐标"""
+    a1 = math.radians(center_angle + half_fov)
+    a2 = math.radians(center_angle - half_fov)
+    return (cx + radius * math.cos(a1), cy + radius * math.sin(a1)), \
+           (cx + radius * math.cos(a2), cy + radius * math.sin(a2))
 
 
-def draw_sector(msp, layer, cx, cy, radius, start_angle, end_angle, segments=64):
-    """绘制扇形区域（从圆心到半径）"""
-    points = [(cx, cy)]
-    for i in range(segments + 1):
-        angle = math.radians(start_angle + (end_angle - start_angle) * i / segments)
-        x = cx + radius * math.cos(angle)
-        y = cy + radius * math.sin(angle)
-        points.append((x, y))
-    points.append((cx, cy))
-    msp.add_lwpolyline(points, dxfattribs={"layer": layer})
+def draw_trapezoid(msp, layer, cx, cy, inner_r, outer_r, center_angle, half_fov):
+    """绘制梯形区域：内弧两端点 → 外弧两端点"""
+    (ix1, iy1), (ix2, iy2) = get_arc_endpoints(cx, cy, inner_r, center_angle, half_fov)
+    (ox1, oy1), (ox2, oy2) = get_arc_endpoints(cx, cy, outer_r, center_angle, half_fov)
+    msp.add_lwpolyline(
+        [(ox1, oy1), (ix1, iy1), (ix2, iy2), (ox2, oy2), (ox1, oy1)],
+        dxfattribs={"layer": layer}
+    )
+
+
+def draw_triangle(msp, layer, cx, cy, radius, center_angle, half_fov):
+    """绘制三角形：原点 → 内弧两端点"""
+    (x1, y1), (x2, y2) = get_arc_endpoints(cx, cy, radius, center_angle, half_fov)
+    msp.add_lwpolyline(
+        [(cx, cy), (x1, y1), (x2, y2), (cx, cy)],
+        dxfattribs={"layer": layer}
+    )
 
 
 def draw_dori_layers(msp, args, calc):
-    """绘制覆盖扇形：从圆心向外 盲区M → D → O → R → I"""
+    """绘制覆盖扇形：原点 → 盲区M → D → O → R → I"""
     cx, cy = 0, 0
-    direction = args.direction
-    h_fov = calc["h_fov"]
-    start_angle = direction - h_fov / 2
-    end_angle = direction + h_fov / 2
+    center_angle = args.direction
+    half_fov = calc["h_fov"] / 2
 
-    # 盲区 M：原点到盲区深度
+    # 盲区 M：三角形
     if not args.no_blindspot:
-        draw_sector(msp, "BLINDSPOT", cx, cy, calc["blind_depth"], start_angle, end_angle)
+        draw_triangle(msp, "BLINDSPOT", cx, cy, calc["blind_depth"], center_angle, half_fov)
 
     # DORI 层：从近到远 D → O → R → I
-    levels = ["D", "O", "R", "I"]
-    prev_radius = calc["blind_depth"]
-
-    for level in levels:
-        radius = calc["dori"][level]
-        layer_name = f"DORI-{level}"
-        draw_dori_ring(msp, layer_name, cx, cy, prev_radius, radius, start_angle, end_angle)
-        prev_radius = radius
+    prev_r = calc["blind_depth"]
+    for level in ["D", "O", "R", "I"]:
+        r = calc["dori"][level]
+        draw_trapezoid(msp, f"DORI-{level}", cx, cy, prev_r, r, center_angle, half_fov)
+        prev_r = r
 
 
 def draw_fov_lines_segmented(msp, args, calc):
-    """绘制 FOV 边界线，从盲区边界开始分段分图层"""
+    """绘制 FOV 边界线，从盲区边界开始按 DORI 分段"""
     cx, cy = 0, 0
-    direction = args.direction
-    h_fov = calc["h_fov"]
-    start_angle = direction - h_fov / 2
-    end_angle = direction + h_fov / 2
+    center_angle = args.direction
+    half_fov = calc["h_fov"] / 2
 
-    # 从盲区边界开始
-    blind_r = calc["blind_depth"]
-    levels = ["D", "O", "R", "I"]
-    radii = [calc["dori"][l] for l in levels]
+    a1 = math.radians(center_angle + half_fov)
+    a2 = math.radians(center_angle - half_fov)
 
-    prev_r = blind_r
-    for level, r in zip(levels, radii):
-        layer_name = f"DORI-{level}"
-        x1, y1 = polar_to_cartesian(cx, cy, prev_r, start_angle)
-        x2, y2 = polar_to_cartesian(cx, cy, r, start_angle)
-        msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": layer_name})
-
-        x3, y3 = polar_to_cartesian(cx, cy, prev_r, end_angle)
-        x4, y4 = polar_to_cartesian(cx, cy, r, end_angle)
-        msp.add_line((x3, y3), (x4, y4), dxfattribs={"layer": layer_name})
-
+    prev_r = calc["blind_depth"]
+    for level in ["D", "O", "R", "I"]:
+        r = calc["dori"][level]
+        layer = f"DORI-{level}"
+        msp.add_line(
+            (cx + prev_r * math.cos(a1), cy + prev_r * math.sin(a1)),
+            (cx + r * math.cos(a1), cy + r * math.sin(a1)),
+            dxfattribs={"layer": layer}
+        )
+        msp.add_line(
+            (cx + prev_r * math.cos(a2), cy + prev_r * math.sin(a2)),
+            (cx + r * math.cos(a2), cy + r * math.sin(a2)),
+            dxfattribs={"layer": layer}
+        )
         prev_r = r
 
 
 def draw_scale_marks(msp, args, calc):
     """绘制距离刻度"""
     cx, cy = 0, 0
-    direction = args.direction
+    center_angle = args.direction
     max_dist = calc["dori"]["D"]
     for dist in range(SCALE_INTERVAL, int(max_dist) + 1, SCALE_INTERVAL):
-        x, y = polar_to_cartesian(cx, cy, dist, direction)
-        perp_angle = direction + 90
-        tick_len = 0.15
-        x1, y1 = polar_to_cartesian(x, y, tick_len, perp_angle)
-        x2, y2 = polar_to_cartesian(x, y, tick_len, perp_angle + 180)
+        x, y = polar_to_cartesian(cx, cy, dist, center_angle)
+        perp = center_angle + 90
+        t = 0.15
+        x1, y1 = polar_to_cartesian(x, y, t, perp)
+        x2, y2 = polar_to_cartesian(x, y, t, perp + 180)
         msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": "ANNOTATION"})
-        text_x, text_y = polar_to_cartesian(x, y, 0.3, perp_angle)
+        tx, ty = polar_to_cartesian(x, y, 0.3, perp)
         msp.add_text(
             f"{dist}m",
             dxfattribs={"layer": "ANNOTATION", "height": 0.25}
-        ).set_placement((text_x, text_y))
+        ).set_placement((tx, ty))
 
 
 def draw_camera_icon(msp, args):
     """绘制摄像机位置点和方向箭头"""
     cx, cy = 0, 0
-    direction = args.direction
     msp.add_circle((cx, cy), radius=0.15, dxfattribs={"layer": "CAMERA"})
-    arrow_len = 0.4
-    x, y = polar_to_cartesian(cx, cy, arrow_len, direction)
+    x, y = polar_to_cartesian(cx, cy, 0.4, args.direction)
     msp.add_line((cx, cy), (x, y), dxfattribs={"layer": "CAMERA"})
 
 
@@ -222,6 +197,7 @@ def create_dxf(args, calc):
     for name, color in LAYER_COLORS.items():
         doc.layers.add(name, color=color)
 
+    # 先画到模型空间
     if not args.no_dori:
         draw_dori_layers(msp, args, calc)
     draw_fov_lines_segmented(msp, args, calc)
@@ -231,9 +207,7 @@ def create_dxf(args, calc):
     # 打包为块
     block_name = "CAMERA_COVERAGE"
     block = doc.blocks.new(name=block_name)
-
-    entities_to_move = list(msp)
-    for entity in entities_to_move:
+    for entity in list(msp):
         msp.delete_entity(entity)
 
     if not args.no_dori:
