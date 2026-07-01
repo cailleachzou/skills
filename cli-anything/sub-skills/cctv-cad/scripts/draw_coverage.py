@@ -4,7 +4,6 @@
 import argparse
 import math
 import sys
-from pathlib import Path
 
 import ezdxf
 
@@ -105,7 +104,28 @@ def polar_to_cartesian(cx, cy, radius, angle_deg):
     return x, y
 
 
+def draw_dori_ring(msp, layer, cx, cy, inner_r, outer_r, start_angle, end_angle, segments=64):
+    """绘制环形扇形区域（带填充）"""
+    outer_points = []
+    for i in range(segments + 1):
+        angle = math.radians(start_angle + (end_angle - start_angle) * i / segments)
+        x = cx + outer_r * math.cos(angle)
+        y = cy + outer_r * math.sin(angle)
+        outer_points.append((x, y))
+
+    inner_points = []
+    for i in range(segments, -1, -1):
+        angle = math.radians(start_angle + (end_angle - start_angle) * i / segments)
+        x = cx + inner_r * math.cos(angle)
+        y = cy + inner_r * math.sin(angle)
+        inner_points.append((x, y))
+
+    all_points = outer_points + inner_points + [outer_points[0]]
+    msp.add_lwpolyline(all_points, dxfattribs={"layer": layer})
+
+
 def draw_sector(msp, layer, cx, cy, radius, start_angle, end_angle, segments=64):
+    """绘制扇形区域（从圆心到半径）"""
     points = [(cx, cy)]
     for i in range(segments + 1):
         angle = math.radians(start_angle + (end_angle - start_angle) * i / segments)
@@ -117,44 +137,79 @@ def draw_sector(msp, layer, cx, cy, radius, start_angle, end_angle, segments=64)
 
 
 def draw_dori_layers(msp, args, calc):
+    """绘制 DORI 分层扇形"""
     cx, cy = 0, 0
     direction = args.direction
     h_fov = calc["h_fov"]
     start_angle = direction - h_fov / 2
     end_angle = direction + h_fov / 2
-    for level in ["D", "O", "R", "I"]:
+
+    levels = ["D", "O", "R", "I"]
+    prev_radius = 0
+
+    for level in levels:
         radius = calc["dori"][level]
         layer_name = f"DORI-{level}"
-        draw_sector(msp, layer_name, cx, cy, radius, start_angle, end_angle)
+
+        if prev_radius > 0:
+            draw_dori_ring(msp, layer_name, cx, cy, prev_radius, radius, start_angle, end_angle)
+        else:
+            draw_sector(msp, layer_name, cx, cy, radius, start_angle, end_angle)
+
+        prev_radius = radius
 
 
-def draw_fov_lines(msp, args, calc):
+def draw_fov_lines_segmented(msp, args, calc):
+    """绘制 FOV 边界线，按 DORI 距离分段分图层"""
     cx, cy = 0, 0
     direction = args.direction
     h_fov = calc["h_fov"]
-    max_radius = calc["dori"]["D"]
     start_angle = direction - h_fov / 2
     end_angle = direction + h_fov / 2
-    x1, y1 = polar_to_cartesian(cx, cy, max_radius, start_angle)
-    x2, y2 = polar_to_cartesian(cx, cy, max_radius, end_angle)
-    msp.add_line((cx, cy), (x1, y1), dxfattribs={"layer": "FOV"})
-    msp.add_line((cx, cy), (x2, y2), dxfattribs={"layer": "FOV"})
+
+    levels = ["I", "R", "O", "D"]
+    radii = [calc["dori"][l] for l in levels]
+
+    prev_r = 0
+    for level, r in zip(levels, radii):
+        layer_name = f"DORI-{level}"
+        x1, y1 = polar_to_cartesian(cx, cy, prev_r, start_angle)
+        x2, y2 = polar_to_cartesian(cx, cy, r, start_angle)
+        msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": layer_name})
+
+        x3, y3 = polar_to_cartesian(cx, cy, prev_r, end_angle)
+        x4, y4 = polar_to_cartesian(cx, cy, r, end_angle)
+        msp.add_line((x3, y3), (x4, y4), dxfattribs={"layer": layer_name})
+
+        prev_r = r
 
 
 def draw_blindspot(msp, args, calc):
+    """绘制盲区（三角形 + 弧线）"""
     if args.no_blindspot:
         return
     cx, cy = 0, 0
     direction = args.direction
     blind_depth = calc["blind_depth"]
     back_angle = direction + 180
+
     p1 = (cx, cy)
     p2 = polar_to_cartesian(cx, cy, blind_depth, back_angle - 15)
     p3 = polar_to_cartesian(cx, cy, blind_depth, back_angle + 15)
     msp.add_lwpolyline([p1, p2, p3, p1], dxfattribs={"layer": "BLINDSPOT"})
 
+    arc_points = []
+    segments = 32
+    for i in range(segments + 1):
+        angle = math.radians(back_angle - 15 + 30 * i / segments)
+        x = cx + blind_depth * math.cos(angle)
+        y = cy + blind_depth * math.sin(angle)
+        arc_points.append((x, y))
+    msp.add_lwpolyline(arc_points, dxfattribs={"layer": "BLINDSPOT"})
+
 
 def draw_scale_marks(msp, args, calc):
+    """绘制距离刻度"""
     cx, cy = 0, 0
     direction = args.direction
     max_dist = calc["dori"]["D"]
@@ -166,10 +221,14 @@ def draw_scale_marks(msp, args, calc):
         x2, y2 = polar_to_cartesian(x, y, tick_len, perp_angle + 180)
         msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": "ANNOTATION"})
         text_x, text_y = polar_to_cartesian(x, y, 0.3, perp_angle)
-        msp.add_text(f"{dist}m", dxfattribs={"layer": "ANNOTATION", "height": 0.25}).set_placement((text_x, text_y))
+        msp.add_text(
+            f"{dist}m",
+            dxfattribs={"layer": "ANNOTATION", "height": 0.25}
+        ).set_placement((text_x, text_y))
 
 
 def draw_camera_icon(msp, args):
+    """绘制摄像机位置点和方向箭头"""
     cx, cy = 0, 0
     direction = args.direction
     msp.add_circle((cx, cy), radius=0.15, dxfattribs={"layer": "CAMERA"})
@@ -178,34 +237,38 @@ def draw_camera_icon(msp, args):
     msp.add_line((cx, cy), (x, y), dxfattribs={"layer": "CAMERA"})
 
 
-def draw_annotation(msp, args, calc):
-    base_x, base_y = 5, -2
-    lines = [
-        f"焦距: {args.focal} mm",
-        f"像素: {args.pixels}",
-        f"传感器: {args.sensor}",
-        f"高度: {args.height} m",
-        f"俯角: {args.tilt}°",
-        f"朝向: {args.direction}°",
-        f"FOV: {calc['h_fov']:.1f}°",
-    ]
-    for i, line in enumerate(lines):
-        msp.add_text(line, dxfattribs={"layer": "ANNOTATION", "height": 0.25}).set_placement((base_x, base_y - i * 0.35))
-
-
 def create_dxf(args, calc):
     doc = ezdxf.new("R2010")
     doc.units = ezdxf.units.M
     msp = doc.modelspace()
     for name, color in LAYER_COLORS.items():
         doc.layers.add(name, color=color)
+
     if not args.no_dori:
         draw_dori_layers(msp, args, calc)
-    draw_fov_lines(msp, args, calc)
+    draw_fov_lines_segmented(msp, args, calc)
     draw_blindspot(msp, args, calc)
     draw_scale_marks(msp, args, calc)
     draw_camera_icon(msp, args)
-    draw_annotation(msp, args, calc)
+
+    # 打包为块
+    block_name = "CAMERA_COVERAGE"
+    block = doc.blocks.new(name=block_name)
+
+    # 先清空模型空间，收集实体引用
+    entities_to_move = list(msp)
+    for entity in entities_to_move:
+        msp.delete_entity(entity)
+
+    # 重新绘制到块中
+    if not args.no_dori:
+        draw_dori_layers(block, args, calc)
+    draw_fov_lines_segmented(block, args, calc)
+    draw_blindspot(block, args, calc)
+    draw_scale_marks(block, args, calc)
+    draw_camera_icon(block, args)
+
+    msp.add_blockref(block_name, (0, 0))
     return doc
 
 
