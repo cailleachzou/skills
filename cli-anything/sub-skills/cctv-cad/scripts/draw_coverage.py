@@ -9,7 +9,6 @@ import ezdxf
 
 from constants import SENSORS, DORI, PIXELS, DEFAULT_TILT, LAYER_COLORS
 
-# 透明度：DXF 编码 = 0x2000000 + alpha
 TRANSPARENCY = {
     "BLINDSPOT": 0x2000000 + 178,
     "DORI-I":    0x2000000 + 153,
@@ -67,15 +66,9 @@ def print_dry_run(args, calc):
         print(f"  {l}: {d:.1f}m")
 
 
-def arc_point(cx, cy, r, angle_deg):
+def polar_xy(cx, cy, r, angle_deg):
     rad = math.radians(angle_deg)
     return (cx + r * math.cos(rad), cy + r * math.sin(rad))
-
-
-def bulge_for_arc(start_angle, end_angle):
-    """计算 LWPOLYLINE bulge 值（弧段）"""
-    delta = end_angle - start_angle
-    return math.tan(math.radians(delta) / 4)
 
 
 def create_dxf(args, calc):
@@ -87,57 +80,24 @@ def create_dxf(args, calc):
         doc.layers.add(name, color=color)
 
     cx, cy = 0, 0
-    ca = args.direction  # 中心角
-    hf = calc["h_fov"] / 2  # 半 FOV
-    blind_r = calc["blind"]
+    ca = args.direction
 
-    # 角度边界
-    a_top = ca + hf
-    a_bot = ca - hf
+    # 5 段线段沿中心线：原点 → I → R → O → D
+    segments = [
+        ("BLINDSPOT", 0, calc["blind"]),
+        ("DORI-I",    calc["blind"], calc["dori"]["I"]),
+        ("DORI-R",    calc["dori"]["I"], calc["dori"]["R"]),
+        ("DORI-O",    calc["dori"]["R"], calc["dori"]["O"]),
+        ("DORI-D",    calc["dori"]["O"], calc["dori"]["D"]),
+    ]
 
-    # 盲区 M：三角形（原点 → 弧两端）
-    p_origin = (cx, cy)
-    p_top = arc_point(cx, cy, blind_r, a_top)
-    p_bot = arc_point(cx, cy, blind_r, a_bot)
-    msp.add_lwpolyline(
-        [p_origin, p_top, p_bot],
-        dxfattribs={"layer": "BLINDSPOT", "transparency": TRANSPARENCY["BLINDSPOT"]}
-    )
-
-    # DORI 梯形：每层是 4 个点 + 弧形边
-    prev_r = blind_r
-    for level in ["D", "O", "R", "I"]:
-        r = calc["dori"][level]
-        layer = f"DORI-{level}"
-
-        # 4 个顶点：外弧两端 + 内弧两端
-        outer_top = arc_point(cx, cy, r, a_top)
-        outer_bot = arc_point(cx, cy, r, a_bot)
-        inner_top = arc_point(cx, cy, prev_r, a_top)
-        inner_bot = arc_point(cx, cy, prev_r, a_bot)
-
-        # 用 bulge 画弧形边
-        # 顺序：外弧上 → 内弧上 → 内弧下 → 外弧下
-        # 外弧边（上到下）：bulge > 0 逆时针
-        # 内弧边（下到上）：bulge > 0 逆时针
-        # 侧边（直线）：bulge = 0
-
-        half_arc = hf  # 弧的半角
-        bulge_val = bulge_for_arc(0, calc["h_fov"])  # 弧段 bulge
-
-        points = [
-            (outer_top[0], outer_top[1], 0),      # 外弧上端
-            (outer_bot[0], outer_bot[1], -bulge_val),  # 外弧下端（顺时针弧）
-            (inner_bot[0], inner_bot[1], 0),       # 内弧下端
-            (inner_top[0], inner_top[1], bulge_val),   # 内弧上端（逆时针弧）
-        ]
-
-        msp.add_lwpolyline(
-            points,
+    for layer, r_start, r_end in segments:
+        p1 = polar_xy(cx, cy, r_start, ca)
+        p2 = polar_xy(cx, cy, r_end, ca)
+        msp.add_line(
+            p1, p2,
             dxfattribs={"layer": layer, "transparency": TRANSPARENCY[layer]}
         )
-
-        prev_r = r
 
     return doc
 
