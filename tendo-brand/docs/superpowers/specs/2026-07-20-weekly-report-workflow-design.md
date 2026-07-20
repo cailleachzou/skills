@@ -40,13 +40,20 @@ Phase 5: 生成 Excel
 项目目录/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/
 ```
 
-文件命名：`Tendo - {项目代码} - Weekly Progress Report (项目周报) {YYYY-MM-DD}.xlsx`
+文件命名：`TendoCN - {Client Name} - {Project Name} Weekly Progress Report (项目周报) {YYYY-MM-DD}.xlsx`
+
+命名规则：
+- 源模板名：`TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx`
+- 输出文件名从模板名派生，替换 Client Name / Project Name / 加入日期
+- Agent 完成所有数据填充后，根据采集到的上下文（项目名、客户名）重命名文件
 
 ## 模板来源
 
 ```
 references/TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx
 ```
+
+文件名格式：`TendoCN - {Client Name} - {Project Name} Weekly Progress Report (项目周报) .xlsx`
 
 ## Sheet 结构
 
@@ -155,22 +162,28 @@ Agent 询问：
 
 ```bash
 # 1. 复制模板
-cp "references/模板.xlsx" "项目目录/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/周报.xlsx"
+TEMPLATE="references/TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx"
+OUTPUT="项目目录/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/周报.xlsx"
+cp "$TEMPLATE" "$OUTPUT"
 
 # 2. 读取模板结构
-officecli get "周报.xlsx" '/Sheet1' --depth 2 --json
+officecli get "$OUTPUT" '/Sheet1' --depth 2 --json
 
 # 3. 插入新子项行（如有新增）
-officecli add "周报.xlsx" '/Sheet1' --type row --index 17 --shift down
+officecli add "$OUTPUT" '/Sheet1' --type row --index 17 --shift down
 
 # 4. 批量填充数据（原子操作）
-echo '[...]' | officecli batch "周报.xlsx" --json
+echo '[...]' | officecli batch "$OUTPUT" --json
 
 # 5. 设置颜色编码
-officecli set "周报.xlsx" '/Sheet1/C17' --prop fill=FF00B050  # Green = In Progress
+officecli set "$OUTPUT" '/Sheet1/C17' --prop fill=FF00B050  # Green = In Progress
 
 # 6. 插入照片（Site Photo sheet）
-officecli add "周报.xlsx" '/Sheet2' --type image --prop path="photo.jpg" --prop anchor="D13"
+officecli add "$OUTPUT" '/Sheet2' --type image --prop path="photo.jpg" --prop anchor="D13"
+
+# 7. 根据上下文重命名文件
+# 文件名格式：TendoCN - {Client Name} - {Project Name} Weekly Progress Report (项目周报) {YYYY-MM-DD}.xlsx
+mv "$OUTPUT" "项目目录/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/TendoCN - {Client} - {Project} Weekly Progress Report (项目周报) {DATE}.xlsx"
 ```
 
 ### 错误处理
@@ -189,7 +202,7 @@ skills/tendo-brand/
 │   └── weekly-report/
 │       └── generate.sh               ← 核心生成脚本（可选，复杂逻辑用）
 ├── references/
-│   └── 模板.xlsx                      ← 周报模板
+│   └── TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx  ← 周报模板
 └── docs/superpowers/specs/
     └── 2026-07-20-weekly-report-workflow-design.md  ← 本文件
 ```
@@ -202,3 +215,4 @@ skills/tendo-brand/
 4. Site Photo 的 Description 正确反映照片内容
 5. Issue/RFA Log 数据完整填充
 6. 输出文件可直接在 Excel/WPS 中打开无报错
+7. 文件根据上下文正确重命名（Client Name + Project Name + Date）
