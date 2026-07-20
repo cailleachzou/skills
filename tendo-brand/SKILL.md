@@ -427,9 +427,16 @@ img { max-width: 100%; height: auto; }
 |-----------|---------|------|
 | Q&A、勘察确认、现场勘察clarification | `agents/qa-sheet.md` | `TendoCN - Q&A for (Client) (Project) - (Date).xlsx` |
 | 人员清单、worker name list、团队名单 | `agents/worker-list.md` | `TendoCN - Worker Name List.xlsx` |
-| 周报、项目状态报告、每周报告、weekly status | `agents/weekly-status-report.md` | `SBY - 每周项目状态报告 (中文).docx` |
+| 中文周报、状态报告、weekly status report、docx周报 | `agents/weekly-status-report.md` | `SBY - 每周项目状态报告 (中文).docx` |
 | Rack Elevation、机柜图、机柜布置、rack layout | `agents/rack-elevation.md` | `TendoCN - Proposed (Client) (Project) Rack Elevation.xls` |
-| 项目周报、weekly progress report、进度报告 | `agents/weekly-report.md` | `TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx` |
+| 进度周报、progress report、xlsx周报、weekly progress | `agents/weekly-report.md` | `TendoCN - ... - Weekly Progress Report (项目周报) .xlsx` |
+
+### 版本区分
+
+| 版本 | 触发词 | 输出格式 | 语言 |
+|------|--------|---------|------|
+| **Word 版** | 中文周报、状态报告、docx周报 | `.docx` 固定结构（A-E段） | 中文 |
+| **XLSX 版** | 进度周报、progress report、xlsx周报 | `.xlsx` 动态矩阵（阶段×子项） | 英文 |
 
 ### 调用方式
 ```
