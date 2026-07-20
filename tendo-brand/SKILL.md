@@ -268,6 +268,157 @@ const table = new Table({
 
 字体：**Montserrat**（400、500、600、700 字重）— 通过 Google Fonts 加载
 
+## MD 转 PDF（md-to-pdf + Tendo 页眉）
+
+将 Markdown 文件转换为带 Tendo 品牌页眉的 PDF。基于 `md-to-pdf`（Puppeteer）实现。
+
+### 前置条件
+
+```bash
+npm install -g md-to-pdf
+npx puppeteer browsers install chrome
+```
+
+### 文件结构
+
+```
+tendo-brand/
+├── assets/
+│   ├── Logo Transparent (Header).png    ← 页眉 Logo
+│   └── ...
+├── references/
+│   └── TendoCN - Test Procedure.docx    ← 页眉参考（含图标）
+└── scripts/
+    └── gen_md2pdf_config.py             ← 配置生成脚本
+```
+
+### 页眉设计规格
+
+| 元素 | 规格 |
+|------|------|
+| Logo | `Logo Transparent (Header).png`，高度 32px |
+| 公司名 | Tendo Technology (Shanghai) Co., Ltd.，8.5pt 加粗 |
+| VAT | VAT Reg. No: 91310000MAE6R8R250，7pt |
+| 地址 | 📍 Building B, Unit 206, No. 135 Yanping Road, Jingan District, Shanghai 200042 |
+| 网站 | ✉️ www.tendo.technology |
+| 竖条分隔 | `3px solid #C6D9F1`（浅蓝） |
+| 底部横条 | `4px #578FD6`（蓝色） |
+| 页边距 | 左右各 25mm（收窄与正文齐平） |
+
+### 页眉 HTML 结构
+
+```html
+<div style="width:100%;box-sizing:border-box;padding-left:25mm;padding-right:25mm;font-family:Arial,sans-serif;color:#404040;">
+  <table style="width:100%;border-collapse:collapse;border:none;">
+    <tr>
+      <td style="width:20%;border:none;vertical-align:middle;">
+        <img src="data:image/png;base64,{LOGO_BASE64}" style="height:32px;" />
+      </td>
+      <td style="width:26%;border-left:3px solid #C6D9F1;padding-left:10px;vertical-align:middle;">
+        <div style="font-size:8.5pt;font-weight:bold;">Tendo Technology (Shanghai) Co., Ltd.</div>
+        <div style="font-size:7pt;color:#666;">VAT Reg. No: 91310000MAE6R8R250</div>
+      </td>
+      <td style="width:32%;border-left:3px solid #C6D9F1;padding-left:10px;vertical-align:middle;">
+        <img src="data:image/jpeg;base64,{MARKER_BASE64}" style="height:11px;" />
+        <span style="font-size:7.5pt;color:#666;">Building B, Unit 206, No. 135 Yanping Road, Jingan District, Shanghai 200042</span>
+      </td>
+      <td style="width:22%;border-left:3px solid #C6D9F1;padding-left:10px;vertical-align:middle;">
+        <img src="data:image/jpeg;base64,{MAIL_BASE64}" style="height:11px;" />
+        <span style="font-size:7.5pt;color:#666;">www.tendo.technology</span>
+      </td>
+    </tr>
+  </table>
+  <div style="height:4px;background:#578FD6;margin-top:8px;"></div>
+</div>
+```
+
+### 配置生成脚本
+
+使用 Python 脚本将 Logo 和图标转为 base64 并生成 `md2pdf-config.js`：
+
+```python
+# scripts/gen_md2pdf_config.py
+import base64, os
+
+def img_to_base64(path):
+    with open(path, 'rb') as f:
+        return base64.b64encode(f.read()).decode()
+
+# 路径配置
+SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ASSETS_DIR = os.path.join(SKILL_DIR, 'assets')
+REFERENCES_DIR = os.path.join(SKILL_DIR, 'references')
+
+# 图标来源：从 TendoCN - Test Procedure.docx 解包获取
+# 需要先 unpack：python scripts/office/unpack.py references/TendoCN-Test-Procedure.docx unpacked_ref
+ICONS_DIR = 'unpacked_ref/word/media'  # image2.jpg=📍, image3.jpg=✉️
+
+logo_b64 = img_to_base64(os.path.join(ASSETS_DIR, 'Logo Transparent (Header).png'))
+marker_b64 = img_to_base64(os.path.join(ICONS_DIR, 'image2.jpg'))
+mail_b64 = img_to_base64(os.path.join(ICONS_DIR, 'image3.jpg'))
+
+# 生成 config（完整模板见上方页眉 HTML 结构）
+# 输出：md2pdf-config.js
+```
+
+### 使用方法
+
+```bash
+# 方法 1：一键转换（自动检测并生成配置）
+scripts/md2pdf.bat input.md [output_dir]
+
+# 方法 2：分步执行
+# 1. 生成配置（首次或图标变更时）
+python scripts/gen_md2pdf_config.py [output_dir]
+
+# 2. 转换 MD → PDF
+md-to-pdf input.md --config-file md2pdf-config.js
+```
+
+### Obsidian 图片处理
+
+MD 文件中的 Obsidian 图片语法 `![[filename.png]]` 需要转换为标准 markdown 才能被 md-to-pdf 识别：
+
+```powershell
+# 批量转换 Obsidian 图片语法
+$content = Get-Content input.md -Raw
+$content = $content -replace '!\[\[([^\]]+)\]\]', '![]($1)'
+$content | Set-Content input_pdf.md -Encoding UTF8
+
+# 同时重命名文件名去空格（如有）
+Rename-Item "Pasted image xxx.png" "img-xxx.png"
+```
+
+### CSS 文件（tendo-style.css）
+
+保持 MD 默认 Obsidian 格式，仅做基础表格样式：
+
+```css
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+th { background-color: #f5f5f5; font-weight: 600; }
+blockquote { border-left: 4px solid #ddd; margin: 12px 0; padding: 4px 12px; color: #666; }
+code { background-color: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-size: 0.9em; }
+hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
+img { max-width: 100%; height: auto; }
+```
+
+### 关键注意事项
+
+1. **页眉收窄**：Puppeteer headerTemplate 渲染在页面全宽区域，必须加 `padding-left/right: 25mm` 收窄至与正文齐平
+2. **图标 base64**：Logo 和图标必须转为 base64 data URI 嵌入，否则 PDF 中无法显示
+3. **图标来源**：📍 和 ✉️ 图标从 `TendoCN - Test Procedure.docx` 解包获取（`word/media/image2.jpg` 和 `image3.jpg`）
+4. **竖条颜色**：`#C6D9F1`（浅蓝），不是 `#ccc` 或 `#98F2F4`
+5. **底部横条**：`#578FD6`（蓝色），用 table 实现确保可见
+6. **图片宽度**：CSS 中 `img { max-width: 100%; height: auto; }` 确保图片不超出页面渲染区域
+7. **Obsidian 图片语法**：`![[filename.png]]` 需转换为标准 markdown `![alt](filename.png)`，且文件名不能有空格
+
 ## Tendo 项目文档代理（agents/）
 
 当需要处理以下 Tendo 标准模板时，使用 `Agent` 工具调用对应代理指令：
@@ -278,6 +429,7 @@ const table = new Table({
 | 人员清单、worker name list、团队名单 | `agents/worker-list.md` | `TendoCN - Worker Name List.xlsx` |
 | 周报、项目状态报告、每周报告、weekly status | `agents/weekly-status-report.md` | `SBY - 每周项目状态报告 (中文).docx` |
 | Rack Elevation、机柜图、机柜布置、rack layout | `agents/rack-elevation.md` | `TendoCN - Proposed (Client) (Project) Rack Elevation.xls` |
+| 项目周报、weekly progress report、进度报告 | `agents/weekly-report.md` | `TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx` |
 
 ### 调用方式
 ```
