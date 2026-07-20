@@ -25,8 +25,8 @@ Final file name: `TendoCN - {Client Name} - {Project Name} Weekly Progress Repor
 Ask the user one at a time:
 1. Client name (e.g. "Cooley LLP")
 2. Project name (e.g. "Cooley Shanghai Meeting Room Retrofit")
-3. Work phases list (e.g. "Demolition, Protection, Restoration, New Point Wiring, Testing, Labelling, System trial operation")
-4. Sub-items list (e.g. "Reception and large conference room, Central Park, 103, Open office")
+3. Work phases list (e.g. "Cable Pulling, Termination, Faceplate Installation, Testing, Labelling")
+4. Sub-items list (e.g. "Reception, Open Office, Executive Office 1/2/3, Meeting Room")
 5. Floor identifier (e.g. "L35")
 
 ### Phase 2: Collect progress data
@@ -37,16 +37,21 @@ For each sub-item × phase combination, ask:
 - Till Date
 - Target Date
 
-### Phase 3: Photo handling
+### Phase 3: Generate photo placeholders
 
-1. Ask for photo folder path
-2. Glob for image files (jpg, jpeg, png, heic)
-3. For each image: use MiMo to understand content → generate bilingual Description
-4. Present descriptions to user for confirmation/correction
-5. Fill Site Photo sheet with description text only — leave photo columns (D+) empty
-6. Remind user to manually insert photos in Excel after generation
+Auto-generate standard photo requirements based on phases × sub-items:
 
-> **Note:** Template cells D13+ may contain broken image references (#VALUE!). Clear these before filling new data.
+| Phase | Standard photos (bilingual) |
+|-------|----------------------------|
+| Cable Pulling | Before cable pulling / 穿线前, Cable pulling completed / 穿线完成 |
+| Termination | Termination in progress / 端接过程, Termination completed / 端接完成 |
+| Faceplate Installation | Faceplate installed / 面板安装 |
+| Testing | Test passed / 测试通过 |
+| Labelling | Labels completed / 标签完成 |
+
+Present the full list to user for confirmation/modification. Write to Site Photo sheet as placeholders (text only, no photos).
+
+> **Note:** These are PLACEHOLDERS — photos will be matched later during Phase 6.
 
 ### Phase 4: Issue / RFA collection
 
@@ -73,30 +78,27 @@ FOR_EACH new_sub_item:
 
 # 4. Batch fill Progress Report data
 # Build JSON array of set commands, then:
-echo '[...]' | officecli batch "$OUTPUT" --json
+officecli batch "$OUTPUT" --input data.json --json
 
-# 5. Set color coding per cell
-# Status → fill color:
+# 5. Set FONT COLOR coding per cell (NOT fill color)
+# Status → font.color:
 #   In Progress → FF00B050 (green)
 #   Delay → FFFF0000 (red)
 #   Not Started → FFFFC000 (orange)
 #   Completed → FF000000 (black)
 FOR_EACH phase_column in [C,F,I,L,O,R,U]:
-  officecli set "$OUTPUT" '/Progress Report/{col}{row}' --prop fill={color_hex}
+  officecli set "$OUTPUT" '/Progress Report/{col}{row}' --prop font.color={color_hex}
 
 # 6. Set Overall Percentage (column X)
 # Calculate average of all phase percentages for each sub-item
 officecli set "$OUTPUT" '/Progress Report/X{row}' --prop value={avg_pct}
 
-# 7. Fill Site Photo sheet (text only, no image insertion)
-# First clear broken image references in D13+ if any
-FOR row FROM 13 TO max_photo_row:
-  officecli set "$OUTPUT" '/Site Photo/D{row}' --prop value=""
-FOR_EACH photo_entry:
+# 7. Fill Site Photo sheet with placeholders
+FOR_EACH photo_placeholder:
   officecli set "$OUTPUT" '/Site Photo/A{row}' --prop value={item_no}
-  officecli set "$OUTPUT" '/Site Photo/B{row}' --prop value={date}
+  officecli set "$OUTPUT" '/Site Photo/B{row}' --prop value="{date}"
   officecli set "$OUTPUT" '/Site Photo/C{row}' --prop value="{description_en} ({description_cn})"
-  # Leave D column empty — user inserts photos manually in Excel
+  # D column left empty — photos matched later in Phase 6
 
 # 8. Fill Issue Log
 FOR_EACH issue:
@@ -107,7 +109,7 @@ FOR_EACH issue:
   officecli set "$OUTPUT" '/Issue_RFA Log/F{row}' --prop value="{solution}"
   officecli set "$OUTPUT" '/Issue_RFA Log/G{row}' --prop value="{action_by}"
   officecli set "$OUTPUT" '/Issue_RFA Log/I{row}' --prop value="{status}"
-  # Status color: Closed→FF92D050, Open→FFFFC000
+  # Issue status uses FILL color: Closed→FF92D050, Open→FFFFC000
   officecli set "$OUTPUT" '/Issue_RFA Log/I{row}' --prop fill={status_color}
 
 # 9. Fill RFI/RFA Log (if any)
@@ -119,6 +121,17 @@ FOR_EACH rfa:
 officecli close "$OUTPUT"
 mv "$OUTPUT" "{Project Dir}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/TendoCN - {Client} - {Project} Weekly Progress Report (项目周报) {DATE}.xlsx"
 ```
+
+### Phase 6: Photo matching (separate session, after construction)
+
+When user returns with construction photos:
+1. Ask for photo folder path
+2. Glob for image files (jpg, jpeg, png, heic)
+3. For each image: use MiMo to understand content → generate description
+4. Auto-match to existing placeholders in Site Photo sheet by comparing MiMo description with placeholder text
+5. Present match results to user for confirmation
+6. Fill matched photos into D column of corresponding rows
+7. Unmatched photos → prompt user to manually assign or create new entries
 
 ## Sheet structure reference
 
@@ -139,7 +152,7 @@ Each phase = 3 columns: %, Till Date, Target Date
 | Row | Content |
 |-----|---------|
 | 12 | Headers: Item No. \| Date \| Description \| Photos |
-| 13+ | Photo entries — text in A/B/C, D column left empty for manual photo insertion |
+| 13+ | Photo placeholders — text in A/B/C, D column filled during Phase 6 matching |
 
 ### Issue_RFA Log
 
@@ -153,11 +166,18 @@ Each phase = 3 columns: %, Till Date, Target Date
 
 ## Color coding
 
+### Progress Report — FONT color (not fill)
+
 | Status | Hex | Meaning |
 |--------|-----|---------|
-| In Progress | FF00B050 | Green |
-| Delay | FFFF0000 | Red |
-| Not Started | FFFFC000 | Orange |
-| Completed | FF000000 | Black |
-| Closed (Issue) | FF92D050 | Light green |
-| Open (Issue) | FFFFC000 | Orange |
+| In Progress | FF00B050 | Green font |
+| Delay | FFFF0000 | Red font |
+| Not Started | FFFFC000 | Orange font |
+| Completed | FF000000 | Black font |
+
+### Issue_RFA Log — FILL color
+
+| Status | Hex | Meaning |
+|--------|-----|---------|
+| Closed | FF92D050 | Light green fill |
+| Open | FFFFC000 | Orange fill |
