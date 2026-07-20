@@ -43,7 +43,10 @@ For each sub-item × phase combination, ask:
 2. Glob for image files (jpg, jpeg, png, heic)
 3. For each image: use MiMo to understand content → generate bilingual Description
 4. Present descriptions to user for confirmation/correction
-5. Try `officecli add --type image` to insert; on failure prompt manual insertion
+5. Fill Site Photo sheet with description text only — leave photo columns (D+) empty
+6. Remind user to manually insert photos in Excel after generation
+
+> **Note:** Template cells D13+ may contain broken image references (#VALUE!). Clear these before filling new data.
 
 ### Phase 4: Issue / RFA collection
 
@@ -85,17 +88,17 @@ FOR_EACH phase_column in [C,F,I,L,O,R,U]:
 # Calculate average of all phase percentages for each sub-item
 officecli set "$OUTPUT" '/Progress Report/X{row}' --prop value={avg_pct}
 
-# 7. Fill Site Photo sheet
+# 7. Fill Site Photo sheet (text only, no image insertion)
+# First clear broken image references in D13+ if any
+FOR row FROM 13 TO max_photo_row:
+  officecli set "$OUTPUT" '/Site Photo/D{row}' --prop value=""
 FOR_EACH photo_entry:
   officecli set "$OUTPUT" '/Site Photo/A{row}' --prop value={item_no}
   officecli set "$OUTPUT" '/Site Photo/B{row}' --prop value={date}
   officecli set "$OUTPUT" '/Site Photo/C{row}' --prop value="{description_en} ({description_cn})"
+  # Leave D column empty — user inserts photos manually in Excel
 
-# 8. Insert photos into Site Photo
-FOR_EACH photo:
-  officecli add "$OUTPUT" '/Site Photo' --type image --prop path="{photo_path}" --prop anchor="D{row}"
-
-# 9. Fill Issue Log
+# 8. Fill Issue Log
 FOR_EACH issue:
   officecli set "$OUTPUT" '/Issue_RFA Log/A{row}' --prop value={item_no}
   officecli set "$OUTPUT" '/Issue_RFA Log/B{row}' --prop value={date}
@@ -107,12 +110,12 @@ FOR_EACH issue:
   # Status color: Closed→FF92D050, Open→FFFFC000
   officecli set "$OUTPUT" '/Issue_RFA Log/I{row}' --prop fill={status_color}
 
-# 10. Fill RFI/RFA Log (if any)
+# 9. Fill RFI/RFA Log (if any)
 FOR_EACH rfa:
   officecli set "$OUTPUT" '/Issue_RFA Log/A{row}' --prop value={item_no}
   ...
 
-# 11. Close and rename
+# 10. Close and rename
 officecli close "$OUTPUT"
 mv "$OUTPUT" "{Project Dir}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/TendoCN - {Client} - {Project} Weekly Progress Report (项目周报) {DATE}.xlsx"
 ```
@@ -136,7 +139,7 @@ Each phase = 3 columns: %, Till Date, Target Date
 | Row | Content |
 |-----|---------|
 | 12 | Headers: Item No. \| Date \| Description \| Photos |
-| 13+ | Photo entries with embedded images in D column area |
+| 13+ | Photo entries — text in A/B/C, D column left empty for manual photo insertion |
 
 ### Issue_RFA Log
 
