@@ -1,58 +1,58 @@
 # Tendo Weekly Report Agent
 
-Generate a weekly progress report Excel file by conversational data collection, AI photo understanding, and officecli batch operations.
+通过对话采集进度数据、AI 图片理解、officecli 批量操作，生成项目周报 Excel 文件。
 
-## Template
+## 模板
 
 ```
 tendo-brand/references/TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx
 ```
 
-File name format: `TendoCN - {Client Name} - {Project Name} Weekly Progress Report (项目周报) .xlsx`
+文件名格式：`TendoCN - {Client Name} - {Project Name} Weekly Progress Report (项目周报) .xlsx`
 
-## Output location
+## 输出位置
 
 ```
 {Project Dir}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/
 ```
 
-Final file name: `TendoCN - {Client Name} - {Project Name} Weekly Progress Report (项目周报) {YYYY-MM-DD}.xlsx`
+最终文件名：`TendoCN - {Client Name} - {Project Name} Weekly Progress Report (项目周报) {YYYY-MM-DD}.xlsx`
 
-## Workflow phases
+## 工作流程
 
-### Phase 0: Plan confirmation
+### Phase 0: 计划确认
 
-Before starting, list the operation plan for user confirmation:
+开始前列出操作计划，用户确认后执行：
 ```
 Plan:
 1. Project info: {Client}, {Project}, {Phases}, {Sub-items}
-2. Progress Report: delete rows 16-20, insert {N} phase columns × 3, insert {M} sub-item rows
+2. Progress Report: delete rows 16-20, insert or delete {N} phase columns × 3, insert {M} sub-item rows
 3. Site Photo: delete rows 13-23, insert {P} photo placeholder rows
 4. Issue_RFA Log: delete rows 14-17, insert {Q} issue rows
 5. Generate Excel → rename to final filename
 Confirm to proceed?
 ```
 
-### Phase 1: Collect project info
+### Phase 1: 采集项目信息
 
-Ask the user one at a time:
-1. Client name (e.g. "DBS Bank")
-2. Project name (e.g. "L35 Office Retrofit")
-3. Work phases list (e.g. "Cable Pulling, Termination, Faceplate Installation, Testing, Labelling")
-4. Sub-items list (e.g. "Reception, Open Office, Executive Office 1/2/3, Meeting Room")
-5. Floor identifier (e.g. "35F")
+逐项询问用户：
+1. Client name（如 "DBS Bank"）
+2. Project name（如 "L35 Office Retrofit"）
+3. Work phases list（如 "Cable Pulling, Termination, Faceplate Installation, Testing, Labelling"）
+4. Sub-items list（如 "Reception, Open Office, Executive Office 1/2/3, Meeting Room"）
+5. Floor identifier（如 "35F"）
 
-### Phase 2: Collect progress data
+### Phase 2: 采集进度数据
 
-For each sub-item × phase combination, ask:
-- Completion percentage (0-100)
+按 子项 × 阶段 矩阵逐项询问：
+- Completion percentage（0-100）
 - Status: In Progress / Delay / Not Started / Completed
 - Till Date
 - Target Date
 
-### Phase 3: Generate photo placeholders
+### Phase 3: 生成照片占位符
 
-Auto-generate standard photo requirements based on phases × sub-items:
+根据 阶段 × 子项 自动生成标准照片需求：
 
 | Phase | Standard photos (bilingual) |
 |-------|----------------------------|
@@ -62,19 +62,19 @@ Auto-generate standard photo requirements based on phases × sub-items:
 | Testing | Test passed / 测试通过 |
 | Labelling | Labels completed / 标签完成 |
 
-Present the full list to user for confirmation/modification. Write to Site Photo sheet as placeholders (text only, no photos).
+展示完整列表供用户确认/修改。写入 Site Photo sheet 作为占位符（仅文字，无照片）。
 
-### Phase 4: Issue / RFA collection
+### Phase 4: 采集 Issue / RFA
 
-Ask:
-1. Any new issues this week? → for each: description, risk (Low/Medium/High), solution, action by, status (Open/Closed)
-2. Any RFI/RFA? → for each: date, description, issued to, respond by, status
+询问：
+1. 本周是否有新问题？→ 逐项采集：描述、风险（Low/Medium/High）、方案、负责人、状态（Open/Closed）
+2. 是否有 RFI/RFA？→ 逐项采集：日期、描述、发送对象、回复期限、状态
 
-### Phase 5: Generate Excel
+### Phase 5: 生成 Excel
 
 ```bash
-# 1. Copy template
-TEMPLATE="tendo-brand/references/TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx"
+# 1. 复制模板
+TEMPLATE="tendo-brand/references/TendoCN - Cooley LLP - ...xlsx"
 OUTPUT="{Project Dir}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/周报.xlsx"
 cp "$TEMPLATE" "$OUTPUT"
 
@@ -82,71 +82,80 @@ cp "$TEMPLATE" "$OUTPUT"
 # PROGRESS REPORT
 # ============================================================
 
-# 2. Delete rows 16-20 (floor ID + sample data)
-# officecli remove with shift=up to close gaps
-officecli remove "$OUTPUT" '/Progress Report/row[16]' --shift up
-officecli remove "$OUTPUT" '/Progress Report/row[16]' --shift up
-officecli remove "$OUTPUT" '/Progress Report/row[16]' --shift up
-officecli remove "$OUTPUT" '/Progress Report/row[16]' --shift up
-officecli remove "$OUTPUT" '/Progress Report/row[16]' --shift up
+# 2. 删除 row 16-20（楼层标识 + 示例数据）
+# 注意：officecli remove row 不支持 --shift，直接删除即可
+officecli remove "$OUTPUT" '/Progress Report/row[16]'  # 重复5次
 
-# 3. Delete existing phase columns (C through W), keep A, B, X
-# Remove columns C-W to make room for dynamic phase columns
-officecli remove "$OUTPUT" '/Progress Report/col[C]' --shift left
-# ... repeat for each column C through W
-
-# 4. Insert N×3 phase columns (N = number of phases)
-# Each phase = 3 columns: %, Till Date, Target Date
+# 3. 插入或删除阶段列（动态）
+# 模板有7个阶段列（C-W，每列3个=21列）
+# 实际项目可能少于或多于7个阶段
+# 操作：先删除所有阶段列（C-W），再按需插入 N×3 列
+#
+# 删除阶段列：
+FOR col FROM W DOWN TO C:
+  officecli remove "$OUTPUT" '/Progress Report/col[{col}]' --shift left
+#
+# 插入新列（每个阶段3列：%, Till Date, Target Date）：
 FOR phase_index FROM 0 TO N-1:
-  base_col = column_letter(3 + phase_index * 3)  # C, F, I, L, O, R, U...
-  officecli add "$OUTPUT" '/Progress Report' --type col --index {col_number} --shift right
-  officecli add "$OUTPUT" '/Progress Report' --type col --index {col_number+1} --shift right
-  officecli add "$OUTPUT" '/Progress Report' --type col --index {col_number+2} --shift right
+  col_num = 3 + phase_index * 3  # C=3, F=6, I=9...
+  officecli add "$OUTPUT" '/Progress Report' --type col --index {col_num} --shift right
+  officecli add "$OUTPUT" '/Progress Report' --type col --index {col_num+1} --shift right
+  officecli add "$OUTPUT" '/Progress Report' --type col --index {col_num+2} --shift right
 
-# 5. Update row 12 merged title
+# 4. 更新 row 12 合并标题
 officecli set "$OUTPUT" '/Progress Report/C12' --prop value="{Project Title}"
-# Merge C12:{last_phase_col}12
+# 合并 C12:{last_col}12
+# 格式：bold=True, sz=10, name=Arial, fill=FF0099FF, font.color=FFFFFFFF, h=center, v=center, wrap=True
 
-# 6. Update row 13 phase headers
+# 5. 更新 row 13 阶段标题
+# 格式：bold=True, sz=10, name=Arial, font.color=FFFFFFFF, fill=FF0099FF
+# border: L=medium, R=medium, T=medium, B=medium
+# align: h=center, v=center, wrap=True
+# 每3列合并一个阶段标题
 FOR_EACH phase at index i:
   col = column_letter(3 + i * 3)
   officecli set "$OUTPUT" '/Progress Report/{col}13' --prop value="{Phase Name}"
+  # 合并 {col}13:{col+2}13
 
-# 7. Update row 14 sub-headers (% | Till Date | Target Date per phase)
+# 6. 更新 row 14 子标题
+# 格式：bold=False, sz=10, name=Arial, fill=00000000
+# % 列：border L=medium(first phase)/thin(other), R=thin, T=medium, B=medium, h=center, nf=0%
+# Till Date 列：border L=thin, R=None, T=medium, B=medium, h=center, v=center, wrap=True, nf=mm-dd-yy
+# Target Date 列：border L=thin, R=medium(last col)/thin(other), T=medium, B=medium, h=center, v=center, wrap=True, nf=mm-dd-yy
 FOR_EACH phase column base:
   officecli set "$OUTPUT" '/Progress Report/{base}14' --prop value="%"
   officecli set "$OUTPUT" '/Progress Report/{base+1}14' --prop value="Till Date"
   officecli set "$OUTPUT" '/Progress Report/{base+2}14' --prop value="Target Date"
 
-# 8. Insert floor ID row (row 16)
+# 7. 插入楼层标识行（row 16）
+# 格式：bold=True, sz=10(A)/12(B), name=Arial, fill=00000000
+# border: L=medium, R=medium(B)/thin(C), T=medium, B=thin
+# align: h=center, wrap=True(B)
 officecli add "$OUTPUT" '/Progress Report' --type row --index 16
 officecli set "$OUTPUT" '/Progress Report/B16' --prop value="{Floor ID}"
 
-# 9. Insert sub-item rows (row 17+)
+# 8. 插入子项行（row 17+）
+# A列格式：bold=True, sz=10, name=Arial, border L=medium, R=medium, T=thin, B=thin, h=center
+# B列格式：bold=False, sz=10, name=Arial, border L=medium, R=medium, T=thin, B=None, h=center, wrap=True
+# %列格式：bold=False, sz=10, name=Arial, border L=medium(first phase)/thin, R=thin, T=thin, B=thin, h=center, nf=0%
+# 日期列格式：bold=False, sz=10, name=Arial, border L=thin, R=thin/medium(last), T=thin, B=thin, h=center, nf=[$-409]d\-mmm;@
+# X列格式：bold=False, sz=10, name=Arial, border L=medium, R=medium, T=thin, B=thin, h=center, nf=0%
 FOR i FROM 0 TO M-1:
   row = 17 + i
   officecli add "$OUTPUT" '/Progress Report' --type row --index {row}
   officecli set "$OUTPUT" '/Progress Report/A{row}' --prop value={i+1}
   officecli set "$OUTPUT" '/Progress Report/B{row}' --prop value="{Sub-item Name}"
 
-# 10. Fill progress data with font colors
-# For each sub-item row, for each phase:
+# 9. 填充进度数据 + 字体颜色
 FOR_EACH sub_item at row r:
   FOR_EACH phase at index i:
     base_col = column_letter(3 + i * 3)
-    # Set % value
     officecli set "$OUTPUT" '/Progress Report/{base_col}{r}' --prop value={pct}
-    # Set dates
     officecli set "$OUTPUT" '/Progress Report/{base_col+1}{r}' --prop value="{till_date}"
     officecli set "$OUTPUT" '/Progress Report/{base_col+2}{r}' --prop value="{target_date}"
-    # Set FONT color based on status
     officecli set "$OUTPUT" '/Progress Report/{base_col}{r}' --prop font.color={status_color}
 
-# 11. Set Overall Percentage column X with AVERAGE formula
-# X column is always the last column after all phases
-# Build AVERAGE formula referencing all phase % columns
-last_col = column_letter(3 + N * 3 - 3)  # last phase's % column
-# Formula: =AVERAGE(C{r},F{r},I{r},L{r},...)
+# 10. Overall Percentage 列 X — AVERAGE 公式
 phase_cols = [column_letter(3 + i * 3) for i in range(N)]
 formula = "=AVERAGE(" + ",".join([f"{c}{r}" for c in phase_cols]) + ")"
 officecli set "$OUTPUT" '/Progress Report/X{r}' --prop value="{formula}"
@@ -155,28 +164,40 @@ officecli set "$OUTPUT" '/Progress Report/X{r}' --prop value="{formula}"
 # SITE PHOTO
 # ============================================================
 
-# 12. Delete rows 13-23 (sample data)
+# 11. 删除 rows 13-23（示例数据）
 FOR row FROM 13 TO 23:
-  officecli remove "$OUTPUT" '/Site Photo/row[13]' --shift up
+  officecli remove "$OUTPUT" '/Site Photo/row[13]'
 
-# 13. Insert photo placeholder rows
+# 12. 插入照片占位符行
+# A列格式：bold=True, sz=10, name=Arial, border L=medium, R=thin, T=None, B=thin, h=center, v=center
+# B列格式：bold=False, sz=10, name=Arial, border L=None, R=thin, T=None, B=thin, h=center, v=center, nf=dd/mm/yyyy;@
+# C列格式：bold=False, sz=10, name=Arial, border L=thin, R=thin, T=None, B=thin, h=center, v=center, wrap=True
+# D列格式：bold=True, sz=10, name=Arial, border L=thin, R=thin, T=None, B=thin, h=center, v=center, wrap=True（留空）
 FOR_EACH photo_placeholder at index i:
   row = 13 + i
   officecli add "$OUTPUT" '/Site Photo' --type row --index {row}
   officecli set "$OUTPUT" '/Site Photo/A{row}' --prop value={i+1}
   officecli set "$OUTPUT" '/Site Photo/B{row}' --prop value="{date}"
   officecli set "$OUTPUT" '/Site Photo/C{row}' --prop value="{description_en} ({description_cn})"
-  # D column left empty — photos matched later
 
 # ============================================================
 # ISSUE_RFA LOG
 # ============================================================
 
-# 14. Delete rows 14-17 (sample issue data)
+# 13. 删除 rows 14-17（示例数据）
 FOR row FROM 14 TO 17:
-  officecli remove "$OUTPUT" '/Issue_RFA Log/row[14]' --shift up
+  officecli remove "$OUTPUT" '/Issue_RFA Log/row[14]'
 
-# 15. Insert issue rows
+# 14. 插入问题行
+# A列格式：bold=False, sz=10, name=Arial, border L=thin, R=thin, T=thin, B=thin, h=center, v=center, wrap=True
+# B列格式：bold=False, sz=10, name=Arial, border L=thin, R=thin, T=thin, B=thin, h=center, v=center, wrap=True
+# C列格式：bold=False, sz=10, name=Calibri, border L=thin, R=thin, T=thin, B=thin, h=left, v=center, wrap=True
+# E列格式：bold=False, sz=10, name=Arial, border L=thin, R=thin, T=thin, B=thin, h=center, v=center, wrap=True
+# F列格式：bold=False, sz=10, name=Arial, border L=thin, R=thin, T=thin, B=thin, h=left, v=center, wrap=True
+# G列格式：bold=False, sz=10, name=Arial, border L=thin, R=thin, T=thin, B=thin, h=center, v=center, wrap=True
+# I列格式：bold=False, sz=10, name=Calibri, border L=thin, R=thin, T=thin, B=thin, h=center, v=center, wrap=True
+#   Closed: fill=FF92D050, Open: fill=FFFFC000
+# J列格式：bold=True, sz=10, name=Arial, border L=thin, R=medium, T=thin, B=thin, h=center, v=center, wrap=True
 FOR_EACH issue at index i:
   row = 14 + i
   officecli add "$OUTPUT" '/Issue_RFA Log' --type row --index {row}
@@ -187,30 +208,29 @@ FOR_EACH issue at index i:
   officecli set "$OUTPUT" '/Issue_RFA Log/F{row}' --prop value="{solution}"
   officecli set "$OUTPUT" '/Issue_RFA Log/G{row}' --prop value="{action_by}"
   officecli set "$OUTPUT" '/Issue_RFA Log/I{row}' --prop value="{status}"
-  # Issue status uses FILL color: Closed→FF92D050, Open→FFFFC000
   officecli set "$OUTPUT" '/Issue_RFA Log/I{row}' --prop fill={status_color}
 
 # ============================================================
 # FINALIZE
 # ============================================================
 
-# 16. Close and rename
+# 15. 关闭并重命名
 officecli close "$OUTPUT"
 mv "$OUTPUT" "{Project Dir}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/TendoCN - {Client} - {Project} Weekly Progress Report (项目周报) {DATE}.xlsx"
 ```
 
-### Phase 6: Photo matching (separate session, after construction)
+### Phase 6: 照片匹配（后续会话）
 
-When user returns with construction photos:
-1. Ask for photo folder path
-2. Glob for image files (jpg, jpeg, png, heic)
-3. For each image: use MiMo to understand content → generate description
-4. Auto-match to existing placeholders in Site Photo sheet by comparing MiMo description with placeholder text
-5. Present match results to user for confirmation
-6. Fill matched photos into D column of corresponding rows
-7. Unmatched photos → prompt user to manually assign or create new entries
+用户施工完成后返回：
+1. 询问照片文件夹路径
+2. 扫描图片文件（jpg, jpeg, png, heic）
+3. MiMo 理解每张照片内容 → 生成描述
+4. 自动匹配到 Site Photo 占位符（对比 MiMo 描述与占位符文字）
+5. 展示匹配结果供用户确认
+6. 匹配成功的照片填入对应行的 D 列
+7. 未匹配的照片 → 提示用户手动指定或新建条目
 
-## Metadata positions
+## 元数据位置
 
 | Sheet | Field | Cell |
 |-------|-------|------|
@@ -220,32 +240,89 @@ When user returns with construction photos:
 | Site Photo | Project | D10 |
 | Issue_RFA Log | Project | C11 |
 
-## Column structure (Progress Report)
+## 格式规范（必须严格匹配）
 
-Dynamic — number of columns = 3 (A,B) + N×3 (phases) + 1 (X=Overall%)
+### Progress Report
 
-Example with 5 phases:
-| A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | X |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Item | Desc | % | TD | Tgt | % | TD | Tgt | % | TD | Tgt | % | TD | Tgt | % | TD | Tgt | Overall% |
+#### Row 13 — 阶段标题
+| 属性 | 值 |
+|------|-----|
+| font | bold=True, sz=10, name=Arial, color=FFFFFFFF |
+| fill | FF0099FF（蓝底） |
+| border | L=medium, R=medium, T=medium, B=medium |
+| align | h=center, v=center, wrap=True |
+| 合并 | 每3列合并（C13:E13, F13:H13...） |
 
-Where: C-E=Cable Pulling, F-H=Termination, I-K=Faceplate, L-N=Testing, O-Q=Labelling
+#### Row 14 — 子标题
+| 列类型 | font | border | align | nf |
+|--------|------|--------|-------|-----|
+| % | bold=False, sz=10, Arial | L=medium(first)/thin, R=thin, T=medium, B=medium | h=center | 0% |
+| Till Date | bold=False, sz=10, Arial | L=thin, R=None, T=medium, B=medium | h=center, v=center, wrap=True | mm-dd-yy |
+| Target Date | bold=False, sz=10, Arial | L=thin, R=medium(last)/thin, T=medium, B=medium | h=center, v=center, wrap=True | mm-dd-yy |
 
-## Row structure (Progress Report)
+#### Row 16 — 楼层标识
+| 列 | font | border | align |
+|----|------|--------|-------|
+| A | bold=True, sz=10, Arial | L=medium, R=medium, T=medium, B=thin | h=center |
+| B | bold=True, sz=12, Arial | L=medium, R=medium, T=medium, B=thin | h=center, wrap=True |
+| C+ | bold=False, sz=10, Arial | L=medium, R=thin, T=medium, B=thin | h=center, nf=0% |
 
-| Row | Content |
-|-----|---------|
-| 9 | Updated On: label(A) + value(E) |
-| 10 | Project: label(A) + value(E) |
-| 12 | Phase title (merged, centered) |
-| 13 | Phase headers (merged per 3 cols) |
-| 14 | Sub-headers: % | Till Date | Target Date |
-| 16 | Floor ID (B16) |
-| 17+ | Data rows: A=seq, B=sub-item, phase cols, X=AVERAGE formula |
+#### Row 17+ — 数据行
+| 列类型 | font | border | align | nf |
+|--------|------|--------|-------|-----|
+| A (序号) | bold=True, sz=10, Arial | L=medium, R=medium, T=thin, B=thin | h=center | General |
+| B (描述) | bold=False, sz=10, Arial | L=medium, R=medium, T=thin, B=None | h=center, wrap=True | General |
+| % (每阶段首列) | bold=False, sz=10, Arial | L=medium(first phase)/thin, R=thin, T=thin, B=thin | h=center | 0% |
+| Till Date | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=center | [$-409]d\-mmm;@ |
+| Target Date | bold=False, sz=10, Arial | L=thin, R=medium(last phase)/thin, T=thin, B=thin | h=center | [$-409]d\-mmm;@ |
+| X (Overall%) | bold=False, sz=10, Arial | L=medium, R=medium, T=thin, B=thin | h=center | 0% |
 
-## Color coding
+### Site Photo
 
-### Progress Report — FONT color (not fill)
+#### Row 12 — 表头
+| 属性 | 值 |
+|------|-----|
+| font | bold=True, sz=10, Arial, color=FFFFFFFF |
+| fill | FF0099FF |
+| border | L=medium(A)/thin(B-D), R=thin(B-D)/None(D), T=medium, B=medium |
+| align | h=center, v=center, wrap=True |
+
+#### Row 13+ — 数据行
+| 列 | font | border | align | nf |
+|----|------|--------|-------|-----|
+| A (序号) | bold=True, sz=10, Arial | L=medium, R=thin, T=None, B=thin | h=center, v=center | General |
+| B (日期) | bold=False, sz=10, Arial | L=None, R=thin, T=None, B=thin | h=center, v=center | dd/mm/yyyy;@ |
+| C (描述) | bold=False, sz=10, Arial | L=thin, R=thin, T=None, B=thin | h=center, v=center, wrap=True | General |
+| D (照片) | bold=True, sz=10, Arial | L=thin, R=thin, T=None, B=thin | h=center, v=center, wrap=True | General |
+
+### Issue_RFA Log
+
+#### Row 13 — 表头
+| 属性 | 值 |
+|------|-----|
+| font | bold=True, sz=10, Arial, color=FFFFFFFF |
+| fill | FF0099FF |
+| border | L=medium(A)/thin(C-J), R=thin(C-I)/medium(J), T=medium, B=medium |
+| align | h=center, v=center, wrap=True |
+
+#### Row 14+ — 数据行
+| 列 | font | border | align | nf |
+|----|------|--------|-------|-----|
+| A (序号) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
+| B (日期) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
+| C (描述) | bold=False, sz=10, Calibri | L=thin, R=thin, T=thin, B=thin | h=left, v=center, wrap=True | General |
+| D (空) | bold=False, sz=10, Arial | L=None, R=thin, T=thin, B=thin | — | General |
+| E (风险) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
+| F (方案) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=left, v=center, wrap=True | General |
+| G (负责人) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
+| I (状态) | bold=False, sz=10, Calibri | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
+| I (Closed) | fill=FF92D050 | | | |
+| I (Open) | fill=FFFFC000 | | | |
+| J (备注) | bold=True, sz=10, Arial | L=thin, R=medium, T=thin, B=thin | h=center, v=center, wrap=True | General |
+
+## 颜色编码
+
+### Progress Report — 字体颜色（非填充）
 
 | Status | Hex |
 |--------|-----|
@@ -254,7 +331,7 @@ Where: C-E=Cable Pulling, F-H=Termination, I-K=Faceplate, L-N=Testing, O-Q=Label
 | Not Started | FFFFC000 |
 | Completed | FF000000 |
 
-### Issue_RFA Log — FILL color
+### Issue_RFA Log — 填充颜色
 
 | Status | Hex |
 |--------|-----|
