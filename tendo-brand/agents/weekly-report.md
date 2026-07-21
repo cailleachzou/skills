@@ -291,7 +291,7 @@ mv "$OUTPUT" "{Project Dir}/Tendo - 03_资料 Technical Archive/周报 - Weekly 
 | 列 | font | border | align | nf |
 |----|------|--------|-------|-----|
 | A (序号) | bold=True, sz=10, Arial | L=medium, R=thin, T=None, B=thin | h=center, v=center | General |
-| B (日期) | bold=False, sz=10, Arial | L=None, R=thin, T=None, B=thin | h=center, v=center | dd/mm/yyyy;@ |
+| B (日期) | bold=False, sz=10, Arial | L=None, R=thin, T=None, B=thin | h=center, v=center | [$-409]d\-mmm;@ |
 | C (描述) | bold=False, sz=10, Arial | L=thin, R=thin, T=None, B=thin | h=center, v=center, wrap=True | General |
 | D (照片) | bold=True, sz=10, Arial | L=thin, R=thin, T=None, B=thin | h=center, v=center, wrap=True | General |
 
@@ -315,10 +315,47 @@ mv "$OUTPUT" "{Project Dir}/Tendo - 03_资料 Technical Archive/周报 - Weekly 
 | E (风险) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
 | F (方案) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=left, v=center, wrap=True | General |
 | G (负责人) | bold=False, sz=10, Arial | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
+| H (照片) | bold=False, sz=10, Calibri | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
 | I (状态) | bold=False, sz=10, Calibri | L=thin, R=thin, T=thin, B=thin | h=center, v=center, wrap=True | General |
 | I (Closed) | fill=FF92D050 | | | |
 | I (Open) | fill=FFFFC000 | | | |
 | J (备注) | bold=True, sz=10, Arial | L=thin, R=medium, T=thin, B=thin | h=center, v=center, wrap=True | General |
+
+#### Row 18 — RFI/RFA 标题
+| 属性 | 值 |
+|------|-----|
+| font | bold=True, sz=18, Arial |
+| align | h=center, v=center |
+
+#### Row 20 — 项目名
+| 列 | 属性 |
+|----|------|
+| A20 | bold=True, sz=12, Arial, val="Project :" |
+| C20 | bold=True, sz=12, Arial, val="{Project Name}" |
+
+#### Row 22 — RFI/RFA 表头
+| 列 | font | fill | border | align |
+|----|------|------|--------|-------|
+| A (Item No.) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=medium, R=thin, T=medium, B=medium | h=center, v=center, wrap=True |
+| B (Issued Date) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=None, R=thin, T=medium, B=medium | h=center, v=center, wrap=True |
+| C (RFI / RFA) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=thin, R=thin, T=medium, B=medium | h=center, v=center, wrap=True |
+| E (Description) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=thin, R=thin, T=medium, B=medium | h=center, v=center, wrap=True |
+| F (Issued to) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=thin, R=thin, T=medium, B=medium | h=center, v=center, wrap=True |
+| G (Respond by) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=thin, R=thin, T=medium, B=medium | h=center, v=center, wrap=True |
+| I (Open/Closed) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=thin, R=None, T=medium, B=medium | h=center, v=center, wrap=True |
+| J (Remarks) | bold=True, sz=10, Arial, color=FFFFFFFF | FF0099FF | L=thin, R=medium, T=medium, B=medium | h=center, v=center, wrap=True |
+
+#### Row 23+ — RFI/RFA 数据行
+| 列 | font | border | align | nf |
+|----|------|--------|-------|-----|
+| A (序号) | bold=True, sz=10, Arial | L=medium, R=thin, T=None, B=thin | h=center, v=center | General |
+| B (日期) | bold=False, sz=10, Arial | — | h=center, v=center | [$-409]d\-mmm;@ |
+| C (RFI/RFA) | bold=False, sz=10, Arial | — | h=center, v=center, wrap=True | General |
+| E (描述) | bold=False, sz=10, Arial | — | h=left, v=center, wrap=True | General |
+| F (发送对象) | bold=False, sz=10, Arial | — | h=center, v=center, wrap=True | General |
+| G (回复期限) | bold=False, sz=10, Arial | — | h=center, v=center | [$-409]d\-mmm;@ |
+| I (状态) | bold=False, sz=10, Calibri | — | h=center, v=center, wrap=True | General |
+| J (备注) | bold=False, sz=10, Arial | — | h=center, v=center, wrap=True | General |
 
 ## 颜色编码
 
