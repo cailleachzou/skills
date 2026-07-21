@@ -98,6 +98,25 @@ def create_dxf(args, calc):
             p1, p2,
             dxfattribs={"layer": layer, "transparency": TRANSPARENCY[layer]}
         )
+        # 镜像线段（沿 X 轴翻转）
+        msp.add_line(
+            (p1[0], -p1[1]), (p2[0], -p2[1]),
+            dxfattribs={"layer": layer, "transparency": TRANSPARENCY[layer]}
+        )
+
+    # 5 个同心圆：盲区 / I / R / O / D
+    circle_radii = [
+        ("BLINDSPOT", calc["blind"]),
+        ("DORI-I",    calc["dori"]["I"]),
+        ("DORI-R",    calc["dori"]["R"]),
+        ("DORI-O",    calc["dori"]["O"]),
+        ("DORI-D",    calc["dori"]["D"]),
+    ]
+    for layer, radius in circle_radii:
+        msp.add_circle(
+            (cx, cy), radius,
+            dxfattribs={"layer": layer, "transparency": TRANSPARENCY[layer]}
+        )
 
     return doc
 

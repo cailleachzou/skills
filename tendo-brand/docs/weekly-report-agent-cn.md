@@ -1,179 +1,165 @@
-# Tendo 项目周报生成器
+# Tendo 项目周报生成工具 — 使用指南
 
-通过对话采集进度数据、AI 图片理解、officecli 批量操作，生成项目周报 Excel 文件。
+## 这是什么
 
-## 模板
+一个 AI 辅助工具，帮你快速生成 Tendo 标准格式的项目周报 Excel 文件。你只需要告诉它项目信息和进度，它会自动排版、填数据、匹配照片。
 
-```
-tendo-brand/references/TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retrofit - Weekly Progress Report (项目周报) .xlsx
-```
+## 两种模式
 
-文件名格式：`TendoCN - {客户名称} - {项目名称} Weekly Progress Report (项目周报) .xlsx`
+| 模式 | 什么时候用 | 你说什么 |
+|------|-----------|---------|
+| **新建周报** | 项目刚开始，从零生成 | "生成周报"、"新建进度报告" |
+| **编辑周报** | 已有周报，需要更新内容 | "编辑周报"、"加照片"、"改进度" |
 
-## 输出位置
+---
 
-```
-{项目目录}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/
-```
+## 新建周报
 
-最终文件名：`TendoCN - {客户名称} - {项目名称} Weekly Progress Report (项目周报) {YYYY-MM-DD}.xlsx`
+### 第一步：提供项目信息
 
-## 工作流程
+AI 会逐项问你：
 
-### Phase 0: 计划确认
+1. **客户名称** — 如 "DBS Bank"
+2. **项目名称** — 如 "L35 Office Retrofit"
+3. **工作阶段** — 如 "Cable Pulling, Termination, Faceplate Installation, Testing, Labelling"
+4. **区域/子项** — 如 "Reception, Open Office, Executive Office 1/2/3, Meeting Room"
+5. **楼层** — 如 "35F"
 
-开始前列出操作计划，用户确认后执行：
-```
-计划：
-1. 项目信息：{客户}、{项目}、{阶段}、{子项}
-2. Progress Report：删除 row 16-20，插入 {N} 个阶段列 × 3，插入 {M} 个子项行
-3. Site Photo：删除 row 13-23，插入 {P} 个照片占位符行
-4. Issue_RFA Log：删除 row 14-17，插入 {Q} 个问题行
-5. 生成 Excel → 重命名为最终文件名
-确认执行？
-```
+### 第二步：填写进度
 
-### Phase 1: 采集项目信息
+按"区域 × 阶段"矩阵逐项告诉你：
 
-逐项询问用户：
-1. 客户名称（如 "DBS Bank"）
-2. 项目名称（如 "L35 Office Retrofit"）
-3. 工作阶段列表（如 "Cable Pulling, Termination, Faceplate Installation, Testing, Labelling"）
-4. 子项列表（如 "Reception, Open Office, Executive Office 1/2/3, Meeting Room"）
-5. 楼层标识（如 "35F"）
+- 完成百分比（0-100%）
+- 状态（进行中 / 延期 / 未开始 / 已完成）
+- 实际完成日期
+- 目标完成日期
 
-### Phase 2: 采集进度数据
+> 可以一次性给一批，也可以分几次慢慢填。
 
-按 子项 × 阶段 矩阵逐项询问：
-- 完成百分比（0-100）
-- 状态：In Progress / Delay / Not Started / Completed
-- Till Date（实际完成日期）
-- Target Date（目标日期）
+### 第三步：确认照片需求
 
-### Phase 3: 生成照片占位符
+工具会根据你选的阶段，自动生成照片拍摄清单，例如：
 
-根据 阶段 × 子项 自动生成标准照片需求：
+| 阶段 | 需要拍的照片 |
+|------|------------|
+| Cable Pulling | 穿线前、穿线完成 |
+| Termination | 端接过程、端接完成 |
+| Faceplate Installation | 面板安装 |
+| Testing | 测试通过 |
+| Labelling | 标签完成 |
 
-| 阶段 | 标准照片（中英文） |
-|------|-------------------|
-| Cable Pulling | Before cable pulling / 穿线前, Cable pulling completed / 穿线完成 |
-| Termination | Termination in progress / 端接过程, Termination completed / 端接完成 |
-| Faceplate Installation | Faceplate installed / 面板安装 |
-| Testing | Test passed / 测试通过 |
-| Labelling | Labels completed / 标签完成 |
+你可以增删改，确认后写入周报的 Site Photo 页。
 
-展示完整列表供用户确认/修改。写入 Site Photo sheet 作为占位符（仅文字，无照片）。
+### 第四步：问题和 RFI
 
-### Phase 4: 采集 Issue / RFA
+- 本周有新问题吗？→ 告诉它描述、风险等级、方案、负责人、状态
+- 有 RFI/RFA 吗？→ 告诉它日期、描述、发给谁、回复期限、状态
 
-询问：
-1. 本周是否有新问题？→ 逐项采集：描述、风险（Low/Medium/High）、方案、负责人、状态（Open/Closed）
-2. 是否有 RFI/RFA？→ 逐项采集：日期、描述、发送对象、回复期限、状态
+### 第五步：生成
 
-### Phase 5: 生成 Excel
+确认后，工具自动生成 Excel 文件，存放在：
+> `{项目目录}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/`
 
-```bash
-# 1. 复制模板
-TEMPLATE="tendo-brand/references/TendoCN - Cooley LLP - ...xlsx"
-OUTPUT="{项目目录}/Tendo - 03_资料 Technical Archive/周报 - Weekly Report/周报.xlsx"
-cp "$TEMPLATE" "$OUTPUT"
+文件名格式：`TendoCN - {客户} - {项目} Weekly Progress Report (项目周报) {日期}.xlsx`
 
-# ============================================================
-# PROGRESS REPORT
-# ============================================================
+---
 
-# 2. 删除 row 16-20（楼层标识 + 示例数据）
-officecli remove "$OUTPUT" '/Progress Report/row[16]'  # 重复5次
+## 编辑周报
 
-# 3. 删除现有阶段列（C-W），保留 A、B、X
-officecli remove "$OUTPUT" '/Progress Report/col[C]' --shift left  # 重复删除C-W
+在已有周报上做增量修改，不用重新生成。支持以下操作：
 
-# 4. 插入 N×3 个阶段列（N = 阶段数）
-# 每个阶段 = 3列：%、Till Date、Target Date
-# 按阶段数动态插入列
+### A. 新增阶段
+> "加一个 CCTV Installation 阶段"
 
-# 5. 更新 row 12 合并标题
-officecli set "$OUTPUT" '/Progress Report/C12' --prop value="{项目标题}"
+自动插入新列、更新标题、设置默认进度。
 
-# 6. 更新 row 13 阶段标题
-# 每3列一个阶段标题
+### B. 删除阶段
+> "删掉 Labelling 阶段"
 
-# 7. 更新 row 14 子标题（% | Till Date | Target Date）
-# 每个阶段重复3个子标题
+自动删除对应列、更新公式。
 
-# 8. 插入楼层标识行（row 16）
-officecli set "$OUTPUT" '/Progress Report/B16' --prop value="{楼层}"
+### C. 新增区域
+> "加一个 VIP Meeting Room"
 
-# 9. 插入子项行（row 17+）
-# 按子项数量动态插入行，设置序号和名称
+自动插入新行、设置默认进度。
 
-# 10. 填充进度数据 + 字体颜色
-# 每个子项 × 每个阶段：设置%、日期、字体颜色
-# 字体颜色：In Progress=绿, Delay=红, Not Started=橙, Completed=黑
+### D. 修改进度
+> "Reception 的 Cable Pulling 改成 80%，进行中"
 
-# 11. Overall Percentage 列 X — AVERAGE 公式
-# =AVERAGE(C{row},F{row},I{row},L{row},O{row})
-# 动态引用实际阶段列
-```
+直接更新对应单元格。
 
-### Phase 6: 照片匹配（后续会话）
+### E. 调整日期
+> "Termination 目标日期推迟到 7/30"
 
-用户施工完成后返回：
-1. 询问照片文件夹路径
-2. 扫描图片文件（jpg, jpeg, png, heic）
-3. MiMo 理解每张照片内容 → 生成描述
-4. 自动匹配到 Site Photo 占位符（对比 MiMo 描述与占位符文字）
-5. 展示匹配结果供用户确认
-6. 匹配成功的照片填入对应行的 D 列
-7. 未匹配的照片 → 提示用户手动指定或新建条目
+### F. 新增问题
+> "加一个问题：现场发现线缆规格不对"
 
-## 元数据位置
+### G. 新增 RFI/RFA
+> "加一个 RFI：问甲方桥架走向"
 
-| Sheet | 字段 | 单元格 |
-|-------|------|--------|
-| Progress Report | Updated On | E9 |
-| Progress Report | Project | E10 |
-| Site Photo | Updated On | D9 |
-| Site Photo | Project | D10 |
-| Issue_RFA Log | Project | C11 |
+### H. 添加照片（最常用）
 
-## 列结构（Progress Report）
+项目施工过程中，你会陆续拍照片。告诉工具照片文件夹路径，它会：
 
-动态 — 列数 = 3 (A,B) + N×3 (阶段) + 1 (X=Overall%)
+1. **识别每张照片** — AI 看图理解内容（"Reception 穿线完成，蓝色网线已入桥架"）
+2. **自动匹配** — 把照片对应到周报 Site Photo 页的占位符行
+3. **展示结果** — 告诉你匹配了哪些、哪些没匹配上
+4. **写入周报** — 匹配成功的自动填入对应位置
+5. **处理遗漏** — 没匹配上的可以新建占位符或跳过
 
-5个阶段示例：
-| A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | X |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 序号 | 描述 | % | 完成日 | 目标日 | % | 完成日 | 目标日 | % | 完成日 | 目标日 | % | 完成日 | 目标日 | % | 完成日 | 目标日 | 总进度% |
+> 你可以分批加照片，比如每周拿一批回来匹配一次。
 
-C-E=穿线, F-H=端接, I-K=面板安装, L-N=测试, O-Q=标签
+---
 
-## 行结构（Progress Report）
+## 周报包含三个页签
 
-| 行 | 内容 |
-|----|------|
-| 9 | Updated On: 标签(A) + 值(E) |
-| 10 | Project: 标签(A) + 值(E) |
-| 12 | 阶段总标题（合并居中） |
-| 13 | 阶段标题（每3列合并） |
-| 14 | 子标题：% \| Till Date \| Target Date |
-| 16 | 楼层标识 (B16) |
-| 17+ | 数据行：A=序号, B=子项名, 阶段列, X=AVERAGE公式 |
-
-## 颜色编码
-
-### Progress Report — 字体颜色（非填充）
-
-| 状态 | 色值 |
+| 页签 | 内容 |
 |------|------|
-| In Progress | FF00B050（绿） |
-| Delay | FFFF0000（红） |
-| Not Started | FFFFC000（橙） |
-| Completed | FF000000（黑） |
+| **Progress Report** | 进度矩阵（区域 × 阶段），带颜色标记和平均进度公式 |
+| **Site Photo** | 照片清单（序号、日期、描述、照片文件名） |
+| **Issue_RFA Log** | 问题跟踪 + RFI/RFA 日志 |
 
-### Issue_RFA Log — 填充颜色
+## 状态颜色
 
-| 状态 | 色值 |
+Progress Report 页用字体颜色区分状态：
+
+| 状态 | 颜色 |
 |------|------|
-| Closed | FF92D050（浅绿） |
-| Open | FFFFC000（橙） |
+| 进行中 (In Progress) | 绿色 |
+| 延期 (Delay) | 红色 |
+| 未开始 (Not Started) | 橙色 |
+| 已完成 (Completed) | 黑色 |
+
+Issue_RFA Log 页用背景颜色区分状态：
+
+| 状态 | 颜色 |
+|------|------|
+| 已关闭 (Closed) | 浅绿色 |
+| 未关闭 (Open) | 橙色 |
+
+---
+
+## 快速参考
+
+### 常用指令
+
+| 你想做的 | 怎么说 |
+|---------|--------|
+| 新建周报 | "生成周报"、"新建进度报告" |
+| 更新进度 | "改进度"、"Reception Cable Pulling 改成 80%" |
+| 加照片 | "加照片"、"匹配照片"、"这批是这周拍的" |
+| 加问题 | "加一个问题" |
+| 加阶段 | "加一个 XX 阶段" |
+| 加区域 | "加一个 XX 房间" |
+| 调日期 | "XX 目标日期推迟到 X月X日" |
+
+### 文件存放位置
+
+```
+{项目目录}/
+└── Tendo - 03_资料 Technical Archive/
+    └── 周报 - Weekly Report/
+        ├── TendoCN - {客户} - {项目} ... 2026-07-14.xlsx
+        ├── TendoCN - {客户} - {项目} ... 2026-07-21.xlsx
+        └── ...
+```

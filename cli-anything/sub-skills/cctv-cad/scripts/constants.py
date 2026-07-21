@@ -41,6 +41,7 @@ LAYER_COLORS = {
     "DORI-D":     3,
     "BLINDSPOT":  1,
     "ANNOTATION": 8,
+    "RANGE":      5,
 }
 
 SCALE_INTERVAL = 5

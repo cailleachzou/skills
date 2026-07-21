@@ -1,6 +1,4 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# CLAUDE.md — Skills 开发规范
 
 ## 技能开发规范
 
@@ -12,9 +10,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 测试用例保存在 `<skill>/evals/evals.json`
 - 使用 `/skill-creator` 开发技能，完整流程：draft → subagent test → human review → improve → repeat
 
-## 文档同步
+## 目录结构
 
-- `README.md` — 全量技能清单 + 环境依赖 + 更新日志（中文），每次技能增删改同步更新
+```
+skills/
+├── CLAUDE.md                    ← 本文件
+├── README.md                    ← 全量技能清单 + 环境依赖 + 更新日志
+├── <skill-name>/
+│   ├── SKILL.md                 ← 核心：YAML frontmatter + 说明
+│   ├── scripts/                 ← 可选：脚本文件
+│   ├── references/              ← 可选：参考文档
+│   ├── assets/                  ← 可选：静态资源
+│   └── evals/
+│       └── evals.json           ← 测试用例
+└── cli-anything/
+    ├── SKILL.md                 ← 路由器入口（唯一被自动发现）
+    └── sub-skills/
+        └── <name>/
+            └── SKILL.md         ← 子技能（嵌套，不被自动发现）
+```
+
+## 测试命令
+
+```bash
+# 运行单个技能的测试
+claude --skill <skill-name> --eval
+
+# 查看技能列表
+ls skills/
+
+# 验证 SKILL.md 格式
+head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
+```
 
 ## CLI 工具统一入口（cli-anything 路由器）
 
@@ -27,13 +54,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 不要直接 mv 出 `cli-anything/sub-skills/<name>/` 之外的位置 — router 依赖嵌套结构。
 
+## 文档同步
+
+- `README.md` — 全量技能清单 + 环境依赖 + 更新日志（中文），每次技能增删改同步更新
+
 ## Git 提交规范
 
 ```bash
 git commit -m "$(cat <<'EOF'
 简短描述
 
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 EOF
 )"
 ```
+
+---
+
+*最后更新：2026-06-20*

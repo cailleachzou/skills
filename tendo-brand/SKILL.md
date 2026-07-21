@@ -438,6 +438,18 @@ img { max-width: 100%; height: auto; }
 | **Word 版** | 中文周报、状态报告、docx周报 | `.docx` 固定结构（A-E段） | 中文 |
 | **XLSX 版** | 进度周报、progress report、xlsx周报 | `.xlsx` 动态矩阵（阶段×子项） | 英文 |
 
+### XLSX 周报 Subagent 结构
+
+XLSX 周报生成采用串行 subagent pipeline，每个 subagent 负责一个 sheet：
+
+| 序号 | Subagent | 文件 | 职责 |
+|------|----------|------|------|
+| 1 | Progress Report | `agents/weekly-report-progress.md` | 阶段列、子项行、进度数据、字体颜色、AVERAGE 公式 |
+| 2 | Site Photo | `agents/weekly-report-photo.md` | 照片占位符行（阶段×子项自动生成） |
+| 3 | Issue_RFA Log | `agents/weekly-report-issue.md` | 问题跟踪 + RFI/RFA 日志 |
+
+主协调器 `agents/weekly-report.md` 负责数据采集、参数生成、串行 spawn 这三个 subagent。
+
 ### 调用方式
 ```
 Agent(
