@@ -12,41 +12,70 @@
 - `progress`: 嵌套对象 { 子项名 → { 阶段名 → { pct, status, till, target } } }
 - `report_date`: YYYY-MM-DD
 
+## 模板真实结构（核对基准）
+
+```
+Row 9:  A9="Progress Report Updated On :", E9=日期
+Row 10: A10="Project :", E10=项目名
+Row 12: C12 合并标题（阶段总标题，合并到 W12）
+Row 13: 阶段标题行（模板 7 阶段：Demolition(C)/Protection(F)/Restoration(I)/New Point Wiring(L)/Testing(O)/Labelling(R)/System trial operation(U)）
+Row 14: 子标题 %, Till Date, Target Date（每阶段 3 列）
+Row 15: 空白缓冲行
+Row 16: 楼层标识行（B16=楼层，模板已有，更新而非插入）
+Row 17-20: 子项数据行（模板 4 个示例子项）
+Row 21: 空白缓冲行
+Row 22: Overall Percentage 标题行（B22="Overall Percentage (%)"）
+Row 23: Overall AVERAGE 公式行（C23==AVERAGE(C15:C22) 等）
+```
+
+模板阶段列布局：每阶段 3 列，C-E / F-H / I-K / L-N / O-Q / R-T / U-W（共 7 阶段 21 列）。
+**X 列（col 24）= Overall Percentage**，AVERAGE 公式引用各阶段首列（C/F/I/L/O/R/U）。
+
 ## 执行步骤
 
-### 1. 删除模板示例行（row 16-20）
+### 1. 调整阶段列数（只调整差额，保留 Overall 列不动）
 
-```bash
-officecli remove "{output_path}" '/Progress Report/row[16]'
-officecli remove "{output_path}" '/Progress Report/row[16]'
-officecli remove "{output_path}" '/Progress Report/row[16]'
-officecli remove "{output_path}" '/Progress Report/row[16]'
-officecli remove "{output_path}" '/Progress Report/row[16]'
+模板有 7 个阶段列（C-W，每阶段 3 列共 21 列），X 列（col 24）= Overall Percentage。
+实际项目阶段数 N = len(phases)。**Overall Percentage 列位置动态计算**：
+```
+overall_col = column_letter(3 + N * 3)  # C=3，第 N 阶段后紧跟的列
+# N=7 → overall_col = X（与模板一致）
+# N=4 → overall_col = O（C-N 为 4 阶段，O 为 Overall）
+# N=5 → overall_col = R
 ```
 
-### 2. 调整阶段列（直接删除 C~W，再插入正确数量的列）
-
-模板有 7 个阶段列（C-W，每阶段 3 列共 21 列）。实际项目阶段数由 `phases` 数组决定。
-
-**直接删除所有模板阶段列**（从右到左逆序删除，C=3 到 W=23）：
+**情况 A：N < 7（阶段数少于模板）**
+从右侧逆序删除多余的 (7-N) 个阶段块，每块 3 列。**删除时只删阶段列（C-W 区间），不删 X 列**。逆序删除后 X 列会左移到 overall_col 位置。
 ```bash
-# 逆序删除：先删 W(23)，再删 V(21)...直到 C(3)
-FOR col FROM 23 DOWN TO 3:
-  officecli remove "{output_path}" '/Progress Report/col[{col}]'
+# 逆序删除：从最后一个多余阶段块的最后一列开始
+# 多余列数 = (7-N)*3，从 col (3 + N*3) 开始往右删
+first_extra_col = 3 + N * 3  # Overall 列原位置前
+FOR col FROM 23 DOWN TO first_extra_col:
+  officecli remove "{output_path}" '/Progress Report/col[{first_extra_col}]'
+# 删完后，原 X 列左移到 col (3 + N*3) = overall_col
 ```
 
-注意：`officecli remove col` 不支持 `--shift` 参数，但逆序删除时列索引不会偏移。
-
-**插入新列**（每个阶段 3 列：%, Till Date, Target Date）：
+**情况 B：N > 7（阶段数多于模板）**
+在 X 列前插入 (N-7)*3 列，X 列右移到 overall_col 位置。
 ```bash
-FOR i FROM 0 TO len(phases)-1:
-  base = 3 + i * 3  # C=3, F=6, I=9, L=12...
-  officecli add "{output_path}" '/Progress Report' --type col --index {base} --shift right
-  officecli add "{output_path}" '/Progress Report' --type col --index {base+1} --shift right
-  officecli add "{output_path}" '/Progress Report' --type col --index {base+2} --shift right
+# 在 col 24（原 X）前插入 (N-7)*3 列
+FOR i FROM 0 TO (N-7)*3 - 1:
+  officecli add "{output_path}" '/Progress Report' --type col --index 24 --shift right
+# 插完后，Overall 列右移到 col (3 + N*3) = overall_col
 ```
 
-最后一个阶段的最后一列是日期列，其右边界的 R border 必须是 medium（而非 thin）。
+**情况 C：N = 7** — 无需调整列数，overall_col = X。
+
+### 2. 删除模板示例子项行
+
+模板 row 17-20 有 4 个示例子项数据。删除后重新插入项目实际子项。
+```bash
+# 逆序删除 row 17-20（保留 row 16 楼层行和 row 15 缓冲行）
+officecli remove "{output_path}" '/Progress Report/row[20]'
+officecli remove "{output_path}" '/Progress Report/row[19]'
+officecli remove "{output_path}" '/Progress Report/row[18]'
+officecli remove "{output_path}" '/Progress Report/row[17]'
+```
 
 ### 3. 更新 Row 12 合并标题
 
@@ -54,7 +83,7 @@ FOR i FROM 0 TO len(phases)-1:
 officecli set "{output_path}" '/Progress Report/C12' --prop value="{project.title}"
 ```
 
-合并区域：C12 到最后一列 12（`{last_col}12`）。
+合并区域：C12 到 Overall 列前一列（`{last_phase_col}12`，其中 last_phase_col = column_letter(N*3 + 2)）。
 格式：bold=True, sz=10, name=Arial, fill=FF0099FF, font.color=FFFFFFFF, h=center, v=center, wrap=True
 
 ### 4. 更新 Row 13 阶段标题
@@ -92,14 +121,13 @@ FOR i FROM 0 TO len(phases)-1:
   officecli set "{output_path}" '/Progress Report/{next_col2}14' --prop value="Target Date"
 ```
 
-### 6. 插入楼层标识行（row 16）
+### 6. 更新楼层标识行（row 16，模板已有）
 
 ```bash
-officecli add "{output_path}" '/Progress Report' --type row --index 16
 officecli set "{output_path}" '/Progress Report/B16' --prop value="{project.floor}"
 ```
 
-格式：
+格式（保留模板原有格式，仅更新值）：
 - A16: bold=True, sz=10, Arial, border L=medium, R=medium, T=medium, B=thin, h=center
 - B16: bold=True, sz=12, Arial, border L=medium, R=medium, T=medium, B=thin, h=center, wrap=True
 - C16+: bold=False, sz=10, Arial, border L=medium, R=thin, T=medium, B=thin, h=center, nf=0%
@@ -120,7 +148,7 @@ FOR i, sub_item IN ENUMERATE(sub_items):
 - %列: bold=False, sz=10, Arial, border L=medium(first phase)/thin, R=thin, T=thin, B=thin, h=center, nf=0%
 - Till Date: bold=False, sz=10, Arial, border L=thin, R=thin, T=thin, B=thin, h=center, nf=[$-409]d\-mmm;@
 - Target Date: bold=False, sz=10, Arial, border L=thin, R=medium(last phase)/thin, T=thin, B=thin, h=center, nf=[$-409]d\-mmm;@
-- X列: bold=False, sz=10, Arial, border L=medium, R=medium, T=thin, B=thin, h=center, nf=0%
+- Overall 列 (overall_col): bold=False, sz=10, Arial, border L=medium, R=medium, T=thin, B=thin, h=center, nf=0%
 
 ### 8. 填充进度数据 + 字体颜色
 
@@ -146,13 +174,31 @@ FOR sub_item, phases_data IN progress:
 
 日期值格式：YYYY-MM-DD（officecli 会自动转换为 Excel 日期序列号）
 
-### 9. Overall Percentage 列 X — AVERAGE 公式
+### 9. Overall Percentage 列 — AVERAGE 公式
+
+**Overall 列位置 = `overall_col`（动态计算，见 Step 1）**，不固定为 X。
+AVERAGE 参数引用各阶段首列（%列），列字母随阶段数动态生成。
 
 ```bash
 phase_cols = [column_letter(3 + i * 3) for i in range(len(phases))]
 formula = "=AVERAGE(" + ",".join([f"{c}{row}" for c in phase_cols]) + ")"
-officecli set "{output_path}" '/Progress Report/X{row}' --prop value="{formula}"
+officecli set "{output_path}" '/Progress Report/{overall_col}{row}' --prop value="{formula}"
 ```
+
+### 10. Overall 行（row 23）AVERAGE 公式更新
+
+模板 row 23 有各列 AVERAGE 公式（C23==AVERAGE(C15:C22) 等）。阶段数变化后需更新：
+- 各阶段 % 列的 AVERAGE：`{phase_col}23 = =AVERAGE({phase_col}15:{phase_col}22)`
+- Overall 列 AVERAGE：`{overall_col}23 = =AVERAGE({overall_col}15:{overall_col}22)`
+
+```bash
+FOR i FROM 0 TO len(phases)-1:
+  phase_col = column_letter(3 + i * 3)
+  officecli set "{output_path}" '/Progress Report/{phase_col}23' --prop value="=AVERAGE({phase_col}15:{phase_col}22)"
+officecli set "{output_path}" '/Progress Report/{overall_col}23' --prop value="=AVERAGE({overall_col}15:{overall_col}22)"
+```
+
+注意：row 22 是 "Overall Percentage (%)" 标题行，row 23 是公式行。AVERAGE 范围 C15:C22 包含 row 22（标题行 C22 为空，不影响计算）。子项行数变化时，row 22/23 可能随插入/删除行移动，公式范围需按实际行号调整。
 
 ## 工具要求
 

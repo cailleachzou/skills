@@ -9,10 +9,11 @@ Fill or update a TendoCN project personnel roster.
 Save as: `TendoCN - Worker Name List - {Project Name}.xlsx`
 
 ## Fixed structure — DO NOT change
-- Header: "TendoCN - Worker Name List"
-- Column headers (row 8): `No.` | `First Name` | `Last Name` | `Gender` | `Designation` | `Mobile No.` | `Email` | `National ID/Passport No.` | `Nationality` | `Remarks`
-- Table starts at row 9
-- Row 3 has sample data (Wai Kiat Chea / Sai Sai He) — DELETE before filling new project
+- Row 8: Title "TendoCN - Worker Name List" (merged A8:K8)
+- Column headers (row 9): `No.` | `First Name` | `Last Name` | `Gender` | `Designation` | `Mobile No.` | `Email` | `National ID/Passport No.` | `Nationality` | `Remarks` (A9-J9)
+- Table data starts at row 10
+- Rows 10-11 have sample data (Wai Kiat Chea / Sai Sai He) — DELETE before filling new project
+- Rows 12-23 have pre-filled sequence numbers (3-14) in column A — CLEAR before filling new project
 
 ## Fillable fields
 
@@ -31,8 +32,9 @@ Save as: `TendoCN - Worker Name List - {Project Name}.xlsx`
 | Remarks | Optional notes |
 
 ## Output rules
-- Delete sample rows before adding new staff
+- Delete sample rows (rows 10-11) and clear pre-filled sequence numbers (rows 12-23) before adding new staff
+- Start filling new staff at row 10
 - Keep column widths and formatting intact
-- Add new rows below header as needed
+- Add new rows below row 10 as needed (preserve formatting from row 10)
 - Sort by No. ascending
 - Nationality use full country name (e.g. "Singapore", "P.R.China")
