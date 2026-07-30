@@ -47,20 +47,24 @@ overall_col = column_letter(3 + N * 3)  # C=3，第 N 阶段后紧跟的列
 **情况 A：N < 7（阶段数少于模板）**
 从右侧逆序删除多余的 (7-N) 个阶段块，每块 3 列。**删除时只删阶段列（C-W 区间），不删 X 列**。逆序删除后 X 列会左移到 overall_col 位置。
 ```bash
-# 逆序删除：从最后一个多余阶段块的最后一列开始
+# 逆序删除：officecli col 路径用字母（数字 index 不支持）
 # 多余列数 = (7-N)*3，从 col (3 + N*3) 开始往右删
-first_extra_col = 3 + N * 3  # Overall 列原位置前
-FOR col FROM 23 DOWN TO first_extra_col:
-  officecli remove "{output_path}" '/Progress Report/col[{first_extra_col}]'
+first_extra_col_letter = column_letter(3 + N * 3)  # Overall 列原位置前
+total_extra = (7 - N) * 3
+FOR i FROM 1 TO total_extra:
+  # 每次删 first_extra_col_letter 列，删后该位置变为下一个要删的列
+  officecli remove "{output_path}" '/Progress Report/col[{first_extra_col_letter}]'
 # 删完后，原 X 列左移到 col (3 + N*3) = overall_col
 ```
 
 **情况 B：N > 7（阶段数多于模板）**
 在 X 列前插入 (N-7)*3 列，X 列右移到 overall_col 位置。
 ```bash
-# 在 col 24（原 X）前插入 (N-7)*3 列
+# 在 X 列（col 24）前插入 (N-7)*3 列
+# officecli add col 用字母 index
+x_col_letter = "X"
 FOR i FROM 0 TO (N-7)*3 - 1:
-  officecli add "{output_path}" '/Progress Report' --type col --index 24 --shift right
+  officecli add "{output_path}" '/Progress Report' --type col --index {x_col_letter} --shift right
 # 插完后，Overall 列右移到 col (3 + N*3) = overall_col
 ```
 

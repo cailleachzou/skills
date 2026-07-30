@@ -55,8 +55,8 @@ FOR i, issue IN ENUMERATE(issues):
   officecli set "{output_path}" '/Issue_RFA Log/A{row}' --prop value={i+1}
   officecli set "{output_path}" '/Issue_RFA Log/B{row}' --prop value="{issue.date}"
   officecli set "{output_path}" '/Issue_RFA Log/C{row}' --prop value="{issue.description}"
-  # 合并 C:D（模板 Issue 描述列均为 C:D 合并）
-  officecli merge "{output_path}" '/Issue_RFA Log/C{row}:D{row}'
+  # 合并 C:D（模板 Issue 描述列均为 C:D 合并；officecli 用 set --prop merge= 合并单元格）
+  officecli set "{output_path}" '/Issue_RFA Log/C{row}' --prop merge=C{row}:D{row}
   officecli set "{output_path}" '/Issue_RFA Log/E{row}' --prop value="{issue.risk}"
   officecli set "{output_path}" '/Issue_RFA Log/F{row}' --prop value="{issue.solution}"
   officecli set "{output_path}" '/Issue_RFA Log/G{row}' --prop value="{issue.action_by}"
