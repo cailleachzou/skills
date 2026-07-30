@@ -1,16 +1,11 @@
-# Design: references/ 模板参考文档
+# Tendo references/ 模板参考文档
 
-**Date**: 2026-07-30
-**Author**: DUDU & Cailleach
-**Status**: Approved
+> 维护说明：新增模板/agent 时同步更新本文档。SKILL.md 的 agents 触发表以 SKILL.md 为准。
 
 ## 1. 概述
 
 ### 目的
 作为 `SKILL.md` 的补充参考文档，系统记录 `references/` 每个模板的技术细节。当需要新增/修改 agent 或理解模板结构时，不必重新打开二进制文件。
-
-### 读者
-skill 开发者（自己）、未来维护者。
 
 ### 范围
 `references/` 中 7 个 docx/xlsx 模板：
@@ -391,24 +386,6 @@ media 文件夹：
 
 ---
 
-## 5. 覆盖缺口分析
-
-| 缺口类型 | 示例 | 建议 |
-|---------|------|------|
-| 有 agent 无模板 | rack-elevation.md | 补充模板到 `references/`，或在 agent 中标注"需用户自行准备" |
-| 有模板无 agent | Service Report.xlsx、Test Procedure.docx | 评估自动化需求；如不需要，文档中标注为"手动填写" |
-
----
-
-## 6. 维护策略
-
-- **新增模板** → 同步更新本文档第 2 节速查表 + 新增对应详解节。
-- **新增/修改 agent** → 同步更新对应详解节第 4 段（对应 agent）。
-- **SKILL.md agents 表变更** → 本文档不再重复（以 SKILL.md 为准）。
-- **文档位置**：`docs/superpowers/specs/2026-07-30-references-templates-design.md`
-
----
-
 ## 附录：非模板文件
 
 `references/` 中 4 个非模板文件不纳入本文档范围：
@@ -419,9 +396,3 @@ media 文件夹：
 | Screenshot 2026-07-15 133109.png | 截图参考 |
 | md2pdf-config.js | md-to-pdf 配置文件 |
 | tendo-style.css | Tendo 品牌 CSS 样式 |
-
----
-
-## 实现结果
-
-最终参考文档见 `docs/references-templates-guide.md`。
