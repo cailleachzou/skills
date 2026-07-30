@@ -185,20 +185,30 @@ formula = "=AVERAGE(" + ",".join([f"{c}{row}" for c in phase_cols]) + ")"
 officecli set "{output_path}" '/Progress Report/{overall_col}{row}' --prop value="{formula}"
 ```
 
-### 10. Overall 行（row 23）AVERAGE 公式更新
+### 10. Overall 行 AVERAGE 公式更新（动态行号）
 
-模板 row 23 有各列 AVERAGE 公式（C23==AVERAGE(C15:C22) 等）。阶段数变化后需更新：
-- 各阶段 % 列的 AVERAGE：`{phase_col}23 = =AVERAGE({phase_col}15:{phase_col}22)`
-- Overall 列 AVERAGE：`{overall_col}23 = =AVERAGE({overall_col}15:{overall_col}22)`
+模板 row 22 是 "Overall Percentage (%)" 标题行，row 23 是公式行（仅当子项数 M=4 时）。
+Step 2 删除模板 4 个示例子项行（row 17-20）后，Overall 标题行/公式行会随插入的子项数 M 移动：
+- **Overall 标题行 = `18 + M`**（M=4→row 22，M=3→row 21，M=5→row 23）
+- **Overall 公式行 = `19 + M`**（M=4→row 23，M=3→row 22，M=5→row 24）
+- AVERAGE 范围上界 = 公式行 - 1 = `18 + M`，下界固定 row 15
 
 ```bash
+M = len(sub_items)
+overall_title_row = 18 + M
+overall_formula_row = 19 + M
+range_end = overall_title_row  # AVERAGE 范围 :15 到 :overall_title_row
+
+# 各阶段 % 列的 AVERAGE
 FOR i FROM 0 TO len(phases)-1:
   phase_col = column_letter(3 + i * 3)
-  officecli set "{output_path}" '/Progress Report/{phase_col}23' --prop value="=AVERAGE({phase_col}15:{phase_col}22)"
-officecli set "{output_path}" '/Progress Report/{overall_col}23' --prop value="=AVERAGE({overall_col}15:{overall_col}22)"
+  officecli set "{output_path}" '/Progress Report/{phase_col}{overall_formula_row}' --prop value="=AVERAGE({phase_col}15:{phase_col}{range_end})"
+
+# Overall 列 AVERAGE
+officecli set "{output_path}" '/Progress Report/{overall_col}{overall_formula_row}' --prop value="=AVERAGE({overall_col}15:{overall_col}{range_end})"
 ```
 
-注意：row 22 是 "Overall Percentage (%)" 标题行，row 23 是公式行。AVERAGE 范围 C15:C22 包含 row 22（标题行 C22 为空，不影响计算）。子项行数变化时，row 22/23 可能随插入/删除行移动，公式范围需按实际行号调整。
+注意：AVERAGE 范围 `{col}15:{col}{overall_title_row}` 包含 Overall 标题行（该行数据列为空，不影响计算）。模板原公式 C23=`=AVERAGE(C15:C22)` 即此模式（M=4 时 range_end=22）。
 
 ## 工具要求
 

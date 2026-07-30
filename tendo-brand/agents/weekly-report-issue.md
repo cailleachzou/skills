@@ -17,7 +17,7 @@
 ```
 Row 9:  A9="ISSUE LOG"（合并 A9:C10）
 Row 11: A11="Project :", C11=项目名
-Row 13: Issue 表头（Item No./Date/Issue Description/Risk/Proposed solution/Action By/Completed Photos/Issue Open/Closed/Remarks）
+Row 13: Issue 表头（Item No./Date/Issue Description/Risk/Proposed solution/Action By/Completed Photos/Issue Open / Closed/Remarks）
 Row 14-17: 4 个示例 Issue（C 列描述合并 C:D）
 Row 18: RFA title "RFI / RFA LOG"（合并 A18:C19，占 2 行）— 当 Issue 数=4 时
 Row 20: RFA Project 行（A20="Project :", C20=项目名）— 当 Issue 数=4 时
@@ -55,6 +55,8 @@ FOR i, issue IN ENUMERATE(issues):
   officecli set "{output_path}" '/Issue_RFA Log/A{row}' --prop value={i+1}
   officecli set "{output_path}" '/Issue_RFA Log/B{row}' --prop value="{issue.date}"
   officecli set "{output_path}" '/Issue_RFA Log/C{row}' --prop value="{issue.description}"
+  # 合并 C:D（模板 Issue 描述列均为 C:D 合并）
+  officecli merge "{output_path}" '/Issue_RFA Log/C{row}:D{row}'
   officecli set "{output_path}" '/Issue_RFA Log/E{row}' --prop value="{issue.risk}"
   officecli set "{output_path}" '/Issue_RFA Log/F{row}' --prop value="{issue.solution}"
   officecli set "{output_path}" '/Issue_RFA Log/G{row}' --prop value="{issue.action_by}"
@@ -65,6 +67,8 @@ FOR i, issue IN ENUMERATE(issues):
   ELIF issue.status == "Open":
     officecli set "{output_path}" '/Issue_RFA Log/I{row}' --prop fill=FFFFC000
 ```
+
+注意：模板 Issue 描述列 C14:D14-C17:D17 均为合并单元格，插入新行时需显式合并 `C{row}:D{row}` 以保持版式一致。
 
 插入 Issue 行后，RFA 区会随之下移。**RFA 区行号用动态公式计算**（见上方"模板真实结构"）。
 
@@ -96,7 +100,7 @@ officecli set "{output_path}" '/Issue_RFA Log/C{rfa_header_row}' --prop value="R
 officecli set "{output_path}" '/Issue_RFA Log/E{rfa_header_row}' --prop value="Description"
 officecli set "{output_path}" '/Issue_RFA Log/F{rfa_header_row}' --prop value="Issued to"
 officecli set "{output_path}" '/Issue_RFA Log/G{rfa_header_row}' --prop value="Respond by"
-officecli set "{output_path}" '/Issue_RFA Log/I{rfa_header_row}' --prop value="Open/Closed"
+officecli set "{output_path}" '/Issue_RFA Log/I{rfa_header_row}' --prop value="Issue Open / Closed"
 officecli set "{output_path}" '/Issue_RFA Log/J{rfa_header_row}' --prop value="Remarks"
 ```
 

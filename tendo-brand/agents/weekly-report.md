@@ -36,7 +36,7 @@ tendo-brand/references/TendoCN - Cooley LLP - Cooley Shanghai Meeting Room Retro
 Plan:
 1. Project info: {Client}, {Project}, {Phases count} phases, {Sub-items count} sub-items
 2. Copy template → apply project info → rename
-3. Progress Report: delete rows 16-20, insert or delete columns for {N} phases, insert {M} sub-item rows
+3. Progress Report: delete rows 17-20 (keep row 16 floor row), insert or delete columns for {N} phases, insert {M} sub-item rows
 4. Site Photo: delete rows 13-23, insert {P} photo placeholder rows
 5. Issue_RFA Log: delete rows 14-17, insert {Q} issue rows
 Confirm to proceed?
