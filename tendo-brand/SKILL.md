@@ -430,7 +430,7 @@ img { max-width: 100%; height: auto; }
 | 中文周报、状态报告、weekly status report、docx周报 | `agents/weekly-status-report.md` | `SBY - 每周项目状态报告 (中文).docx` |
 | Rack Elevation、机柜图、机柜布置、rack layout | `agents/rack-elevation.md` | `TendoCN - Proposed (Client) (Project) Rack Elevation.xls` |
 | 进度周报、progress report、xlsx周报、weekly progress | `agents/weekly-report.md` | `TendoCN - ... - Weekly Progress Report (项目周报) .xlsx` |
-| 出库单、Material Requisition、TCMR、delivery order | `agents/delivery-order.md` | `TCMR2603-00005- Material Requisition - TCSO2603-00085.xlsx` |
+| 出库单、Material Requisition、TCMR、delivery order | `agents/delivery-order.md` | `TCMR2603-00005- Material Requisition - TCSO2603-00085.xlsx` | 输出 xlsx + PDF（含签名叠加） |
 
 ### 版本区分
 
@@ -461,3 +461,7 @@ Agent(
 ```
 
 代理指令文件位于 `tendo-brand/agents/`，每个文件包含：模板路径、固定结构说明、可填字段、输出规则。
+
+### 模板参考文档
+
+各模板的内部结构、字段映射、注意事项详见 `docs/references-templates-guide.md`。新增模板或修改 agent 时同步更新该文档。
