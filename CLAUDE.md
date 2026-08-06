@@ -30,18 +30,18 @@ skills/
             └── SKILL.md         ← 子技能（嵌套，不被自动发现）
 ```
 
-## 测试命令
+## 测试与评估
 
 ```bash
-# 运行单个技能的测试
-claude --skill <skill-name> --eval
-
 # 查看技能列表
 ls skills/
 
 # 验证 SKILL.md 格式
 head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
 ```
+
+- **技能评估**：通过 `/skill-creator` 工作流运行（测试用例在 `<skill>/evals/evals.json`）：draft → subagent test → human review → improve → repeat
+- ⚠️ `claude --skill --eval` 不是真实 CLI 命令（已用 `claude --help` 验证），勿用
 
 ## CLI 工具统一入口（cli-anything 路由器）
 
