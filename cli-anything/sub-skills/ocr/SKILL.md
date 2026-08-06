@@ -5,11 +5,77 @@ type: cli-sub
 compatibility: Umi-OCR Rapid v2.1.5+ installed at `C:\Users\59620\Downloads\Programs\Umi-OCR_Rapid_v2.1.5\Umi-OCR.exe`
 ---
 
-# Umi-OCR Skill
+# OCR Skill — 两套引擎
 
-Extract plain text from images and documents via Umi-OCR's HTTP API.
+本技能提供两种 OCR 引擎，按场景选择：
 
-## Umi-OCR Installation
+| 场景 | 引擎 | 输出 |
+|------|------|------|
+| **图片 → 纯文本** | Umi-OCR | 纯文本 |
+| **PDF → Markdown（保留布局/表格）** | marker-pdf | Markdown |
+
+## 选择规则
+
+- **PDF 文件转 Markdown** → 用 marker-pdf（Section A）
+- **图片 OCR / 纯文本提取** → 用 Umi-OCR（Section B）
+
+---
+
+# Section A — marker-pdf（PDF → Markdown）
+
+## 安装位置
+
+- **Python venv**: `C:\Users\59620\.venv-marker\`
+- **marker CLI**: `C:\Users\59620\.venv-marker\Scripts\marker.exe`
+- **Wrapper 脚本**: `cli-anything/sub-skills/ocr/scripts/pdf2md.ps1`
+
+## 快速用法
+
+```powershell
+# 基本转换 — PDF → Markdown（同目录输出）
+& "C:\Users\59620\.venv-marker\Scripts\marker.exe" "<含PDF的文件夹>" --output_format markdown --output_dir "<输出目录>"
+
+# 指定页码范围
+& "C:\Users\59620\.venv-marker\Scripts\marker.exe" "<文件夹>" --output_format markdown --output_dir "<输出>" --page_range "0,1-3,5"
+
+# 强制 OCR 模式（扫描件）
+& "C:\Users\59620\.venv-marker\Scripts\marker.exe" "<文件夹>" --output_format markdown --output_dir "<输出>" --mode balanced
+
+# Wrapper 脚本（推荐）
+powershell -File "C:\Users\59620\.claude\skills\cli-anything\sub-skills\ocr\scripts\pdf2md.ps1" -Input "C:\path\to\scan.pdf"
+```
+
+## marker 关键参数
+
+| 参数 | 说明 |
+|------|------|
+| `--output_format markdown` | 输出 Markdown 格式 |
+| `--output_dir PATH` | 输出目录 |
+| `--mode balanced\|fast` | balanced=GPU最佳质量，fast=CPU轻量（默认按设备自动选择） |
+| `--page_range "0,1-5,10"` | 指定页码（0-indexed） |
+| `--force_ocr` | 强制全文 OCR |
+| `--disable_image_extraction` | 不提取图片 |
+| `--skip_existing` | 跳过已转换文件 |
+
+## 工作流程
+
+1. 将 PDF 文件放入一个临时文件夹
+2. 运行 `marker <文件夹> --output_format markdown --output_dir <输出目录>`
+3. marker 自动检测语言（含中文 surya-ocr 引擎）
+4. 输出 `<文件名>.md` 到指定目录
+
+## 注意事项
+
+- 首次运行会下载模型（约 1-2GB），需联网
+- CPU 模式下较慢，大文件建议用 GPU
+- marker 输入是**文件夹**（不是单个文件），会处理文件夹内所有 PDF
+- 中文支持由 surya-ocr 引擎提供，效果良好
+
+---
+
+# Section B — Umi-OCR（图片/文档 → 纯文本）
+
+## Umi-OCR 安装位置
 
 - **Exe path**: `C:\Users\59620\Downloads\Programs\Umi-OCR_Rapid_v2.1.5\Umi-OCR.exe`
 - **Data dir**: `C:\Users\59620\Downloads\Programs\Umi-OCR_Rapid_v2.1.5\UmiOCR-data`
