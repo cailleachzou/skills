@@ -25,6 +25,11 @@ REM Generate config if not exists
 if not exist "%OUTPUT_DIR%\md2pdf-config.js" (
     echo Generating Tendo PDF config...
     python "%SCRIPT_DIR%gen_md2pdf_config.py" "%OUTPUT_DIR%"
+    REM Fallback to static config if dynamic generation failed
+    if not exist "%OUTPUT_DIR%\md2pdf-config.js" (
+        echo Using static config fallback...
+        copy "%SKILL_DIR%\references\md2pdf-config.js" "%OUTPUT_DIR%\md2pdf-config.js" >nul
+    )
 )
 
 REM Create temp file with standard image syntax
@@ -41,6 +46,10 @@ for %%f in ("%OUTPUT_DIR%\Pasted image *.png") do (
 REM Convert MD to PDF
 echo Converting %INPUT_FILE% to PDF...
 md-to-pdf "%TEMP_FILE%" --config-file "%OUTPUT_DIR%\md2pdf-config.js"
+
+REM Stamp header image on each page using PyMuPDF
+echo Stamping header...
+python "%SCRIPT_DIR%stamp_header.py" "%OUTPUT_DIR%\%~n1_pdf.pdf" "%SKILL_DIR%\references\header_only.png"
 
 REM Rename output PDF to match input filename
 if exist "%OUTPUT_DIR%\%~n1_pdf.pdf" (

@@ -39,66 +39,58 @@ def main():
     # image2.jpg = location pin, image3.jpg = mail envelope
     unpacked_media = os.path.join(output_dir, 'unpacked_ref', 'word', 'media')
     
-    # Check if icons exist
+    # Check if icons exist (optional — header works without them)
     logo_path = os.path.join(assets_dir, 'Logo Transparent (Header).png')
     marker_path = os.path.join(unpacked_media, 'image2.jpg')
     mail_path = os.path.join(unpacked_media, 'image3.jpg')
+
+    def safe_b64(path, placeholder=''):
+        if os.path.exists(path):
+            return img_to_base64(path)
+        return placeholder
+
+    logo_b64 = safe_b64(logo_path)
+    marker_b64 = safe_b64(marker_path, 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')
+    mail_b64 = safe_b64(mail_path, 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')
     
-    if not os.path.exists(logo_path):
-        print(f'Error: Logo not found at {logo_path}')
-        sys.exit(1)
-    
-    if not os.path.exists(marker_path) or not os.path.exists(mail_path):
-        print(f'Error: Icons not found at {unpacked_media}')
-        print('Run: python scripts/office/soffice.py --headless --convert-to docx references/TendoCN-Test-Procedure.docx')
-        print('Then: python scripts/office/unpack.py references/TendoCN-Test-Procedure.docx unpacked_ref')
-        sys.exit(1)
-    
-    # Convert images to base64
-    logo_b64 = img_to_base64(logo_path)
-    marker_b64 = img_to_base64(marker_path)
-    mail_b64 = img_to_base64(mail_path)
-    
-    # Header template
+    # Header template — no footer, single-line company name
+    logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="height:32px;" />' if logo_b64 else '<span style="font-size:9pt;font-weight:bold;color:#578FD6;">TENDO</span>'
+    marker_html = f'<img src="data:image/jpeg;base64,{marker_b64}" style="height:11px;vertical-align:middle;" />' if marker_b64 else ''
+    mail_html = f'<img src="data:image/jpeg;base64,{mail_b64}" style="height:11px;vertical-align:middle;" />' if mail_b64 else ''
+
     header_html = f'''<div style="width:100%;box-sizing:border-box;padding-left:25mm;padding-right:25mm;font-family:Arial,sans-serif;color:#404040;">
 <table style="width:100%;border-collapse:collapse;border:none;margin:0;padding:0;">
 <tr>
-<td style="width:20%;border:none;padding:0;vertical-align:middle;">
-<img src="data:image/png;base64,{logo_b64}" style="height:32px;" />
+<td style="width:18%;border:none;padding:0;vertical-align:middle;">
+{logo_html}
 </td>
-<td style="width:26%;border:none;border-left:3px solid #C6D9F1;padding-left:10px;vertical-align:middle;">
-<div style="font-size:8.5pt;font-weight:bold;color:#404040;">Tendo Technology (Shanghai) Co., Ltd.</div>
-<div style="font-size:7pt;color:#666;margin-top:2px;">VAT Reg. No: 91310000MAE6R8R250</div>
+<td style="width:28%;border:none;border-left:3px solid #C6D9F1;padding-left:10px;vertical-align:middle;white-space:nowrap;">
+<div style="font-size:7.5pt;font-weight:bold;color:#404040;">Tendo Technology (Shanghai) Co., Ltd.</div>
+<div style="font-size:6.5pt;color:#666;margin-top:1px;">VAT Reg. No: 91310000MAE6R8R250</div>
 </td>
 <td style="width:32%;border:none;border-left:3px solid #C6D9F1;padding-left:10px;vertical-align:middle;">
-<img src="data:image/jpeg;base64,{marker_b64}" style="height:11px;vertical-align:middle;" />
-<span style="font-size:7.5pt;color:#666;vertical-align:middle;margin-left:3px;">Building B, Unit 206, No. 135 Yanping Road, Jingan District, Shanghai 200042</span>
+{marker_html}<span style="font-size:7pt;color:#666;vertical-align:middle;margin-left:3px;">Building B, Unit 206, No. 135 Yanping Road, Jingan District, Shanghai 200042</span>
 </td>
 <td style="width:22%;border:none;border-left:3px solid #C6D9F1;padding-left:10px;vertical-align:middle;">
-<img src="data:image/jpeg;base64,{mail_b64}" style="height:11px;vertical-align:middle;" />
-<span style="font-size:7.5pt;color:#666;vertical-align:middle;margin-left:3px;">www.tendo.technology</span>
+{mail_html}<span style="font-size:7pt;color:#666;vertical-align:middle;margin-left:3px;">www.tendo.technology</span>
 </td>
 </tr>
 </table>
 <div style="height:4px;background:#578FD6;margin-top:8px;"></div>
 </div>'''
-    
-    # Footer template
-    footer_html = '''<div style="width:100%;box-sizing:border-box;padding-left:25mm;padding-right:25mm;font-family:Arial,sans-serif;font-size:7pt;color:#999;text-align:center;border-top:1px solid #eee;padding-top:6px;">
-Tendo Technology | Confidential | Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-</div>'''
+
+    # No footer
+    footer_html = '<div></div>'
     
     # CSS absolute path (so md-to-pdf finds it regardless of MD file location)
     css_abs_path = os.path.join(skill_dir, 'references', 'tendo-style.css').replace('\\', '/')
 
-    # Config file content
+    # Config file content — large top margin for header image overlay
     config = f"""module.exports = {{
   pdf_options: {{
     format: 'A4',
-    margin: {{ top: '28mm', bottom: '22mm', left: '25mm', right: '25mm' }},
-    displayHeaderFooter: true,
-    headerTemplate: `{header_html}`,
-    footerTemplate: `{footer_html}`
+    margin: {{ top: '32mm', bottom: '15mm', left: '25mm', right: '25mm' }},
+    displayHeaderFooter: false
   }},
   stylesheet: ['{css_abs_path}']
 }};"""
