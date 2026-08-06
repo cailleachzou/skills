@@ -22,3 +22,6 @@ umi-ocr-src/
 # npx skills 生成的本地锁文件（含已安装 skill 哈希）
 skills-lock.json
 
+# OCR 本地测试草稿（大体积测试 PDF 与转换输出）
+cli-anything/sub-skills/ocr/test/
+
