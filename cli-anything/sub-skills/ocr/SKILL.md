@@ -29,6 +29,20 @@ compatibility: Umi-OCR Rapid v2.1.5+ installed at `C:\Users\59620\Downloads\Prog
 - **marker CLI**: `C:\Users\59620\.venv-marker\Scripts\marker.exe`
 - **Wrapper 脚本**: `cli-anything/sub-skills/ocr/scripts/pdf2md.ps1`
 
+## 必需环境变量（surya / llama.cpp 后端）
+
+marker v2 基于 surya，启动时强制初始化 OCR 推理后端（spawn `llama-server`），
+**缺少下列变量会直接报 `SpawnError: llama-server binary not found`**：
+
+| 环境变量 | 值（本机） |
+|---------|-----------|
+| `LLAMA_CPP_BINARY` | `C:\Users\59620\.models\llama-x64\llama-server.exe` |
+| `SURYA_GGUF_LOCAL_MODEL_PATH` | `C:\Users\59620\.models\surya\surya-2.gguf` |
+| `SURYA_GGUF_LOCAL_MMPROJ_PATH` | `C:\Users\59620\.models\surya\surya-2-mmproj.gguf` |
+
+> `pdf2md.ps1` wrapper 已内置这些变量，直接用即可；手敲 marker.exe 时需自行设置。
+> GGUF 可改成局域网路径，供多机复用（surya 支持 `s3://`、`hf://` 前缀）。
+
 ## 快速用法
 
 ```powershell
@@ -66,10 +80,12 @@ powershell -File "C:\Users\59620\.claude\skills\cli-anything\sub-skills\ocr\scri
 
 ## 注意事项
 
-- 首次运行会下载模型（约 1-2GB），需联网
-- CPU 模式下较慢，大文件建议用 GPU
+- 首次运行会下载模型（surya 布局/检测模型，约 1-2GB），需联网；GGUF 大模型（surya-2.gguf）用 `SURYA_GGUF_LOCAL_*` 指向本地，避免重复下载
+- CPU 模式下较慢（文本层 PDF ≈10-12 页/分），大文件建议用 GPU
 - marker 输入是**文件夹**（不是单个文件），会处理文件夹内所有 PDF
 - 中文支持由 surya-ocr 引擎提供，效果良好
+- 输出可能落在 `<output_dir>/<文件名>/<文件名>.md` 子目录（v2 按文件分目录），wrapper 已用递归查找
+- Windows 下结束时报 `Failed to stop llamacpp [WinError 87]` 是清理子进程的无害噪音，不影响结果
 
 ---
 
