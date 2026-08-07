@@ -52,7 +52,7 @@
 - dwg（CAD 转换翻译）
 - dxf-review（DXF 视觉复查）
 - ffmpeg（音视频转码）
-- ocr（离线 OCR + PDF→Markdown）
+- docling（文档解析与转换，PDF/图片→Markdown，含 OCR）
 - officecli（Office 文档）
 - pdf2zh（PDF 翻译）
 - tendo-brand（品牌主题）

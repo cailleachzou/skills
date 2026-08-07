@@ -109,7 +109,7 @@ Claude 会自动拆解步骤、串联技能。你不需要手动指定每一步�
 ```
 问题：扫描版 PDF 提取文字全是乱码
 解法：pdf 技能有自动 fallback 链
-      pdfplumber → UMI-OCR → AI 视觉识别
+      pdfplumber → docling → AI 视觉识别
       如果 pdfplumber 失败，会自动尝试 OCR
 ```
 
@@ -158,7 +158,7 @@ PDF → markitdown → Markdown → docx → Word 文档
 示例：
 ```
 PDF 提取 → 文字可读？→ 是 → 直接用
-                     → 否 → UMI-OCR → 再用
+                     → 否 → docling → 再用
 ```
 
 适用：根据中间结果决定下一步。
@@ -261,7 +261,7 @@ Claude 会按步骤排查，而不是瞎猜。
 
 ### 6.3 善用 fallback 链
 
-- `pdf` — pdfplumber → UMI-OCR → AI 视觉
-- `ocr` — Umi-OCR → marker-pdf（PDF→Markdown）
+- `pdf` — pdfplumber → docling → AI 视觉
+- `docling` — PDF/DOCX/图片 → Markdown/JSON（内置 OCR）
 
 不需要你手动切换，技能会自动尝试。

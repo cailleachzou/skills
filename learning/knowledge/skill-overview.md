@@ -41,17 +41,17 @@ diagram-skill 生成架构图 → tendo-brand 应用品牌色 → 嵌入 docx �
 
 ---
 
-## 3. 媒体 & OCR
+## 3. 媒体 & 文档解析
 
 | 技能                      | 来源  | 触发关键词               | 典型场景                       |
 | ----------------------- | --- | ------------------- | -------------------------- |
 | **ffmpeg**              | 自建  | FFmpeg、视频转换、音频处理    | 音视频转码、探测、批量处理、预设管理         |
-| **ocr**                 | 自建  | OCR、文字识别、图片转文字      | 离线 OCR（Umi-OCR）：截图/照片/PDF 文字提取；PDF→Markdown（marker-pdf） |
+| **docling**             | 自建  | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换：PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，扫描件内置 OCR |
 
 ### 典型串联
 
 ```
-截图 → ocr 提取文字 → 粘贴到文档
+PDF/截图 → docling 解析 → Markdown → 粘贴到文档
 ```
 
 ---
