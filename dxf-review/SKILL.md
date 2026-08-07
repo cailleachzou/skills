@@ -4,7 +4,6 @@ description: |
   DXF/DWG 视觉复查工具 — 渲染预览、多模态对比、自动验证。
   当用户需要检查 DXF 生成质量、对比原图、或进行视觉验证时触发。
   触发词：视觉复查、预览、DXF检查、对比原图、渲染看下。
-type: cli-sub
 ---
 
 # DXF Visual Review — 视觉复查流程
@@ -118,9 +117,9 @@ python scripts/dxf_visual_review.py read-image original.png --prompt "提取图�
 python scripts/dxf_visual_review.py read-image screenshot.png --prompt "识别所有文字"
 ```
 
-### 音频/视频（通过 mimo skill）
+### 音频/视频（通过 MiMo API）
 
-音频和视频分析通过 `mimo` 子技能处理，参见 `sub-skills/mimo/SKILL.md`。
+音频和视频分析通过 Xiaomi MiMo API 处理（需配置 `MIMO_API_KEY` 环境变量）。
 
 ## 复查报告格式
 
@@ -158,7 +157,10 @@ python scripts/dxf_visual_review.py read-image screenshot.png --prompt "识别�
 - **ezdxf** — DXF 读取与渲染
 - **matplotlib** — PNG 渲染
 - **Playwright** — 浏览器预览（可选）
-- **mimo** — 多模态分析（可选）
+- **mimo（可选多模态分析）** — `compare` / `read-image` 子命令调用
+  `mimo-v2.5` 量计 API，凭据读环境变量 `MIMO_API_KEY`（sk- 开头）、
+  `MIMO_BASE_URL`（默认 `https://api.xiaomimimo.com/v1`）、`MIMO_MODEL`。
+  未设置密钥时自动降级为"手动对比"提示，不影响 render/validate。
 
 ## 常见问题
 

@@ -6,29 +6,14 @@
 
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
-| **cli-anything** | CLI 工具、OCR、DWG、PDF翻译、视频转码、联网搜索 | **路由器型 meta-skill** — 统一入口，自动路由到 6 个子 CLI 技能（见下方子表） |
-| **audio-meeting-minutes** | 录音转文字、会议纪要、音频处理 | 录音→FFmpeg压缩→ASR转写→AI汇总会议纪要，支持多文件批量处理 |
-| **batch-image-renamer** | 批量重命名、Tendo - XXX    | 按 `Tendo - <描述>-NNN.<ext>` 格式批量重命名图片，AI 识别内容，自动去重冲突 |
-| **diagram-skill**       | 画图、mermaid、甘特图、时序图   | 生成和编辑 Mermaid 图表代码 — 流程图、时序图、甘特图、思维导图、架构图、ER 图、状态图、C4 等 |
-| **email-eml**           | 生成邮件、.eml            | 生成 .eml 邮件文件，支持收件人/主题/正文（签名由用户在 Outlook 手动添加） |
-| **mimo-multimodal**     | MiMo多模态、图片分析、音频分析、视频分析 | 小米 MiMo 多模态理解 — 图片/音频/视频内容分析，支持 auto 自动检测媒体类型 |
-| **survey-photo-workflow** | 勘察照片、现场照片归档、勘察报告 | 勘察照片完整工作流 — AI理解→重命名(batch-image-renamer)→归档到项目勘察文件夹→编制勘察报告 |
+| **ocr**               | OCR、文字识别、图片转文字、截图识字 | 离线 OCR 文字提取（Umi-OCR HTTP API）+ PDF→Markdown（marker-pdf） |
+| **dwg**               | DWG、DXF、CAD、图层、DXF翻译 | CAD 格式转换、文字提取/翻译、SVG 导出、批量处理（LibreDWG + ezdxf） |
+| **dxf-review**        | 视觉复查、预览、DXF检查、对比原图 | DXF 视觉复查 — 渲染预览、多模态对比、自动验证 |
+| **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
+| **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
+| **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tendo-brand**         | Tendo、品牌样式           | 应用 Tendo Technology 官方品牌主题（色彩、字体、视觉样式）至演示和文稿 |
-
-### cli-anything 子技能索引
-
-`cli-anything/` 是个路由器（meta-skill），内部收纳 6 个子技能：
-
-| 子技能路径 | 触发词 | 用途 | 实际命令来源 |
-|----------|--------|------|------|
-| `cli-anything/sub-skills/ocr/` | OCR / 文字识别 / 图片转文字 | 离线 OCR 文字提取 | Umi-OCR HTTP API（`C:\Users\59620\Downloads\Programs\Umi-OCR_Rapid_v2.1.5\`）|
-| `cli-anything/sub-skills/dwg/` | DWG / DXF / CAD / 图层 | CAD 格式转换、文字提取/翻译、SVG 导出 | LibreDWG + ezdxf（`C:\Program Files\libredwg-0.13.4-win32\`）|
-| `cli-anything/sub-skills/ffmpeg/` | FFmpeg / 转码 / 视频 / 音频 | 音视频转码、批量处理 | `pip install -e .` 装在外部 |
-| `cli-anything/sub-skills/pdf2zh/` | PDF 翻译 / pdf2zh | PDF 翻译（保留 layout，23+ 引擎）| `pip install -e .` 装在 `C:\Program Files\pdf2zh\agent-harness` |
-| `cli-anything/sub-skills/web-search-fast/` | 联网搜索 / web search | 联网搜索（多引擎回退）| `pip install -e .` 装在外部 |
-| `cli-anything/sub-skills/mimo/` | 多模态 / 图片理解 / 音频理解 | MiMo 多模态内容分析 | `mimo_multimodal.py` 脚本（仓库内）|
-
-> **架构**：所有 CLI 工具调用都从 `cli-anything` 入口走。子技能藏在 `sub-skills/` 内，Claude 启动时不会自动发现，由路由器引导加载。详见 [`docs/superpowers/specs/2026-06-15-cli-anything-router-design.md`](docs/superpowers/specs/2026-06-15-cli-anything-router-design.md)。
+| **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
 
 ## 已安装插件（Plugins）
 
@@ -81,26 +66,21 @@ git clone https://github.com/cailleachzou/skills.git
 **Python 路径**（Windows）：`C:\Users\59620\AppData\Local\Python\python.exe`
 > 所有 Python 技能均使用此路径（不要用裸 `python`，Windows 上不存在）
 
-| 技能                               | Python 包                                                               | 其他依赖                                                                         |
-| -------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **cli-anything** (路由器)        | —                                                                      | 汇总：见下方子表                                                                 |
-| &nbsp;&nbsp;↳ `ocr`              | —                                                                      | Umi-OCR Rapid v2.1.5+（HTTP API 在 1224 端口）                                              |
-| &nbsp;&nbsp;↳ `dwg`              | `ezdxf`                                                                | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + `libgcc_s_dw2-1.dll` |
-| &nbsp;&nbsp;↳ `ffmpeg`           | `click >= 8.0`                                                         | ffmpeg, ffprobe（PATH 中）                                                              |
-| &nbsp;&nbsp;↳ `pdf2zh`           | `click`, `pdfminer.six`                                                | pdf2zh.exe（`C:\Program Files\pdf2zh\build\pdf2zh.exe`）                                 |
-| &nbsp;&nbsp;↳ `web-search-fast`  | `camoufox`, `web-search-fast`                                          | Camoufox 浏览器（`python -m camoufox fetch`）                                     |
-| &nbsp;&nbsp;↳ `mimo`             | `openai`                                                               | `MIMO_API_KEY` 环境变量                                                               |
+| 技能            | Python 包          | 其他依赖                                                              |
+| --------------- | ----------------- | --------------------------------------------------------------------- |
+| **ocr**        | —                 | Umi-OCR Rapid v2.1.5+（HTTP API 在 1224 端口）；marker-pdf venv（`C:\Users\59620\.venv-marker\`）|
+| **dwg**        | `ezdxf`           | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + `libgcc_s_dw2-1.dll` |
+| **ffmpeg**     | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
+| **pdf2zh**     | `click`, `pdfminer.six` | pdf2zh.exe（`C:\Program Files\pdf2zh\build\pdf2zh.exe`）           |
 
 ### CLI 工具
 
-| 工具                                                       | 子技能路径                  | 说明                       |
-| -------------------------------------------------------- | ----------------------- | ------------------------ |
-| **Umi-OCR HTTP API**                                     | `cli-anything/sub-skills/ocr/`    | 离线 OCR 文字识别（端口 1224）        |
-| **LibreDWG**                                             | `cli-anything/sub-skills/dwg/`    | DWG ↔ DXF 转换、SVG 导出、图层读取    |
-| **ffmpeg / ffprobe**                                     | `cli-anything/sub-skills/ffmpeg/` | 音视频转码                    |
-| **pdf2zh.exe**                                           | `cli-anything/sub-skills/pdf2zh/` | PDF 翻译（PDFMathTranslate 引擎）|
-| **web-search-fast (Camoufox)**                           | `cli-anything/sub-skills/web-search-fast/` | 联网搜索（多引擎回退）        |
-| **MiMo API**                                             | `cli-anything/sub-skills/mimo/`   | 小米多模态理解                |
+| 工具                                                       | 技能路径            | 说明                       |
+| -------------------------------------------------------- | ----------------- | ------------------------ |
+| **Umi-OCR HTTP API**                                     | `ocr/`            | 离线 OCR 文字识别（端口 1224）        |
+| **LibreDWG**                                             | `dwg/`            | DWG ↔ DXF 转换、SVG 导出、图层读取    |
+| **ffmpeg / ffprobe**                                     | `ffmpeg/`         | 音视频转码                    |
+| **pdf2zh.exe**                                           | `pdf2zh/`         | PDF 翻译（PDFMathTranslate 引擎）|
 
 ### 其他环境
 
@@ -108,12 +88,13 @@ git clone https://github.com/cailleachzou/skills.git
 |------|------|
 | **Montserrat 字体** | tendo-brand（Google Fonts CDN） |
 | **Mermaid** | diagram-skill（渲染：Obsidian / Mermaid Live Editor） |
-| **mimo-multimodal** | batch-image-renamer（图片内容理解，小米 MiMo API）|
 
 ---
 
 ## 更新日志
 
+- **2026/08/07** mimo 全面切换计量计费：CLAUDE.md 新增「多模态任务处理」章节（图像/视频/音频理解、TTS、小任务备用，curl 直连 `api.xiaomimimo.com`）；pdf2zh 的 mimo 引擎、dxf-review 的 `compare`/`read-image` 均改为读环境变量 `MIMO_API_KEY`（sk- 开头），删除 tokenplan 引用；`mimo_multimodal` 模块依赖改为标准库 urllib 直连
+- **2026/08/06** 拆除 cli-anything 路由器：将 5 个 CLI 子技能（ocr / dwg / dxf-review / ffmpeg / pdf2zh）提升为顶层独立技能（自动发现）；删除 cli-anything 包及 cctv-cad、web-search-fast、mimo 子技能
 - **2026/07/22** 新增 survey-photo-workflow（勘察照片整理+归档+报告）、audio-meeting-minutes（录音转会议纪要）；tendo-brand 新增 delivery-order agent（出库单生成）
 - **2026/06/12** 删除本地 docx/pdf/pptx/xlsx/skill-creator/theme-factory/markitdown 七个技能，改用 Plugin 或移除；卸载 claude-hud、ecc 插件；新增 claude-api、claude-md-management、code-review、document-skills、playground 插件
 - **2026/06/10** 新增「已安装插件」章节，列出 4 个第三方插件 + 3 个官方插件的源地址和说明

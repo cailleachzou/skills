@@ -1,10 +1,9 @@
 ---
-name: "cli-anything-pdf2zh"
+name: pdf2zh
 description: "CLI harness for the PDFMathTranslate Windows EXE — translate PDFs (with layout preserved) from scripts and AI agents. Ships with a Xiaomi MiMo translator patch that adds a new OpenAI-compatible service to the bundled pdf2zh.exe."
-type: cli-sub
 ---
 
-# cli-anything-pdf2zh
+# pdf2zh
 
 > Translate PDFs from scripts / agents. Wraps `pdf2zh.exe` (PDFMathTranslate)
 > and adds a **Xiaomi MiMo** translator via a one-shot patch into the bundled
@@ -48,9 +47,15 @@ pip install -e .
 #
 # 3. Install the Xiaomi MiMo translator patch + set the API key
 #    (mimo is the default service — required for out-of-the-box translation)
+#    Env vars take precedence over config.json (translator.py's set_envs
+#    reads MIMO_* from os.environ first). Prefer env vars on this host:
+#      MIMO_API_KEY  → Windows user env (sk-…, 计量计费)
+#      MIMO_BASE_URL → https://api.xiaomimimo.com/v1
+#      MIMO_MODEL    → mimo-v2.5
+#    config.json is the fallback (set with cli-anything-pdf2zh config):
 cli-anything-pdf2zh patch install
 cli-anything-pdf2zh config set-key mimo MIMO_API_KEY <key>
-cli-anything-pdf2zh config set-key mimo MIMO_BASE_URL https://token-plan-cn.xiaomimimo.com/v1
+cli-anything-pdf2zh config set-key mimo MIMO_BASE_URL https://api.xiaomimimo.com/v1
 cli-anything-pdf2zh config set-key mimo MIMO_MODEL mimo-v2.5
 #
 #    To use a different service, pass --service <name> (e.g. --service google
@@ -245,7 +250,7 @@ The Xiaomi MiMo translator expects:
 | Env | Default | Required |
 |-----|---------|----------|
 | `MIMO_API_KEY` | — | yes (falls back to `ANTHROPIC_AUTH_TOKEN` env var) |
-| `MIMO_BASE_URL` | `https://token-plan-cn.xiaomimimo.com/v1` | no |
+| `MIMO_BASE_URL` | `https://api.xiaomimimo.com/v1` | no |
 | `MIMO_MODEL` | `mimo-v2.5-pro` | no |
 
 ### Idempotency

@@ -7,9 +7,6 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 
-# 添加父目录到路径以导入 mimo
-sys.path.insert(0, str(Path(__file__).parent.parent / "mimo.disabled"))
-
 try:
     import ezdxf
     from ezdxf.addons.drawing import RenderContext, Frontend
@@ -117,26 +114,66 @@ def validate_dxf(dxf_path, spec_path=None):
     return report
 
 
+def _call_mimo(prompt, images):
+    """调用 mimo-v2.5 量计 API 进行多模态分析（OpenAI 兼容）。
+
+    凭据从环境变量读取：MIMO_API_KEY（sk- 开头）、MIMO_BASE_URL、
+    MIMO_MODEL。不硬编码密钥。失败时抛 RuntimeError。
+    """
+    import base64
+    import urllib.request
+
+    api_key = os.environ.get("MIMO_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "MIMO_API_KEY 未设置（Windows 用户环境变量）。"
+            "参见 CLAUDE.md「多模态任务处理」。"
+        )
+    base_url = os.environ.get("MIMO_BASE_URL", "https://api.xiaomimimo.com/v1")
+    model = os.environ.get("MIMO_MODEL", "mimo-v2.5")
+
+    content = [{"type": "text", "text": prompt}]
+    for img in images:
+        with open(img, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/png;base64,{b64}"},
+        })
+
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": content}],
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        f"{base_url}/chat/completions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["choices"][0]["message"]["content"]
+
+
 def compare_with_reference(dxf_path, reference_path, prompt=None):
     """多模态对比 DXF 与参考图"""
     # 先渲染 DXF
     rendered_path = render_dxf(dxf_path)
     if not rendered_path:
         return None
-    
-    # 尝试调用 mimo 进行多模态分析
+
+    # 调用 mimo-v2.5 进行多模态对比（读取环境变量 MIMO_API_KEY）
     try:
-        from mimo_multimodal import MimoMultimodal
-        
-        mimo = MimoMultimodal()
         if prompt is None:
             prompt = "对比这两个图，找出差异：左边是原始参考图，右边是生成的CAD图。列出所有不同之处。"
-        
-        result = mimo.compare_images(str(reference_path), str(rendered_path), prompt)
+        result = _call_mimo(prompt, [str(reference_path), str(rendered_path)])
         print(f"Comparison: {result}")
         return result
-    except ImportError:
-        print("Warning: mimo not available. Manual comparison required.")
+    except Exception as e:
+        print(f"Warning: mimo not available. Manual comparison required. ({e})")
         print(f"  - Reference: {reference_path}")
         print(f"  - Rendered: {rendered_path}")
         return {"reference": str(reference_path), "rendered": str(rendered_path)}
@@ -145,14 +182,11 @@ def compare_with_reference(dxf_path, reference_path, prompt=None):
 def read_image(image_path, prompt="请描述这张图片的内容"):
     """多模态读取图片"""
     try:
-        from mimo_multimodal import MimoMultimodal
-        
-        mimo = MimoMultimodal()
-        result = mimo.analyze_image(str(image_path), prompt)
+        result = _call_mimo(prompt, [str(image_path)])
         print(f"Analysis: {result}")
         return result
-    except ImportError:
-        print("Error: mimo not available. Install mimo skill.")
+    except Exception as e:
+        print(f"Error: mimo not available. ({e})")
         return None
 
 
