@@ -1,7 +1,6 @@
 ---
 name: ocr
-description: Use Umi-OCR to extract text from images (screenshots, photos, scanned documents) and PDFs/DOCX files. Make sure to use this skill whenever the user wants to recognize, extract, or read text from an image file, screenshot, PDF page, or any visual content — whether they explicitly mention "OCR", "文字识别", "图片转文字", "截图识字", or just ask to "extract text from [file]". Umi-OCR is an offline, free OCR engine that runs locally with a HTTP API.
-type: cli-sub
+description: Use Umi-OCR to extract text from images (screenshots, photos, scanned documents) and PDFs/DOCX files. Make sure to use this skill whenever the user wants to recognize, extract, or read text from an image file, screenshot, PDF page, or any visual content — whether they explicitly mention "OCR", "文字识别", "图片转文字", "截图识字", or just ask to "extract text from [file]". Umi-OCR is an offline, free OCR engine that runs locally with a HTTP API. Also converts PDF → Markdown (layout/table preserved) via marker-pdf.
 compatibility: Umi-OCR Rapid v2.1.5+ installed at `C:\Users\59620\Downloads\Programs\Umi-OCR_Rapid_v2.1.5\Umi-OCR.exe`
 ---
 
@@ -27,7 +26,7 @@ compatibility: Umi-OCR Rapid v2.1.5+ installed at `C:\Users\59620\Downloads\Prog
 
 - **Python venv**: `C:\Users\59620\.venv-marker\`
 - **marker CLI**: `C:\Users\59620\.venv-marker\Scripts\marker.exe`
-- **Wrapper 脚本**: `cli-anything/sub-skills/ocr/scripts/pdf2md.ps1`
+- **Wrapper 脚本**: `ocr/scripts/pdf2md.ps1`
 
 ## 必需环境变量（surya / llama.cpp 后端）
 
@@ -56,7 +55,7 @@ marker v2 基于 surya，启动时强制初始化 OCR 推理后端（spawn `llam
 & "C:\Users\59620\.venv-marker\Scripts\marker.exe" "<文件夹>" --output_format markdown --output_dir "<输出>" --mode balanced
 
 # Wrapper 脚本（推荐）
-powershell -File "C:\Users\59620\.claude\skills\cli-anything\sub-skills\ocr\scripts\pdf2md.ps1" -Input "C:\path\to\scan.pdf"
+powershell -File "C:\Users\59620\.claude\skills\ocr\scripts\pdf2md.ps1" -Input "C:\path\to\scan.pdf"
 ```
 
 ## marker 关键参数

@@ -101,8 +101,7 @@ Claude 会自动拆解步骤、串联技能。你不需要手动指定每一步�
 
 ```
 问题：WebSearch/WebFetch 不好用
-解法：用 cli-anything-web-search-fast 技能替代
-触发词：联网搜索、web search、网页查询
+解法：用 WebSearch 工具重试，或换搜索引擎 / 加关键词
 ```
 
 ### 2.6 PDF 提取乱码
@@ -251,8 +250,8 @@ Claude 会按步骤排查，而不是瞎猜。
 ### 6.1 善用 batch 操作
 
 - `batch-image-renamer` — 批量重命名图片
-- `dxf-dwg-converter` — 批量 DWG↔DXF 转换
-- `cli-anything-ffmpeg` — 批量视频转码
+- `dwg` — 批量 DWG↔DXF 转换
+- `ffmpeg` — 批量视频转码
 
 ### 6.2 善用模板
 
@@ -263,6 +262,6 @@ Claude 会按步骤排查，而不是瞎猜。
 ### 6.3 善用 fallback 链
 
 - `pdf` — pdfplumber → UMI-OCR → AI 视觉
-- `cli-anything-web-search-fast` — Google → DuckDuckGo → Bing
+- `ocr` — Umi-OCR → marker-pdf（PDF→Markdown）
 
 不需要你手动切换，技能会自动尝试。

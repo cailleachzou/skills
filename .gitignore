@@ -23,7 +23,7 @@ umi-ocr-src/
 skills-lock.json
 
 # OCR 本地测试草稿（大体积测试 PDF 与转换输出）
-cli-anything/sub-skills/ocr/test/
+ocr/test/
 
 # mimo-cli 运行时目录（插件依赖 + cron 锁文件，非本仓库内容）
 .mimocode/

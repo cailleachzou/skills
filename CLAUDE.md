@@ -16,18 +16,13 @@
 skills/
 ├── CLAUDE.md                    ← 本文件
 ├── README.md                    ← 全量技能清单 + 环境依赖 + 更新日志
-├── <skill-name>/
-│   ├── SKILL.md                 ← 核心：YAML frontmatter + 说明
-│   ├── scripts/                 ← 可选：脚本文件
-│   ├── references/              ← 可选：参考文档
-│   ├── assets/                  ← 可选：静态资源
-│   └── evals/
-│       └── evals.json           ← 测试用例
-└── cli-anything/
-    ├── SKILL.md                 ← 路由器入口（唯一被自动发现）
-    └── sub-skills/
-        └── <name>/
-            └── SKILL.md         ← 子技能（嵌套，不被自动发现）
+└── <skill-name>/
+    ├── SKILL.md                 ← 核心：YAML frontmatter + 说明
+    ├── scripts/                 ← 可选：脚本文件
+    ├── references/              ← 可选：参考文档
+    ├── assets/                  ← 可选：静态资源
+    └── evals/
+        └── evals.json           ← 测试用例
 ```
 
 ## 测试与评估
@@ -43,16 +38,17 @@ head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
 - **技能评估**：通过 `/skill-creator` 工作流运行（测试用例在 `<skill>/evals/evals.json`）：draft → subagent test → human review → improve → repeat
 - ⚠️ `claude --skill --eval` 不是真实 CLI 命令（已用 `claude --help` 验证），勿用
 
-## CLI 工具统一入口（cli-anything 路由器）
+## CLI 工具技能（顶层独立）
 
-所有 CLI 工具（OCR / CAD / FFmpeg / PDF 翻译 / 联网搜索 / 多模态）统一通过 `cli-anything/` 路由器入口走：
+CLI 工具技能（OCR / CAD / FFmpeg / PDF 翻译 / DXF 复查）已提升为**顶层独立技能**，各自被 Claude 自动发现：
 
-- **入口**：`cli-anything/SKILL.md`（唯一被 Claude 自动发现）
-- **子技能**：`cli-anything/sub-skills/<name>/SKILL.md`（嵌套，Claude 不会自动发现）
-- **工作流**：用户在 Claude 对话里说 CLI 需求 → router 触发 → Read 子技能 SKILL.md → 调命令
-- **添加新 CLI**：在 `cli-anything/sub-skills/<name>/` 放 SKILL.md + 在 router 索引表加一行
+- **ocr** — Umi-OCR 文字识别 + marker-pdf（PDF→Markdown）
+- **dwg** — CAD 格式转换、文字提取/翻译、图层、SVG 导出
+- **dxf-review** — DXF 视觉复查、渲染预览、多模态对比
+- **ffmpeg** — 音视频转码、批量处理、预设管理
+- **pdf2zh** — PDF 翻译（保留 layout）
 
-不要直接 mv 出 `cli-anything/sub-skills/<name>/` 之外的位置 — router 依赖嵌套结构。
+每个技能目录结构：`SKILL.md` + 可选 `scripts/`。技能名与目录名一致。
 
 ## 文档同步
 
@@ -71,4 +67,4 @@ EOF
 
 ---
 
-*最后更新：2026-06-20*
+*最后更新：2026-08-06*

@@ -1,10 +1,9 @@
 ---
-name: cli-anything-ffmpeg
+name: ffmpeg
 description: AI-friendly CLI harness for FFmpeg — transcode, probe, batch-process media with presets, session management, and JSON output. Use when users ask to convert/encode/transcode video, probe media files, batch process video files, or manage encoding presets.
-type: cli-sub
 ---
 
-# cli-anything-ffmpeg
+# ffmpeg
 
 AI-friendly CLI harness wrapping `ffmpeg` and `ffprobe` binaries — adds stateful session management, encoding presets, job queues, batch processing, and machine-readable JSON output for AI agent consumption.
 

@@ -46,19 +46,17 @@
 
 出题方式：给一个具体场景，让用户说出应该使用哪些技能。
 
-可用技能列表（共 31 个）：
+可用技能列表（共 29 个）：
 
-自建技能（10个）：
-- batch-image-renamer（批量重命名图片）
-- cli-anything-ffmpeg（音视频转码）
-- cli-anything-pdf2zh（PDF 翻译）
-- cli-anything-web-search-fast（联网搜索）
-- diagram-skill（Mermaid 图表）
-- dxf-dwg-converter（CAD 转换翻译）
-- email-eml（生成邮件）
-- mimo-multimodal（多模态分析）
+自建技能（8个）：
+- dwg（CAD 转换翻译）
+- dxf-review（DXF 视觉复查）
+- ffmpeg（音视频转码）
+- ocr（离线 OCR + PDF→Markdown）
+- officecli（Office 文档）
+- pdf2zh（PDF 翻译）
 - tendo-brand（品牌主题）
-- umi-ocr（离线 OCR）
+- tyc-it（天眼查商业查询）
 
 插件技能（含 document-skills 插件提供的 docx/pdf/pptx/xlsx/skill-creator/theme-factory）
 
