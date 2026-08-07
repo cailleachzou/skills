@@ -1,0 +1,23 @@
+{
+  "skill_name": "docling",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "把这个 PDF 转成 Markdown：<用户提供的 PDF 路径>，输出到 ./out/",
+      "expected_output": "Markdown 输出生成，含标题/段落/表格结构；报告转换成功与页数",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "提取这个 PDF 里的表格结构：<用户提供的 PDF 路径>",
+      "expected_output": "表格以 Markdown 表格形式输出，行列结构正确",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "把这个 PDF 转成 JSON（无损 DoclingDocument 格式）：<用户提供的 PDF 路径>",
+      "expected_output": "JSON 输出生成，含结构化 DoclingDocument 字段",
+      "files": []
+    }
+  ]
+}

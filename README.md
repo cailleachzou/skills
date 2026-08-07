@@ -7,6 +7,7 @@
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
 | **ocr**               | OCR、文字识别、图片转文字、截图识字 | 离线 OCR 文字提取（Umi-OCR HTTP API）+ PDF→Markdown（marker-pdf） |
+| **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON |
 | **dwg**               | DWG、DXF、CAD、图层、DXF翻译 | CAD 格式转换、文字提取/翻译、SVG 导出、批量处理（LibreDWG + ezdxf） |
 | **dxf-review**        | 视觉复查、预览、DXF检查、对比原图 | DXF 视觉复查 — 渲染预览、多模态对比、自动验证 |
 | **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
@@ -69,9 +70,16 @@ git clone https://github.com/cailleachzou/skills.git
 | 技能            | Python 包          | 其他依赖                                                              |
 | --------------- | ----------------- | --------------------------------------------------------------------- |
 | **ocr**        | —                 | Umi-OCR Rapid v2.1.5+（HTTP API 在 1224 端口）；marker-pdf venv（`C:\Users\59620\.venv-marker\`）|
+| **docling**     | 独立 venv（见下）  | docling venv（`C:\Users\59620\.venv-docling\`）；⚠️ 需设 `TORCH_COMPILE_DISABLE=1 TORCHINDUCTOR_DISABLE=1` |
 | **dwg**        | `ezdxf`           | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + `libgcc_s_dw2-1.dll` |
 | **ffmpeg**     | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
 | **pdf2zh**     | `click`, `pdfminer.six` | pdf2zh.exe（`C:\Program Files\pdf2zh\build\pdf2zh.exe`）           |
+
+> **docling 用独立 venv**（`C:\Users\59620\.venv-docling\`，Python 3.12，勿用系统 Python）
+> 已装：docling 2.118.0 + torch 2.13.0（venv 约 1.1GB，模型缓存 `~/.cache/huggingface/` 约 2GB）
+> 调用：`C:\Users\59620\.venv-docling\Scripts\docling.exe convert <source> --to md --output <dir>`
+> 重建：`uv venv ~/.venv-docling --python 3.12 && uv pip install --python ~/.venv-docling docling`
+> wrapper：`docling/scripts/docling.ps1`（自动设环境变量 + 16GB 内存友好参数）
 
 ### CLI 工具
 
@@ -93,6 +101,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/08/07** 新增 **docling** 技能（IBM Docling 文档解析）：PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含表格提取、OCR、RAG 分块；独立 venv（`~/.venv-docling`，Python 3.12）；wrapper 脚本固化 `TORCH_COMPILE_DISABLE/TORCHINDUCTOR_DISABLE`（torch 2.13 无 MSVC 报错）与 16GB 内存友好参数（`--page-batch-size`）
 - **2026/08/07** mimo 全面切换计量计费：CLAUDE.md 新增「多模态任务处理」章节（图像/视频/音频理解、TTS、小任务备用，curl 直连 `api.xiaomimimo.com`）；pdf2zh 的 mimo 引擎、dxf-review 的 `compare`/`read-image` 均改为读环境变量 `MIMO_API_KEY`（sk- 开头），删除 tokenplan 引用；`mimo_multimodal` 模块依赖改为标准库 urllib 直连
 - **2026/08/06** 拆除 cli-anything 路由器：将 5 个 CLI 子技能（ocr / dwg / dxf-review / ffmpeg / pdf2zh）提升为顶层独立技能（自动发现）；删除 cli-anything 包及 cctv-cad、web-search-fast、mimo 子技能
 - **2026/07/22** 新增 survey-photo-workflow（勘察照片整理+归档+报告）、audio-meeting-minutes（录音转会议纪要）；tendo-brand 新增 delivery-order agent（出库单生成）
