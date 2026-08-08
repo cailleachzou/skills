@@ -7,7 +7,7 @@
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
 | **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON（含 OCR） |
-| **dwg**               | DWG、DXF、CAD、图层、DXF翻译 | CAD 格式转换、文字提取/翻译、SVG 导出、批量处理（LibreDWG + ezdxf） |
+| **dwg-translate**     | 翻译、DWG、DXF、CAD、图纸、中文 | DWG 电气图纸英译中 — AutoCAD COM 直连 → 提取 → MIMO 批量翻译 → 回填 → 输出 *_ZH.dwg |
 | **dxf-review**        | 视觉复查、预览、DXF检查、对比原图 | DXF 视觉复查 — 渲染预览、多模态对比、自动验证 |
 | **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
 | **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
@@ -68,7 +68,7 @@ git clone https://github.com/cailleachzou/skills.git
 | 技能            | Python 包          | 其他依赖                                                              |
 | --------------- | ----------------- | --------------------------------------------------------------------- |
 | **docling**     | 独立 venv（见下）  | docling venv（`C:\Users\59620\.venv-docling\`）；⚠️ 需设 `TORCH_COMPILE_DISABLE=1 TORCHINDUCTOR_DISABLE=1` |
-| **dwg**        | `ezdxf`           | LibreDWG (`dwg2dxf`, `dxf2dwg`, `dwg2SVG`, `dwglayers`, `dwgread`) + `libgcc_s_dw2-1.dll` |
+| **dwg-translate** | `ezdxf`、`pandas`、`pywin32` | 独立 venv（`C:\Users\59620\cad-translate-cli\.venv`，Python 3.14）；AutoCAD 2027（需手动打开一次完成 COM 注册）；MIMO_API_KEY（已写入 `~/.config/cli-anything-cad/config.json`） |
 | **ffmpeg**     | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
 | **pdf2zh**     | `click`, `pdfminer.six` | pdf2zh.exe（`C:\Program Files\pdf2zh\build\pdf2zh.exe`）           |
 
@@ -82,7 +82,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 | 工具                                                       | 技能路径            | 说明                       |
 | -------------------------------------------------------- | ----------------- | ------------------------ |
-| **LibreDWG**                                             | `dwg/`            | DWG ↔ DXF 转换、SVG 导出、图层读取    |
+| **AutoCAD 2027 (COM)**                                   | `dwg-translate/`   | DWG ↔ DXF 转换（ProgID `AutoCAD.Application.26`，SaveAs 25/24） |
 | **ffmpeg / ffprobe**                                     | `ffmpeg/`         | 音视频转码                    |
 | **pdf2zh.exe**                                           | `pdf2zh/`         | PDF 翻译（PDFMathTranslate 引擎）|
 
@@ -96,6 +96,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/08/08** 移除 **dwg** 技能（LibreDWG 工具链，dxf2dwg 大文件卡死 / dwg2dxf 丢失 AEC 对象）；新增 **dwg-translate** 技能（AutoCAD COM 直连 DWG + ezdxf + MIMO 批量翻译，输出 `*_ZH.dwg`）；依赖表新增独立 venv 与 AutoCAD 2027 说明；CLI 工具表以 AutoCAD 2027 (COM) 替换 LibreDWG
 - **2026/08/07** 移除 **tendo-brand** 技能（目录已删）；README 技能列表及「其他环境」表中 Montserrat 字体依赖行一并清理
 - **2026/08/07** 移除 **ocr** 技能（marker-pdf + Umi-OCR 双引擎），全面转用 **docling**；卸载全局依赖（marker-pdf venv、surya 模型、llama-server、Umi-OCR 程序+数据目录）
 - **2026/08/07** 新增 **docling** 技能（IBM Docling 文档解析）：PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含表格提取、OCR、RAG 分块；独立 venv（`~/.venv-docling`，Python 3.12）；wrapper 脚本固化 `TORCH_COMPILE_DISABLE/TORCHINDUCTOR_DISABLE`（torch 2.13 无 MSVC 报错）与 16GB 内存友好参数（`--page-batch-size`）
