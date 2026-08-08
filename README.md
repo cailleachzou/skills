@@ -12,7 +12,6 @@
 | **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
 | **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
-| **tendo-brand**         | Tendo、品牌样式           | 应用 Tendo Technology 官方品牌主题（色彩、字体、视觉样式）至演示和文稿 |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
 
 ## 已安装插件（Plugins）
@@ -91,13 +90,13 @@ git clone https://github.com/cailleachzou/skills.git
 
 | 工具 | 用途 |
 |------|------|
-| **Montserrat 字体** | tendo-brand（Google Fonts CDN） |
 | **Mermaid** | diagram-skill（渲染：Obsidian / Mermaid Live Editor） |
 
 ---
 
 ## 更新日志
 
+- **2026/08/07** 移除 **tendo-brand** 技能（目录已删）；README 技能列表及「其他环境」表中 Montserrat 字体依赖行一并清理
 - **2026/08/07** 移除 **ocr** 技能（marker-pdf + Umi-OCR 双引擎），全面转用 **docling**；卸载全局依赖（marker-pdf venv、surya 模型、llama-server、Umi-OCR 程序+数据目录）
 - **2026/08/07** 新增 **docling** 技能（IBM Docling 文档解析）：PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含表格提取、OCR、RAG 分块；独立 venv（`~/.venv-docling`，Python 3.12）；wrapper 脚本固化 `TORCH_COMPILE_DISABLE/TORCHINDUCTOR_DISABLE`（torch 2.13 无 MSVC 报错）与 16GB 内存友好参数（`--page-batch-size`）
 - **2026/08/07** mimo 全面切换计量计费：CLAUDE.md 新增「多模态任务处理」章节（图像/视频/音频理解、TTS、小任务备用，curl 直连 `api.xiaomimimo.com`）；pdf2zh 的 mimo 引擎、dxf-review 的 `compare`/`read-image` 均改为读环境变量 `MIMO_API_KEY`（sk- 开头），删除 tokenplan 引用；`mimo_multimodal` 模块依赖改为标准库 urllib 直连
