@@ -8,7 +8,6 @@
 | ----------------------- | -------------------- | --------------------------------- |
 | **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON（含 OCR） |
 | **dwg-translate**     | 翻译、DWG、DXF、CAD、图纸、中文 | DWG 电气图纸英译中 — AutoCAD COM 直连 → 提取 → MIMO 批量翻译 → 回填 → 输出 *_ZH.dwg |
-| **dxf-review**        | 视觉复查、预览、DXF检查、对比原图 | DXF 视觉复查 — 渲染预览、多模态对比、自动验证 |
 | **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
 | **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
@@ -96,6 +95,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/08/08** 移除 **dxf-review** 技能（DXF 渲染预览/多模态对比/自动验证，已不再需要）；同步清理 CLAUDE.md 技能列表及 README 技能表
 - **2026/08/08** 移除 **dwg** 技能（LibreDWG 工具链，dxf2dwg 大文件卡死 / dwg2dxf 丢失 AEC 对象）；新增 **dwg-translate** 技能（AutoCAD COM 直连 DWG + ezdxf + MIMO 批量翻译，输出 `*_ZH.dwg`）；依赖表新增独立 venv 与 AutoCAD 2027 说明；CLI 工具表以 AutoCAD 2027 (COM) 替换 LibreDWG
 - **2026/08/07** 移除 **tendo-brand** 技能（目录已删）；README 技能列表及「其他环境」表中 Montserrat 字体依赖行一并清理
 - **2026/08/07** 移除 **ocr** 技能（marker-pdf + Umi-OCR 双引擎），全面转用 **docling**；卸载全局依赖（marker-pdf venv、surya 模型、llama-server、Umi-OCR 程序+数据目录）

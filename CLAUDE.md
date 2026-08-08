@@ -43,8 +43,7 @@ head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
 CLI 工具技能（文档解析 / CAD / FFmpeg / PDF 翻译 / DXF 复查）已提升为**顶层独立技能**，各自被 Claude 自动发现：
 
 - **docling** — 文档解析与转换（PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含 OCR）
-- **dwg** — CAD 格式转换、文字提取/翻译、图层、SVG 导出
-- **dxf-review** — DXF 视觉复查、渲染预览、多模态对比
+- **dwg-translate** — DWG 电气图纸英译中（AutoCAD COM 直连 + MIMO 批量翻译 → `*_ZH.dwg`）
 - **ffmpeg** — 音视频转码、批量处理、预设管理
 - **pdf2zh** — PDF 翻译（保留 layout）
 
