@@ -2,7 +2,7 @@
 name: local-ai
 description: >
   处理"最简单任务"时优先用本机本地模型——省 token、可离线、保隐私。通用文本问答/翻译/改写用
-  Ollama `qwen3:4b`（iGPU），看图/图像理解用 `qwen2.5vl:3b`（iGPU），**OCR 文字提取走 NPU**
+  Ollama `qwen2.5:3b`（iGPU），看图/图像理解用 `qwen2.5vl:3b`（iGPU），**OCR 文字提取走 NPU**
   （docling + rapidocr，比 CPU 快约 5 倍），
   文档 RAG 检索用 `bge-m3` 嵌入（1024 维），语音转文字用 whisper-small（CPU）。
   当用户要求"本地处理 / 离线 / 断网 / 不耗 token / 最简单任务 / 小事件 / 省电 / 隐私 / 本机模型 /
@@ -11,12 +11,12 @@ description: >
 compatibility: |
   全部为已部署的本地工具（Intel Core Ultra 5 125H / Meteor Lake / 16GB / iGPU+NPU）：
   - Ollama（IPEX-LLM 版，走 iGPU/SYCL0）：`C:\Users\59620\tools\ollama-xpu\ollama.exe`
-    模型：`qwen3:4b`（文本）、`qwen2.5vl:3b`（视觉）、`bge-m3`（嵌入）
+    模型：`qwen2.5:3b`（文本）、`qwen2.5vl:3b`（视觉）、`bge-m3`（嵌入）
   - whisper.cpp：`C:\Users\59620\tools\whisper\Release\whisper-cli.exe` + `ggml-small.bin`
   - OCR（NPU，独立于 Ollama）：`C:\Users\59620\.venv-docling\Scripts\python.exe` +
     `C:\Users\59620\Desktop\docling_npu.py`（docling + rapidocr，OpenVINO NPU 引擎）
   - Ollama 服务需先启动（`start-ollama-xpu.bat`，监听 127.0.0.1:11434）；OCR 不需要 Ollama
-  ⚠️ 本机仅 16GB 内存，勿同时常驻多个模型（qwen3 约 2.5G + 视觉 3.2G 同载约 5.7G）
+  ⚠️ 本机仅 16GB 内存，勿同时常驻多个模型（qwen2.5:3b 约 2.1G + 视觉 3.2G 同载约 5.3G）
 metadata:
   author: Cailleach Zou
   version: "1.0"
@@ -44,7 +44,7 @@ allowed-tools: Bash(*)
 
 | 模型/工具 | 设备 | 职责 | 实测 |
 |-----------|------|------|------|
-| Ollama `qwen3:4b` | iGPU (SYCL0) | 通用文本、翻译、改写 | 中文回复正常 |
+| Ollama `qwen2.5:3b` | iGPU (SYCL0) | 通用文本、翻译、改写 | 中文回复正常 |
 | Ollama `qwen2.5vl:3b` | iGPU (SYCL0) | **图像理解** / 看图描述 | 1~10s 描述图内文字 |
 | docling + rapidocr | **NPU** | **OCR 文字提取**（图片/扫描PDF） | 6.6s 中文；比 CPU 快约 5 倍 |
 | Ollama `bge-m3` | CPU | RAG 嵌入 | 1024 维 |
@@ -62,13 +62,13 @@ call start-ollama.bat
 
 验证：`curl http://127.0.0.1:11434/api/tags`
 
-### 1. 通用文本（qwen3:4b · iGPU）
+### 1. 通用文本（qwen2.5:3b · iGPU）
 
 ```bash
-"C:\Users\59620\tools\ollama-xpu\ollama.exe" run qwen3:4b "把这段翻译成英文：你好世界"
+"C:\Users\59620\tools\ollama-xpu\ollama.exe" run qwen2.5:3b "把这段翻译成英文：你好世界"
 ```
 
-- qwen3 默认带思考过程；要快速答复加 `--hidethinking`
+- qwen2.5:3b 无强制思考，直接回答（原 qwen3:4b 的默认思考已随模型删除）
 - `ollama.exe` 在 PATH 默认没有，用完整路径
 
 ### 2a. 图像理解 / 看图（qwen2.5vl:3b · iGPU）

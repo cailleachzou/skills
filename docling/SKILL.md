@@ -144,6 +144,26 @@ powershell -NoProfile -ExecutionPolicy Bypass -File \
 "$DOCLING" convert scan.pdf --to md --output ./out/ --force-ocr   # 强制重新 OCR
 "$DOCLING" convert report.pdf --to md --output ./out/ --no-ocr    # 跳过 OCR（更快）
 "$DOCLING" convert scan.pdf --to md --output ./out/ --ocr-lang en --ocr-lang de
+
+## NPU 加速 OCR（Intel AI Boost，本机可用）
+
+本机 Intel Core Ultra 5 125H 的 NPU（11 TOPS）已验证能跑 rapidocr 的 PP-OCR 模型，
+比 CPU 快约 5 倍。**docling CLI 无法传 backend/rapidocr_params，NPU OCR 必须走 Python SDK**，
+已固化工具：`Desktop\docling_npu.py`（默认 NPU，`--cpu` 切回 CPU）。
+
+```bash
+# NPU OCR（图片或扫描 PDF）
+"C:\Users\59620\.venv-docling\Scripts\python.exe" "C:\Users\59620\Desktop\docling_npu.py" 扫描件.pdf -o out.md
+```
+
+⚠️ 依赖 venv-docling 里 rapidocr 的 4 处 NPU 补丁（升级 rapidocr/openvino 后需重打）：
+1. `inference_engine/openvino/main.py` — device 可配置 + NPU 按任务 reshape 固定输入
+2. `ch_ppocr_det/utils.py` — DetPreProcess 支持 force_square
+3. `ch_ppocr_det/main.py` — NPU 模式固定 736×736
+4. `ch_ppocr_rec/main.py` — NPU 模式固定 rec 宽度
+
+局限：NPU 要求固定输入 shape（det 736²、rec 宽 320、batch=1），超高分辨率小字 /
+超长文本行精度可能下降；复杂版式建议先用 CLI 标准模式对比。
 ```
 
 ## 表格、增强、其他内容

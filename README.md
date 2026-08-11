@@ -12,7 +12,9 @@
 | **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
-| **local-ai**          | 本地模型、Ollama、NPU、whisper、离线、最简单任务、OCR、省电 | 本地模型处理最简单任务 — iGPU 文本（qwen3:4b）/图像理解（qwen2.5vl:3b）、NPU OCR（docling+rapidocr）、bge-m3 嵌入（1024 维）、whisper 转写 |
+| **local-ai**          | 本地模型、Ollama、NPU、whisper、离线、最简单任务、OCR、省电 | 本地模型处理最简单任务 — iGPU 文本（qwen2.5:3b）/图像理解（qwen2.5vl:3b）、NPU OCR（docling+rapidocr）、bge-m3 嵌入（1024 维）、whisper 转写 |
+| **hf-cli**            | hf、huggingface、Hugging Face、模型下载、数据集、Spaces | Hugging Face Hub CLI — 下载/上传/管理模型、数据集、Spaces、Buckets、Repos、Jobs、Webhooks、Inference Endpoints 等（`hf` 替代已废弃的 `huggingface-cli`） |
+| **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 
 ## 已安装插件（Plugins）
 
@@ -85,6 +87,7 @@ git clone https://github.com/cailleachzou/skills.git
 | **AutoCAD 2027 (COM)**                                   | `dwg-translate/`   | DWG ↔ DXF 转换（ProgID `AutoCAD.Application.26`，SaveAs 25/24） |
 | **ffmpeg / ffprobe**                                     | `ffmpeg/`         | 音视频转码                    |
 | **pdf2zh.exe**                                           | `pdf2zh/`         | PDF 翻译（PDFMathTranslate 引擎）|
+| **hf**                                                   | `hf-cli/`         | Hugging Face Hub CLI（huggingface_hub 1.27.0，pip 安装，命令在 pythoncore Scripts，已入用户 PATH）|
 
 ### 其他环境
 
@@ -96,6 +99,8 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/08/11** 新增 **hf-cli** 技能（Hugging Face Hub CLI）：`hf download/upload/models/datasets/spaces/jobs` 等，替代已废弃的 `huggingface-cli`；依赖 `hf`（pip `huggingface_hub` 1.27.0，命令在 `pythoncore-3.14-64\Scripts`，已加入用户 PATH）。同步新增 **ncm-dump** 技能（网易云 .ncm 加密音乐 → 通用 mp3/flac，AES-128 + 自定义 RC4，依赖 `pycryptodome`）
+- **2026/08/11** **local-ai** 技能：文本主力由 `qwen3:4b` 替换为 `qwen2.5:3b`（Qwen2.5-3B-Instruct，Hugging Face 官方 GGUF 经魔搭镜像下载，Q4_K_M）——去除默认深度思考；已删除 qwen3:4b 模型。当前通道：qwen2.5:3b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉）、docling+rapidocr（NPU OCR）、bge-m3（嵌入）、whisper-small（转写）
 - **2026/08/11** **local-ai** 技能：移除 **DeepSeek-R1-1.5B**（llama.cpp NPU 文本通道，生成文本不打印终端、无实用价值）——删除 `tools/llama-npu/`（2.3G）、`run-npu.bat` 及安装包；NPU 现仅用于 OCR（docling+rapidocr，约 5 倍加速）。当前通道：qwen3:4b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉）、docling+rapidocr（NPU OCR）、bge-m3（嵌入）、whisper-small（转写）
 - **2026/08/11** 新增 **local-ai** 技能（本地模型处理最简单任务）：qwen3:4b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉，IPEX-LLM 版 ollama run 不支持 --images → 走 API 脚本 `scripts/vision.py`）、bge-m3（1024 维嵌入）、whisper-small（转写）；工具位于 `C:\Users\59620\tools\`
 - **2026/08/08** 移除 **dxf-review** 技能（DXF 渲染预览/多模态对比/自动验证，已不再需要）；同步清理 CLAUDE.md 技能列表及 README 技能表
