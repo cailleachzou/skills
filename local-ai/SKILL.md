@@ -2,10 +2,11 @@
 name: local-ai
 description: >
   处理"最简单任务"时优先用本机本地模型——省 token、可离线、保隐私。通用文本问答/翻译/改写用
-  Ollama `qwen3:4b`（iGPU），看图/OCR 用 `qwen2.5vl:3b`（iGPU），超轻量小事件用
-  `DeepSeek-R1-1.5B`（NPU，省电），文档 RAG 检索用 `bge-m3` 嵌入（1024 维），语音转文字用
-  whisper-small（CPU）。当用户要求"本地处理 / 离线 / 断网 / 不耗 token / 最简单任务 / 小事件 /
-  省电 / 隐私 / 本机模型"，或任务简单到没必要动用主模型或 mimo 时使用本技能。
+  Ollama `qwen3:4b`（iGPU），看图/图像理解用 `qwen2.5vl:3b`（iGPU），**OCR 文字提取走 NPU**
+  （docling + rapidocr，比 CPU 快约 5 倍），超轻量小事件用 `DeepSeek-R1-1.5B`（NPU，省电），
+  文档 RAG 检索用 `bge-m3` 嵌入（1024 维），语音转文字用 whisper-small（CPU）。
+  当用户要求"本地处理 / 离线 / 断网 / 不耗 token / 最简单任务 / 小事件 / 省电 / 隐私 / 本机模型 /
+  OCR / 提取图片文字 / 扫描件"，或任务简单到没必要动用主模型或 mimo 时使用本技能。
   工具根目录 `C:\Users\59620\tools\`；mimo 多模态调用模板见全局 CLAUDE.md，不在此重复。
 compatibility: |
   全部为已部署的本地工具（Intel Core Ultra 5 125H / Meteor Lake / 16GB / iGPU+NPU）：
@@ -14,7 +15,9 @@ compatibility: |
   - llama.cpp NPU 版：`C:\Users\59620\tools\llama-npu\llama-cli-npu.exe`
     模型：`DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf`
   - whisper.cpp：`C:\Users\59620\tools\whisper\Release\whisper-cli.exe` + `ggml-small.bin`
-  - Ollama 服务需先启动（`start-ollama-xpu.bat`，监听 127.0.0.1:11434）
+  - OCR（NPU，独立于 Ollama）：`C:\Users\59620\.venv-docling\Scripts\python.exe` +
+    `C:\Users\59620\Desktop\docling_npu.py`（docling + rapidocr，OpenVINO NPU 引擎）
+  - Ollama 服务需先启动（`start-ollama-xpu.bat`，监听 127.0.0.1:11434）；OCR 不需要 Ollama
   ⚠️ 本机仅 16GB 内存，勿同时常驻多个模型（qwen3 约 2.5G + 视觉 3.2G 同载约 5.7G）
 metadata:
   author: Cailleach Zou
@@ -44,7 +47,8 @@ allowed-tools: Bash(*)
 | 模型/工具 | 设备 | 职责 | 实测 |
 |-----------|------|------|------|
 | Ollama `qwen3:4b` | iGPU (SYCL0) | 通用文本、翻译、改写 | 中文回复正常 |
-| Ollama `qwen2.5vl:3b` | iGPU (SYCL0) | 看图 / OCR（离线） | 9.6s 识别图内文字 |
+| Ollama `qwen2.5vl:3b` | iGPU (SYCL0) | **图像理解** / 看图描述 | 1~10s 描述图内文字 |
+| docling + rapidocr | **NPU** | **OCR 文字提取**（图片/扫描PDF） | 6.6s 中文；比 CPU 快约 5 倍 |
 | `DeepSeek-R1-1.5B` | NPU | 超轻量文本、小事件（省电） | 30 tok/s，**输出不可见** |
 | Ollama `bge-m3` | CPU | RAG 嵌入 | 1024 维 |
 | whisper-small | CPU | 语音转文字 | 6s / 中文基本正确 |
@@ -70,13 +74,26 @@ call start-ollama.bat
 - qwen3 默认带思考过程；要快速答复加 `--hidethinking`
 - `ollama.exe` 在 PATH 默认没有，用完整路径
 
-### 2. 看图 / OCR（qwen2.5vl:3b · iGPU）
+### 2a. 图像理解 / 看图（qwen2.5vl:3b · iGPU）
 
-⚠️ 本版 Ollama 的 `ollama run` **不支持 `--images`**，视觉必须走 API。已封装脚本：
+⚠️ 需 Ollama 服务在跑（第 0 节）；本版 `ollama run` **不支持 `--images`**，视觉必须走 API。已封装脚本：
 
 ```bash
 py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\vision.py" "图片.png" "描述这张图片的内容"
 ```
+
+### 2b. OCR 文字提取（docling + rapidocr · NPU）
+
+从图片 / 扫描 PDF 里**提取文字**，走 NPU，不依赖 Ollama：
+
+```bash
+py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\ocr.py" "扫描件.png"                 # 文字打印到终端
+py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\ocr.py" "扫描件.pdf" -o out.md       # 结果写入 md
+py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\ocr.py" "图.png" --cpu              # OpenVINO CPU 对比
+```
+
+- 引擎：OpenVINO + rapidocr PP-OCR，NPU 加速，比 CPU 快约 5 倍
+- 小模型对长数字末尾偶有丢失（`12345`→`1234`）；复杂版式可用 `--cpu` 对比精度
 
 ### 3. 文档 RAG 嵌入（bge-m3 · CPU）
 
@@ -115,6 +132,8 @@ Release\whisper-cli.exe -m ggml-small.bin -f 音频.wav -l zh -otxt
 ## 注意事项
 
 - **16GB 内存**：勿同时常驻多模型；模型加载占用的是系统内存（iGPU 共享内存）
-- **Ollama 原生不支持 NPU**：本机 Ollama 走 iGPU/SYCL0，NPU 只由 `llama-cli-npu` 调用
+- **OCR 不需要 Ollama**（docling+rapidocr 走 NPU）；**图像理解需要 Ollama 服务**
+- **NPU 的两条实际用途**：OCR 加速（docling_npu.py，约 5 倍）与超轻量文本（llama-cli-npu，但生成文本不可见）
+- **Ollama 原生不支持 NPU**：本机 Ollama 走 iGPU/SYCL0
+- 视觉模型 small 精度有限（如 `12345`→`1234`），复杂图可试 `--cpu` 对比或换 gemma3:4b
 - 查看已装模型：`ollama list`；删除：`ollama rm <模型名>`
-- 视觉模型 small 精度有限，OCR 复杂场景可考虑 gemma3:4b
