@@ -12,7 +12,7 @@
 | **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
-| **local-ai**          | 本地模型、Ollama、NPU、whisper、离线、最简单任务、省电 | 本地模型处理最简单任务 — iGPU 文本（qwen3:4b）/视觉 OCR（qwen2.5vl:3b）、NPU 超轻量（DeepSeek-R1-1.5B）、bge-m3 嵌入（1024 维）、whisper 转写 |
+| **local-ai**          | 本地模型、Ollama、NPU、whisper、离线、最简单任务、OCR、省电 | 本地模型处理最简单任务 — iGPU 文本（qwen3:4b）/图像理解（qwen2.5vl:3b）、NPU OCR（docling+rapidocr）、bge-m3 嵌入（1024 维）、whisper 转写 |
 
 ## 已安装插件（Plugins）
 
@@ -96,7 +96,8 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
-- **2026/08/11** 新增 **local-ai** 技能（本地模型处理最简单任务）：qwen3:4b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉/OCR，IPEX-LLM 版 ollama run 不支持 --images → 走 API 脚本 `scripts/vision.py`）、DeepSeek-R1-1.5B（NPU，30 tok/s，生成文本不打印终端）、bge-m3（1024 维嵌入）、whisper-small（转写）；工具位于 `C:\Users\59620\tools\`
+- **2026/08/11** **local-ai** 技能：移除 **DeepSeek-R1-1.5B**（llama.cpp NPU 文本通道，生成文本不打印终端、无实用价值）——删除 `tools/llama-npu/`（2.3G）、`run-npu.bat` 及安装包；NPU 现仅用于 OCR（docling+rapidocr，约 5 倍加速）。当前通道：qwen3:4b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉）、docling+rapidocr（NPU OCR）、bge-m3（嵌入）、whisper-small（转写）
+- **2026/08/11** 新增 **local-ai** 技能（本地模型处理最简单任务）：qwen3:4b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉，IPEX-LLM 版 ollama run 不支持 --images → 走 API 脚本 `scripts/vision.py`）、bge-m3（1024 维嵌入）、whisper-small（转写）；工具位于 `C:\Users\59620\tools\`
 - **2026/08/08** 移除 **dxf-review** 技能（DXF 渲染预览/多模态对比/自动验证，已不再需要）；同步清理 CLAUDE.md 技能列表及 README 技能表
 - **2026/08/08** 移除 **dwg** 技能（LibreDWG 工具链，dxf2dwg 大文件卡死 / dwg2dxf 丢失 AEC 对象）；新增 **dwg-translate** 技能（AutoCAD COM 直连 DWG + ezdxf + MIMO 批量翻译，输出 `*_ZH.dwg`）；依赖表新增独立 venv 与 AutoCAD 2027 说明；CLI 工具表以 AutoCAD 2027 (COM) 替换 LibreDWG
 - **2026/08/07** 移除 **tendo-brand** 技能（目录已删）；README 技能列表及「其他环境」表中 Montserrat 字体依赖行一并清理
