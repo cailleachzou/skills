@@ -1,26 +1,27 @@
 ---
 name: local-ai
 description: >
-  处理"最简单任务"时优先用本机本地模型——省 token、可离线、保隐私。通用文本问答/翻译/改写用
-  Ollama `qwen2.5:3b`（iGPU），看图/图像理解用 `qwen2.5vl:3b`（iGPU），**OCR 文字提取走 NPU**
-  （docling + rapidocr，比 CPU 快约 5 倍），
-  文档 RAG 检索用 `bge-m3` 嵌入（1024 维），语音转文字用 whisper-small（CPU）。
-  当用户要求"本地处理 / 离线 / 断网 / 不耗 token / 最简单任务 / 小事件 / 省电 / 隐私 / 本机模型 /
-  OCR / 提取图片文字 / 扫描件"，或任务简单到没必要动用主模型或 mimo 时使用本技能。
-  工具根目录 `C:\Users\59620\tools\`；mimo 多模态调用模板见全局 CLAUDE.md，不在此重复。
+  处理"最简单任务"时优先用本机本地模型——省 token、可离线、保隐私。
+  通用文本问答/翻译/改写用 llama.cpp Vulkan 后端 + GTX 1080 Ti GPU。
+  当用户要求"本地处理 / 离线 / 断网 / 不耗 token / 最简单任务 / 小事件 / 省电 / 隐私 / 本机模型"，
+  或任务简单到没必要动用主模型或 mimo 时使用本技能。
+  mimo 多模态调用模板见全局 CLAUDE.md，不在此重复。
 compatibility: |
-  全部为已部署的本地工具（Intel Core Ultra 5 125H / Meteor Lake / 16GB / iGPU+NPU）：
-  - Ollama（IPEX-LLM 版，走 iGPU/SYCL0）：`C:\Users\59620\tools\ollama-xpu\ollama.exe`
-    模型：`qwen2.5:3b`（文本）、`qwen2.5vl:3b`（视觉）、`bge-m3`（嵌入）
-  - whisper.cpp：`C:\Users\59620\tools\whisper\Release\whisper-cli.exe` + `ggml-small.bin`
-  - OCR（NPU，独立于 Ollama）：`C:\Users\59620\.venv-docling\Scripts\python.exe` +
-    `C:\Users\59620\Desktop\docling_npu.py`（docling + rapidocr，OpenVINO NPU 引擎）
-  - Ollama 服务需先启动（`start-ollama-xpu.bat`，监听 127.0.0.1:11434）；OCR 不需要 Ollama
-  ⚠️ 本机仅 16GB 内存，勿同时常驻多个模型（qwen2.5:3b 约 2.1G + 视觉 3.2G 同载约 5.3G）
+  硬件: AMD Ryzen 5 3600X + NVIDIA GTX 1080 Ti (11GB VRAM, Vulkan 1.3)
+  软件:
+  - llama.cpp 预编译 Vulkan 版 (b10630): `C:\Users\caill\tools\llama-cpp\vulkan\llama-server.exe`
+  - Python 3.14.2 + llama-cpp-python 0.3.35 (CPU fallback)
+  模型 (GGUF 格式, 存储在 ~/.ollama/models/blobs/):
+  - lfm2.5: LiquidAI LFM2.5-2.6B (1.6GB, 英文最快 ~120 tok/s)
+  - phi4-mini: Microsoft Phi-4 Mini (2.4GB)
+  - qwen2.5:7b: Qwen2.5 7B (4.4GB, 中文最强 ~61 tok/s)
+  - llama3: Meta Llama 3 8B (4.4GB)
+  ⚠️ GTX 1080 Ti (CC 6.1) 不兼容 Ollama 0.32.9 和 llama-cpp-python CUDA 版，只能用 Vulkan 后端
 metadata:
   author: Cailleach Zou
-  version: "1.0"
+  version: "3.0"
   created: 2026-08-11
+  updated: 2026-08-26
 allowed-tools: Bash(*)
 ---
 
@@ -35,86 +36,80 @@ allowed-tools: Bash(*)
 |----|------|------|
 | 主模型 | 当前 Claude | 复杂规划、排期、代码、写作——**不外包** |
 | 次模型 | mimo-v2.5（API） | 图像/视频/音频理解、TTS（全局 CLAUDE.md 模板） |
-| **本地模型（本技能）** | 下表 | **最简单任务**，省 token / 离线 / 隐私 |
+| **本地模型（本技能）** | llama.cpp Vulkan | **最简单任务**，省 token / 离线 / 隐私 |
 
 **走本地**：任务极简（一句话问答、翻译、改写、分类、抽关键词）、离线断网、隐私敏感、图省 token。
 **不走本地**：需强推理/长上下文/多步 → 主模型；涉及看/听/说 → mimo；复杂文档解析 → `docling` skill。
 
 ## 工具总览
 
-| 模型/工具 | 设备 | 职责 | 实测 |
-|-----------|------|------|------|
-| Ollama `qwen2.5:3b` | iGPU (SYCL0) | 通用文本、翻译、改写 | 中文回复正常 |
-| Ollama `qwen2.5vl:3b` | iGPU (SYCL0) | **图像理解** / 看图描述 | 1~10s 描述图内文字 |
-| docling + rapidocr | **NPU** | **OCR 文字提取**（图片/扫描PDF） | 6.6s 中文；比 CPU 快约 5 倍 |
-| Ollama `bge-m3` | CPU | RAG 嵌入 | 1024 维 |
-| whisper-small | CPU | 语音转文字 | 6s / 中文基本正确 |
+| 模型/工具 | 设备 | 职责 | 实测速度 |
+|-----------|------|------|----------|
+| llama-server Vulkan + qwen2.5:7b | GTX 1080 Ti | **中文任务**（翻译/改写/问答） | ~61 tok/s |
+| llama-server Vulkan + lfm2.5 | GTX 1080 Ti | 英文任务（最快） | ~120 tok/s |
+| llama-server Vulkan + phi4-mini | GTX 1080 Ti | 英文/代码 | ~80 tok/s |
+| llama-cpp-python (CPU fallback) | CPU 12线程 | 备用 | ~9 tok/s |
+
+> ⚠️ **GPU 方案**: GTX 1080 Ti (CC 6.1) 与 Ollama 0.32.9 和 llama-cpp-python CUDA 版不兼容。
+> 唯一可用的 GPU 方案是 **llama.cpp Vulkan 后端**（对架构无限制）。
 
 ## 调用方法
 
-### 0. 启动 Ollama 服务（一次性）
+### 1. 启动 llama-server（推荐方式）
 
 ```cmd
-:: 双击 C:\Users\59620\tools\start-ollama-xpu.bat，保持窗口开着；或：
-cd /d C:\Users\59620\tools\ollama-xpu
-call start-ollama.bat
+:: 启动 Vulkan 后端服务器（qwen2.5:7b 中文模型）
+cd /d C:\Users\caill\tools\llama-cpp\vulkan
+llama-server.exe -m "C:\Users\caill\.ollama\models\blobs\sha256-2bada8a7450677000f678be90653b85d364de7db25eb5ea54136ada5f3933730" -ngl 99 --host 127.0.0.1 --port 8080 -c 2048
 ```
 
-验证：`curl http://127.0.0.1:11434/api/tags`
+验证: `curl http://127.0.0.1:8080/health`
 
-### 1. 通用文本（qwen2.5:3b · iGPU）
+### 2. 通过 API 对话（OpenAI 兼容）
 
 ```bash
-"C:\Users\59620\tools\ollama-xpu\ollama.exe" run qwen2.5:3b "把这段翻译成英文：你好世界"
+curl -s http://127.0.0.1:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"local","messages":[{"role":"user","content":"用一句话介绍量子计算"}],"max_tokens":100}'
 ```
 
-- qwen2.5:3b 无强制思考，直接回答（原 qwen3:4b 的默认思考已随模型删除）
-- `ollama.exe` 在 PATH 默认没有，用完整路径
-
-### 2a. 图像理解 / 看图（qwen2.5vl:3b · iGPU）
-
-⚠️ 需 Ollama 服务在跑（第 0 节）；本版 `ollama run` **不支持 `--images`**，视觉必须走 API。已封装脚本：
+或封装脚本:
 
 ```bash
-py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\vision.py" "图片.png" "描述这张图片的内容"
+py -3 "C:\Users\caill\.pi\agent\skills\local-ai\scripts\llama_chat.py" "用一句话介绍量子计算"
 ```
 
-### 2b. OCR 文字提取（docling + rapidocr · NPU）
+### 3. 模型切换（需重启服务器）
 
-从图片 / 扫描 PDF 里**提取文字**，走 NPU，不依赖 Ollama：
+| 模型 | GGUF 路径 | 用途 |
+|------|-----------|------|
+| qwen2.5:7b | sha256-2bada8a7450677000f678be90653b85d364de7db25eb5ea54136ada5f3933730 | **中文**（推荐） |
+| lfm2.5 | sha256-79fdf00351b46cf26f020aead28d01889886be87c55fa0eb907e6f9b00bfee14 | 英文（最快） |
+| phi4-mini | sha256-4a770663d4551fb217658be33bbd71426ec9efa91233b0e6ab5d48fdcfb593ed | 英文/代码 |
+| llama3 | sha256-6a0746a1ec1aef3e7ec53868f220ff6e389f6f8ef87a01d77c96807de94ca2aa | 通用 |
+
+### 4. CPU 备用方案（llama-cpp-python）
 
 ```bash
-py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\ocr.py" "扫描件.png"                 # 文字打印到终端
-py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\ocr.py" "扫描件.pdf" -o out.md       # 结果写入 md
-py -3 "C:\Users\59620\.claude\skills\local-ai\scripts\ocr.py" "图.png" --cpu              # OpenVINO CPU 对比
+# 当 llama-server 不可用时
+py -3 "C:\Users\caill\.pi\agent\skills\local-ai\scripts\llama_chat.py" --cpu "你的问题"
 ```
 
-- 引擎：OpenVINO + rapidocr PP-OCR，NPU 加速，比 CPU 快约 5 倍
-- 小模型对长数字末尾偶有丢失（`12345`→`1234`）；复杂版式可用 `--cpu` 对比精度
+## 可用模型详情
 
-### 3. 文档 RAG 嵌入（bge-m3 · CPU）
-
-```bash
-curl http://127.0.0.1:11434/api/embed -H "Content-Type: application/json" \
-  -d "{\"model\":\"bge-m3\",\"input\":\"要检索的文本\"}"
-```
-
-返回 1024 维向量（`embeddings[0]`）。
-
-### 4. 语音转文字（whisper-small · CPU）
-
-```cmd
-cd /d C:\Users\59620\tools\whisper
-Release\whisper-cli.exe -m ggml-small.bin -f 音频.wav -l zh -otxt
-```
-
-输出文本写入 `<音频名>.txt`。
+| 模型 | 大小 | 中文 | 英文 | GPU 速度 | CPU 速度 |
+|------|------|------|------|----------|----------|
+| qwen2.5:7b | 4.4GB | ★★★★★ | ★★★★ | ~61 tok/s | ~3.6 tok/s |
+| lfm2.5 | 1.6GB | ★★★ | ★★★★ | ~120 tok/s | ~9 tok/s |
+| phi4-mini | 2.4GB | ★★ | ★★★★★ | ~80 tok/s | ~5 tok/s |
+| llama3 | 4.4GB | ★★★ | ★★★★ | ~60 tok/s | ~4 tok/s |
 
 ## 注意事项
 
-- **16GB 内存**：勿同时常驻多模型；模型加载占用的是系统内存（iGPU 共享内存）
-- **OCR 不需要 Ollama**（docling+rapidocr 走 NPU）；**图像理解需要 Ollama 服务**
-- **NPU 的实际用途**：仅 OCR 加速（docling_npu.py，约 5 倍）；不用于通用文本
-- **Ollama 原生不支持 NPU**：本机 Ollama 走 iGPU/SYCL0
-- 视觉模型 small 精度有限（如 `12345`→`1234`），复杂图可试 `--cpu` 对比或换 gemma3:4b
-- 查看已装模型：`ollama list`；删除：`ollama rm <模型名>`
+- **GPU 方案**: GTX 1080 Ti 用 Vulkan 后端（llama-server.exe），支持所有架构
+- **中文任务**: 推荐 qwen2.5:7b（LFM2.5 中文输出有问题）
+- **VRAM**: GTX 1080 Ti 11GB，7B 模型约占 5.7GB，可同时跑其他应用
+- **首次加载**: qwen2.5:7b 加载约 10 秒，后续请求快速
+- **端口**: 默认 8080，可用 `--port` 参数修改
+- **温度设置**: 创意任务用 0.7-1.0，精确任务用 0.1-0.3
+- **上下文长度**: 默认 2048 tokens，可用 `-c` 参数调整
