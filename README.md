@@ -7,12 +7,13 @@
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
 | **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON（含 OCR） |
+| **docs-translate**    | 翻译、Word、PPT、PDF、离线、保留格式、批量 | 离线文档翻译（Word/PPT/PDF，保留格式）— 唯一翻译入口，Qwen2.5 本地引擎，含纯文本 `--text` |
 | **dwg-translate**     | 翻译、DWG、DXF、CAD、图纸、中文 | DWG 电气图纸英译中 — AutoCAD COM 直连 → 提取 → MIMO 批量翻译 → 回填 → 输出 *_ZH.dwg |
 | **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
 | **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
-| **local-ai**          | 本地模型、Ollama、NPU、whisper、离线、最简单任务、OCR、省电 | 本地模型处理最简单任务 — iGPU 文本（qwen2.5:3b）/图像理解（qwen2.5vl:3b）、NPU OCR（docling+rapidocr）、bge-m3 嵌入（1024 维）、whisper 转写 |
+| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机 | 本地模型处理最简单任务 — llama.cpp Vulkan + GTX 1080 Ti（qwen2.5:7b/14b 等），问答/改写/摘要；翻译走 docs-translate |
 | **hf-cli**            | hf、huggingface、Hugging Face、模型下载、数据集、Spaces | Hugging Face Hub CLI — 下载/上传/管理模型、数据集、Spaces、Buckets、Repos、Jobs、Webhooks、Inference Endpoints 等（`hf` 替代已废弃的 `huggingface-cli`） |
 | **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 

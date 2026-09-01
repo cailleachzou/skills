@@ -10,8 +10,8 @@ description: >
   `docling convert` CLI, the Python SDK (DocumentConverter + PipelineOptions),
   and the remote Service Client (self-hosted or managed docling-serve).
 compatibility: |
-  docling 2.118.0，独立 venv：`C:\Users\59620\.venv-docling\`（Python 3.12.12）
-  CLI：`C:\Users\59620\.venv-docling\Scripts\docling.exe`（子命令式：`docling convert <source>`）
+  docling 2.118.0，独立 venv：`C:\Users\caill\.venv-docling\`（Python 3.12.12）
+  CLI：`C:\Users\caill\.venv-docling\Scripts\docling.exe`（子命令式：`docling convert <source>`）
   ⚠️ 必须先设置 `TORCH_COMPILE_DISABLE=1` 和 `TORCHINDUCTOR_DISABLE=1`（torch 2.13 在无 MSVC 的 Windows 上报 inductor 错）
   模型缓存：`~/.cache/huggingface/`（约 2GB，首次转换自动下载）
   ⚠️ 本机 16GB 内存：处理大文档（>30 页）必须调小 `--page-batch-size`（默认 4）
@@ -34,7 +34,7 @@ Docling 把 PDF、DOCX、PPTX、XLSX、HTML、Markdown、AsciiDoc、CSV、图片
 
 ```bash
 # 独立 venv（已装好，勿用系统 Python）
-DOCLING="C:\Users\59620\.venv-docling\Scripts\docling.exe"
+DOCLING="C:\Users\caill\.venv-docling\Scripts\docling.exe"
 "$DOCLING" --version
 #   → Docling version: 2.118.0
 #   → Python: cpython-312 (3.12.12)
@@ -61,7 +61,7 @@ export TORCHINDUCTOR_DISABLE=1
 # ① 每次会话先设环境变量 + 定义变量
 export TORCH_COMPILE_DISABLE=1
 export TORCHINDUCTOR_DISABLE=1
-DOCLING="C:\Users\59620\.venv-docling\Scripts\docling.exe"
+DOCLING="C:\Users\caill\.venv-docling\Scripts\docling.exe"
 
 # 转换本地 PDF → Markdown
 "$DOCLING" convert report.pdf --to md --output ./out/
@@ -87,13 +87,13 @@ DOCLING="C:\Users\59620\.venv-docling\Scripts\docling.exe"
 
 ```powershell
 # PowerShell
-& "C:\Users\59620\.claude\skills\docling\scripts\docling.ps1" convert report.pdf --to md --output ./out/
+& "C:\Users\caill\.pi\agent\skills\docling\scripts\docling.ps1" convert report.pdf --to md --output ./out/
 ```
 
 ```bash
 # Git Bash（MSYS2）下调用 PowerShell 脚本
 powershell -NoProfile -ExecutionPolicy Bypass -File \
-  "C:\Users\59620\.claude\skills\docling\scripts\docling.ps1" convert report.pdf --to md --output ./out/
+  "C:\Users\caill\.pi\agent\skills\docling\scripts\docling.ps1" convert report.pdf --to md --output ./out/
 ```
 
 ## ⚠️ 本机关键限制：16GB 内存
@@ -153,7 +153,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File \
 
 ```bash
 # NPU OCR（图片或扫描 PDF）
-"C:\Users\59620\.venv-docling\Scripts\python.exe" "C:\Users\59620\Desktop\docling_npu.py" 扫描件.pdf -o out.md
+"C:\Users\caill\.venv-docling\Scripts\python.exe" "C:\Users\caill\Desktop\docling_npu.py" 扫描件.pdf -o out.md
 ```
 
 ⚠️ 依赖 venv-docling 里 rapidocr 的 4 处 NPU 补丁（升级 rapidocr/openvino 后需重打）：

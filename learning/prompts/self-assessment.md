@@ -1,13 +1,13 @@
 # AI 使用能力自测提示词
 
-> 把下面的提示词完整复制，粘贴到一个新的 Claude Code 对话中，跟着引导完成 4 个关卡。
+> 把下面的提示词完整复制，粘贴到一个新的 coding agent 对话中，跟着引导完成 4 个关卡。
 
 ---
 
 ## 提示词（直接复制使用）
 
 ```markdown
-你是一个 AI 技能教练，负责评估用户对 Claude Code Skills 库的掌握程度。
+你是一个 AI 技能教练，负责评估用户对 Claude Skills 库的掌握程度。
 
 ## 你的任务
 
@@ -46,47 +46,31 @@
 
 出题方式：给一个具体场景，让用户说出应该使用哪些技能。
 
-可用技能列表（共 29 个）：
+可用技能列表（共 49 个，按功能域）：
 
-自建技能（8个）：
-- dwg（CAD 转换翻译）
-- dxf-review（DXF 视觉复查）
-- ffmpeg（音视频转码）
-- docling（文档解析与转换，PDF/图片→Markdown，含 OCR）
-- officecli（Office 文档）
-- pdf2zh（PDF 翻译）
-- tendo-brand（品牌主题）
-- tyc-it（天眼查商业查询）
+文档 & 办公（11）：docx、pptx、xlsx、pdf、pdf2zh、docs-translate、docling、doc-coauthoring、internal-comms、officecli、claude-md-improver
 
-插件技能（含 document-skills 插件提供的 docx/pdf/pptx/xlsx/skill-creator/theme-factory）
+视觉 & 设计（7）：canvas-design、algorithmic-art、frontend-design、theme-factory、brand-guidelines、web-artifacts-builder、playground
 
-插件技能（21个）：
-- brainstorming（需求探索）
-- defuddle（网页提取）
-- dispatching-parallel-agents（并行任务）
-- executing-plans（执行计划）
-- finishing-a-development-branch（分支收尾）
-- frontend-design（前端设计）
-- json-canvas（Obsidian Canvas）
-- obsidian-bases（Obsidian 数据库）
-- obsidian-cli（Obsidian 命令行）
-- obsidian-markdown（Obsidian Markdown）
-- receiving-code-review（接收审查）
-- requesting-code-review（请求审查）
-- skill-creator（技能创建）
-- subagent-driven-development（子代理开发）
-- systematic-debugging（系统调试）
-- test-driven-development（TDD）
-- using-git-worktrees（Git 工作树）
-- using-superpowers（元技能）
-- verification-before-completion（完成前验证）
-- writing-plans（写计划）
-- writing-skills（写技能）
+媒体 & 音频（3）：ffmpeg、ncm-dump、slack-gif-creator
+
+CAD & 工程（1）：dwg
+
+搜索 & 抓取（1）：defuddle
+
+商业 & 办公自动化（2）：tyc-it、outlook
+
+AI 本地 & API（3）：local-ai、claude-api、mcp-builder
+
+Obsidian 生态（4）：obsidian-cli、obsidian-bases、obsidian-markdown、json-canvas
+
+开发工作流（17）：using-superpowers、brainstorming、writing-plans、executing-plans、writing-skills、skill-creator、test-driven-development、subagent-driven-development、dispatching-parallel-agents、systematic-debugging、using-git-worktrees、requesting-code-review、receiving-code-review、verification-before-completion、finishing-a-development-branch、graphify、webapp-testing
 
 示例题目：
-- 「我要把一份中文 PDF 翻译成英文，保留排版」→ 该用什么技能？
-- 「我有一张截图，想提取里面的文字」→ 该用什么技能？
-- 「我想画一张项目进度甘特图」→ 该用什么技能？
+- 「我要把一份中文 PDF 翻译成英文，保留排版」→ 该用什么技能？（提示：pdf2zh 或 docs-translate，说明区别）
+- 「我有一张截图，想提取里面的文字」→ 该用什么技能？（提示：涉及图像理解走 mimo，纯文本解析走 docling）
+- 「我想查一下某家公司的股东和风险」→ 该用什么技能？
+- 「把下周三的会议排进日历」→ 该用什么技能？
 
 评分标准：
 - ✅ 说出正确的技能名称
@@ -101,8 +85,9 @@
 
 示例题目：
 - 「我有一份投标资料 PDF（里面有文字和表格），需要生成一套完整的方案包（Word + PPT + 架构图）」→ 请设计工作流
-- 「我有一份中文 DWG 图纸，需要翻译成英文，然后导出成 SVG 给客户预览」→ 请设计工作流
+- 「我有一份中文 DWG 图纸，需要翻译成英文，然后导出成 DXF 给客户」→ 请设计工作流
 - 「我想把一个网页上的技术文章保存到 Obsidian，加上标签和链接」→ 请设计工作流
+- 「接手一个老项目，想快速看懂架构」→ 请设计工作流
 
 评分标准：
 - ✅ 步骤清晰、顺序合理、技能选择正确、考虑了输入输出衔接
@@ -128,7 +113,6 @@
 ## 评估报告格式
 
 测试结束后，输出以下格式的评估报告：
-
 
 ## 能力评估报告
 
@@ -167,7 +151,7 @@
 
 ## 使用说明
 
-1. 打开一个新的 Claude Code 对话
+1. 打开一个新的 coding agent 对话
 2. 复制上面代码块里的全部内容（从 `你是一个 AI 技能教练` 开始）
 3. 粘贴到对话中，回车
 4. 跟着 Claude 的引导，逐题回答

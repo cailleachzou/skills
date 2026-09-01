@@ -1,301 +1,79 @@
 ---
 name: pdf2zh
-description: "CLI harness for the PDFMathTranslate Windows EXE — translate PDFs (with layout preserved) from scripts and AI agents. Ships with a Xiaomi MiMo translator patch that adds a new OpenAI-compatible service to the bundled pdf2zh.exe."
+description: "Translate PDFs with layout preserved (math, columns) via PDFMathTranslate. Uses external translation services — google (free, no key), openai, deepl, deeplx, ollama, azure. 1.7.9 quirk: use --lang-out zh-CN for Chinese with google."
 ---
 
-# pdf2zh
+# pdf2zh（外部翻译服务版）
 
-> Translate PDFs from scripts / agents. Wraps `pdf2zh.exe` (PDFMathTranslate)
-> and adds a **Xiaomi MiMo** translator via a one-shot patch into the bundled
-> `build/site-packages/pdf2zh/`.
+> PDFMathTranslate 解析 PDF 并保留布局（数学公式、双栏），翻译交给**外部翻译服务**。
+> 本机已装 PyPI 最新版 **1.7.9**（旧版 CLI：无 `-o`，PDF 输出到当前目录 `<名>-zh.pdf` / `<名>-dual.pdf`）。
 
-The harness **calls the real software** (the `pdf2zh.exe` bundled with
-PDFMathTranslate) for all translation. It does not reimplement the
-translator pipeline in Python. The MiMo engine is added by patching
-`translator.py`, `pdf2zh.py`, and `converter.py` inside the bundled
-site-packages (idempotent — `.harness.bak` backups are written).
+## 支持的服务（1.7.9）
 
----
+| 服务 | 命令 | Key 配置 |
+|------|------|----------|
+| Google（免费） | `-s google` | 无需 key |
+| OpenAI 兼容 | `-s openai:<模型>` | `OPENAI_API_KEY`（可选 `OPENAI_BASE_URL`） |
+| DeepL | `-s deepl` | `DEEPL_AUTH_KEY` |
+| DeepLX | `-s deeplx` | `DEEPLX_AUTH_KEY`、`DEEPLX_SERVER_URL` |
+| Ollama（本地） | `-s ollama:<模型>` | 本机 ollama |
+| Azure | `-s azure` | `AZURE_APIKEY`、`AZURE_ENDPOINT`、`AZURE_REGION` |
 
-## When to use
+> 想用其他 OpenAI 兼容服务（包括 MiMo）：设 `OPENAI_API_KEY` + `OPENAI_BASE_URL`，用 `-s openai:<模型>`。
 
-Use this CLI when you need to:
-
-* Translate a PDF (or batch of PDFs) from a script / agent
-* Switch between 23+ translation services (Google, OpenAI, DeepL,
-  MiMo, …) without touching the pdf2zh GUI
-* Inspect a PDF's page count / size / validity before translating
-* Inspect the SQLite translation cache (`~/.cache/pdf2zh/cache.v1.db`)
-* Read / write the JSON translator config (`~/.config/PDFMathTranslate/`)
-* Drive the EXE's MCP server from a script
-
-Do **not** use this for editing the translated PDF, OCR, or anything
-beyond the bundled PDFMathTranslate surface — those are out of scope.
-
----
-
-## Installation
+## 安装（已完成）
 
 ```bash
-# 1. PDFMathTranslate (the real software) — already installed at
-#    C:\Program Files\pdf2zh\build\pdf2zh.exe on this host.
-#    Verify: cli-anything-pdf2zh services list
-#
-# 2. The harness
-cd "C:/Program Files/pdf2zh/agent-harness"
-pip install -e .
-#
-# 3. Install the Xiaomi MiMo translator patch + set the API key
-#    (mimo is the default service — required for out-of-the-box translation)
-#    Env vars take precedence over config.json (translator.py's set_envs
-#    reads MIMO_* from os.environ first). Prefer env vars on this host:
-#      MIMO_API_KEY  → Windows user env (sk-…, 计量计费)
-#      MIMO_BASE_URL → https://api.xiaomimimo.com/v1
-#      MIMO_MODEL    → mimo-v2.5
-#    config.json is the fallback (set with cli-anything-pdf2zh config):
-cli-anything-pdf2zh patch install
-cli-anything-pdf2zh config set-key mimo MIMO_API_KEY <key>
-cli-anything-pdf2zh config set-key mimo MIMO_BASE_URL https://api.xiaomimimo.com/v1
-cli-anything-pdf2zh config set-key mimo MIMO_MODEL mimo-v2.5
-#
-#    To use a different service, pass --service <name> (e.g. --service google
-#    for the no-key-needed fallback).
+pip install pdf2zh                      # 1.7.9 + torch 等依赖（已装）
+py -3 agent_translator_patch.py compat  # numpy 2.x 兼容修复（1.7.9 必需，否则报 fromstring 错误）
 ```
 
-To uninstall the harness:
-```bash
-pip uninstall cli-anything-pdf2zh
-cli-anything-pdf2zh patch uninstall   # restores the original translator.py
-```
+`compat` 只改 `high_level.py` 一处（`np.fromstring` → `np.frombuffer`），留 `.harness.bak`，`uninstall` 可还原。
+本机走代理 `127.0.0.1:7897`，google 服务可用。
 
----
-
-## Command groups
-
-| Group | Subcommands | Purpose |
-|-------|-------------|---------|
-| `info`      | —               | PDF page count, size, validity |
-| `translate` | —               | Translate one or more PDFs |
-| `batch`     | —               | Translate every PDF in a directory |
-| `services`  | `list`, `show`  | Catalog of 23 translation services |
-| `config`    | `list`, `get`, `set`, `delete`, `set-key`, `show-translator` | Read/write `~/.config/PDFMathTranslate/config.json` |
-| `inspect`   | —               | Detailed PDF inspection (alias of `info` with more fields) |
-| `cache`     | `summary`, `list`, `clear` | Query/clear the SQLite translation cache |
-| `patch`     | `status`, `install`, `uninstall` | Manage the Xiaomi MiMo translator patch |
-| `mcp`       | —               | Launch the EXE's MCP server (passthrough) |
-| `repl`      | —               | Default when no subcommand is given |
-
-**Global flags:** `--json` (machine-readable output, every command supports it),
-`--exe PATH` (override the EXE path), `--quiet` (suppress non-essential output).
-
----
-
-## Quick examples
-
-### One-shot translation
+## 常用命令
 
 ```bash
-# English → Chinese, MiMo (the default — needs API key configured)
-cli-anything-pdf2zh translate paper.pdf -o out/
+# 英→中（注意：google 中文目标语言用 zh-CN，用 zh 会返回原文！）
+pdf2zh paper.pdf -s google --lang-in en --lang-out zh-CN
 
-# English → Japanese, MiMo, explicit
-cli-anything-pdf2zh translate paper.pdf -o out/ --service mimo --lang-in en --lang-out ja
+# 英→日
+pdf2zh paper.pdf -s google --lang-in en --lang-out ja
 
-# Google fallback (no API key needed)
-cli-anything-pdf2zh translate paper.pdf -o out/ --service google
+# 指定页
+pdf2zh book.pdf -s google --lang-in en --lang-out zh-CN --pages 1-3
 
-# Translate pages 1-3 only
-cli-anything-pdf2zh translate book.pdf -o out/ --pages 1-3
-
-# Batch
-cli-anything-pdf2zh batch ./pdfs/ -o ./out/
+# OpenAI 兼容（含 MiMo）
+OPENAI_API_KEY=sk-... OPENAI_BASE_URL=https://api.xiaomimimo.com/v1 \
+  pdf2zh paper.pdf -s openai:mimo-v2.5 --lang-in en --lang-out zh-CN
 ```
 
-### JSON output (for agents)
+## 注意事项
 
-```bash
-cli-anything-pdf2zh --json services list
-# [
-#   {"name": "google", "kind": "free", "key": "no", "desc": "Google Translate (web endpoint)"},
-#   ...
-#   {"name": "mimo", "kind": "key", "key": "yes", "desc": "Xiaomi MiMo (added by harness patch)"}
-# ]
+* **语言码**：google 用 `zh-CN`/`ja`/`en` 等；`zh` 不被 google 网页端点识别（返回原文）。`auto` 也安全。
+* **公式占位符**：pdf2zh 把公式替换成 `$v0$ $v1$` 再翻译，译文必须原样保留这些标记，管道回填成真实公式。
+* **缓存**：位于 `%TEMP%\cache\<hash>\`。翻译结果会缓存，改服务/语言后 key 不同不受影响；想强制重译删该目录。
+* **多线程**：`-t` 默认 4，并发调翻译服务。
 
-cli-anything-pdf2zh --json translate paper.pdf -o out/
-# {
-#   "mono_pdf": "...\\paper-mono.pdf",
-#   "dual_pdf": "...\\paper-dual.pdf",
-#   "exit_code": 0,
-#   "duration_s": 12.4,
-#   "inputs": ["paper.pdf"],
-#   ...
-# }
-```
+## 排错
 
-### Interactive REPL (default)
+| 现象 | 处理 |
+|------|------|
+| `ValueError: The binary mode of fromstring is removed` | 没打 numpy 兼容：`py -3 agent_translator_patch.py compat` |
+| 译文和原文一样 | 检查语言码（google 中文用 `zh-CN`）；网络/代理可达性 |
+| `Empty translation result` | google 页面结构变化或网络问题，换 `-s openai` 等服务 |
+| `Unsupported translation service` | 服务名拼错，或该服务不在 1.7.9 列表 |
 
-```bash
-$ cli-anything-pdf2zh
-◆  cli-anything-pdf2zh  v0.1.0  (PDFMathTranslate harness)
+## 备用：当前对话翻译引擎（agent）
 
-  Commands: help, status, services, use <svc>, lang <in> <out>, pdf <path>,
-            out <path>, translate, save [path], open <path>, patch-install,
-            version, exit
+`agent_translator_patch.py install` 会注册 `-s agent`（由 coding agent 在对话中翻译，无外部 API），
+两遍法工作流详见脚本注释。当前默认使用外部服务，需要时再启用。
 
-pdf2zh> pdf paper.pdf
-  ✓ current_pdf = paper.pdf
-pdf2zh> out ./translated
-  ✓ output_dir = ./translated
-pdf2zh> use mimo
-  ✓ service = mimo
-pdf2zh> lang en zh
-  ✓ lang = en -> zh
-pdf2zh> translate
-  ✓ mono: ./translated/paper-mono.pdf  dual: ./translated/paper-dual.pdf
-pdf2zh> save my-translation.json
-  ✓ saved my-translation.json
-pdf2zh> exit
-  Bye.
-```
+## 文件位置
 
-### Inspect / cache
-
-```bash
-cli-anything-pdf2zh info paper.pdf
-cli-anything-pdf2zh --json cache summary
-cli-anything-pdf2zh cache list --engine mimo --limit 10
-cli-anything-pdf2zh cache clear --engine mimo
-```
-
-### Xiaomi MiMo patch
-
-```bash
-cli-anything-pdf2zh patch status
-cli-anything-pdf2zh patch install         # adds MiMo class to translator.py,
-                                          # registers it in pdf2zh.py + converter.py
-cli-anything-pdf2zh patch uninstall       # restores from .harness.bak backups
-```
-
----
-
-## Agent guidance
-
-### Default service
-
-* `mimo` is the default for both `translate` and `batch` (and the REPL
-  `Session` defaults to it). Override with `--service <name>` if you need
-  Google / OpenAI / DeepL / etc.
-* `mimo` requires the patch installed and the API key configured (see
-  Installation step 3). If the key is missing, the EXE raises
-  `ValueError: ...` — the harness exits 1.
-* The API key falls back to `ANTHROPIC_AUTH_TOKEN` env var if `MIMO_API_KEY`
-  is not explicitly set in the pdf2zh config.
-
-### Auto-fallback chain
-
-* If the **default** service (`mimo`) fails (non-zero exit), the
-  harness automatically retries once with the next service in
-  `DEFAULT_FALLBACK_CHAIN` (currently `google`, the only key-free
-  fallback). This way an unset API key degrades to a working translation
-  instead of a hard failure.
-* Auto-fallback only kicks in for the default service. If the user
-  explicitly picked `--service openai` (or any non-default), the failure
-  is reported as-is — silently swapping the engine behind their back
-  would be more confusing than the original error.
-* The result dict carries four extra fields when fallback ran:
-  * `fallback_used: bool`
-  * `fallback_from: str` — the service that failed (e.g. `"mimo"`)
-  * `fallback_to: str` — the service actually used (e.g. `"google"`)
-  * `fallback_reason: str` — last 300 chars of the first attempt's
-    stdout+stderr, so you can see why it failed
-* In human output the user sees a `⚠ mimo failed — fell back to
-  google` warning line before the success/error block. In JSON output
-  the same info is in the result fields.
-
-### Output discipline
-
-* Every command supports `--json`. The harness never prints colours or
-  spinners in JSON mode.
-* Output is one of:
-  * A single JSON object (most commands)
-  * A JSON array (`services list`)
-  * A path string (`pdf2zh.exe --version`)
-* Errors are emitted as `{"error": "..."}` on stdout, **not** mixed into
-  data. Exit code is non-zero on failure.
-
-### Resolving the EXE
-
-The harness looks for the EXE in this order:
-
-1. `--exe PATH` (explicit override)
-2. `$PDF2ZH_EXE_PATH` env var
-3. `shutil.which("pdf2zh")`
-4. `C:\Program Files\pdf2zh\build\pdf2zh.exe` (canonical install)
-5. Sibling `build/pdf2zh.exe` relative to the harness package (dev mode)
-
-If none of these work, the harness exits with a clear install-instructions
-message.
-
-### Translator envs
-
-`config set-key <service> <KEY> <value>` writes to
-`~/.config/PDFMathTranslate/config.json` under `translators[N].envs`. The
-EXE picks these up on the next run. Secret values (keys containing
-`KEY`, `TOKEN`, or `SECRET`) are **masked** in `config show-translator`
-output — even in `--json` mode — so they don't leak into agent
-transcripts.
-
-The Xiaomi MiMo translator expects:
-
-| Env | Default | Required |
-|-----|---------|----------|
-| `MIMO_API_KEY` | — | yes (falls back to `ANTHROPIC_AUTH_TOKEN` env var) |
-| `MIMO_BASE_URL` | `https://api.xiaomimimo.com/v1` | no |
-| `MIMO_MODEL` | `mimo-v2.5-pro` | no |
-
-### Idempotency
-
-* `patch install` is a no-op if already installed
-* `patch uninstall` is a no-op if not installed
-* `translate` and `batch` always write to a fresh `*-mono.pdf` / `*-dual.pdf`
-  pair; pre-existing files are overwritten
-
-### Failure modes
-
-* Network down → `translate` exits 1, `stderr_tail` is captured
-* Missing API key → EXE raises `ValueError`, harness exits 1
-* Wrong service name → EXE raises `ValueError: Unsupported translation service`
-* Cache file corrupt → `cache summary` returns 0 rows + `note` field
-
-### When the EXE isn't installed
-
-`find_pdf2zh_exe` raises a `RuntimeError` with clear instructions. The
-unit tests don't fail — they skip — if the EXE is missing.
-
----
-
-## Filesystem locations
-
-| What | Where |
-|------|-------|
-| EXE | `C:\Program Files\pdf2zh\build\pdf2zh.exe` |
-| Bundled python | `C:\Program Files\pdf2zh\build\runtime\` |
-| Bundled site-packages | `C:\Program Files\pdf2zh\build\site-packages\` |
-| Edited by patch | `…\site-packages\pdf2zh\translator.py` |
-| Edited by patch | `…\site-packages\pdf2zh\pdf2zh.py` |
-| Edited by patch | `…\site-packages\pdf2zh\converter.py` |
-| Backups written by patch | `<file>.harness.bak` next to each |
-| ONNX model cache | `~/.cache/babeldoc/` |
-| Translation cache (SQLite) | `~/.cache/pdf2zh/cache.v1.db` |
-| Translator config (JSON) | `~/.config/PDFMathTranslate/config.json` |
-
----
-
-## Security
-
-* Never commit `~/.config/PDFMathTranslate/config.json` — it contains
-  API keys. Add it to your global `.gitignore`.
-* The harness's `config show-translator` masks secrets. Use it to verify
-  what was stored without leaking the value.
-* The MiMo patch makes a backup of each file it edits
-  (`<file>.harness.bak`). `patch uninstall` restores from these.
+| 内容 | 位置 |
+|------|------|
+| 包 | `C:\Users\caill\AppData\Local\Programs\Python\Python314\Lib\site-packages\pdf2zh\` |
+| 补丁备份 | `pdf2zh\*.py.harness.bak` |
+| 翻译缓存 | `%TEMP%\cache\` |
+| 布局模型 | `~/.cache/huggingface/`（首次运行自动下载） |

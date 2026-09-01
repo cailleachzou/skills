@@ -10,7 +10,7 @@
 
 ```
 ❌ 帮我调用 docx 技能生成一个文件
-✅ 帮我把这份方案生成 Word 文档，要有目录和页眉，用 Tendo 品牌模板
+✅ 帮我把这份方案生成 Word 文档，要有目录和页眉
 ```
 
 Claude 会根据你的描述自动匹配最合适的技能。你越具体，它越准。
@@ -29,12 +29,12 @@ Claude 会根据你的描述自动匹配最合适的技能。你越具体，它�
 
 ### 1.3 用中文就行
 
-所有自建技能都支持中文触发。不需要翻译成英文，也不需要背诵技能名。
+所有技能都支持中文触发。不需要翻译成英文，也不需要背诵技能名。
 
 ```
 ✅ 画一张系统架构图
 ✅ 把这份 DWG 翻译成英文
-✅ 生成一封邮件给客户
+✅ 查一下这家公司的股东关系
 ```
 
 ### 1.4 复合任务一句话说清
@@ -78,15 +78,15 @@ Claude 会自动拆解步骤、串联技能。你不需要手动指定每一步�
 ```
 报错：Python was not found
 原因：Windows 上没有 python3 命令
-解法：用 python 或 py -3（不要用 python3）
+解法：用 py -3（不要用 python3，也不要裸写 python）
 ```
 
 ### 2.3 Node 依赖缺失
 
 ```
-报错：Cannot find module 'adm-zip'
+报错：Cannot find module 'xxx'
 原因：npm 包未安装
-解法：npm install adm-zip
+解法：npm install xxx
 ```
 
 ### 2.4 大文件读取超时
@@ -101,7 +101,7 @@ Claude 会自动拆解步骤、串联技能。你不需要手动指定每一步�
 
 ```
 问题：WebSearch/WebFetch 不好用
-解法：用 WebSearch 工具重试，或换搜索引擎 / 加关键词
+解法：优先用 defuddle 技能提取网页；或 curl + 搜索引擎
 ```
 
 ### 2.6 PDF 提取乱码
@@ -111,6 +111,14 @@ Claude 会自动拆解步骤、串联技能。你不需要手动指定每一步�
 解法：pdf 技能有自动 fallback 链
       pdfplumber → docling → AI 视觉识别
       如果 pdfplumber 失败，会自动尝试 OCR
+```
+
+### 2.7 文档翻译两套方案别搞混
+
+```
+- pdf2zh：翻译 PDF（保留排版），在线翻译引擎
+- docs-translate：翻译 Word/PPT/PDF，本机离线模型，样式 100% 保留
+按需求选：要格式保真且可离线 → docs-translate；只要 PDF 快速翻译 → pdf2zh
 ```
 
 ---
@@ -125,7 +133,7 @@ Claude 会自动拆解步骤、串联技能。你不需要手动指定每一步�
 
 示例：
 ```
-PDF → markitdown → Markdown → docx → Word 文档
+PDF → docling → Markdown → docx → Word 文档
 ```
 
 适用：步骤之间有明确的输入输出关系。
@@ -142,7 +150,7 @@ PDF → markitdown → Markdown → docx → Word 文档
 ```
 项目资料 → 同时生成：
   - Word 方案文档（docx）
-  - 架构图（diagram-skill）
+  - 架构图（Mermaid 代码块，可直接嵌入）
   - PPT 汇报（pptx）
 ```
 
@@ -158,7 +166,7 @@ PDF → markitdown → Markdown → docx → Word 文档
 示例：
 ```
 PDF 提取 → 文字可读？→ 是 → 直接用
-                     → 否 → docling → 再用
+                     → 否 → docling OCR → 再用
 ```
 
 适用：根据中间结果决定下一步。
@@ -219,23 +227,63 @@ Claude 会按步骤排查，而不是瞎猜。
 
 ---
 
-## 5. Obsidian 生态技巧
+## 5. 效率倍增器
 
-### 5.1 用 obsidian-cli 批量管理笔记
+### 5.1 善用 batch 操作
+
+- `dwg` — 批量 DWG↔DXF 转换、批量图纸翻译
+- `ffmpeg` — 批量视频转码
+- `ncm-dump` — 批量解密 .ncm 音乐
+- `docs-translate` — 批量翻译 Word/PPT/PDF 文档
+
+### 5.2 善用模板 & 主题
+
+- `docx` / `pptx` — 模板编辑模式
+- `theme-factory` — 10 种专业主题，统一风格
+- `brand-guidelines` — Anthropic 官方品牌色/字体
+
+### 5.3 善用 fallback 链
+
+- `pdf` — pdfplumber → docling → AI 视觉
+- `docling` — PDF/DOCX/图片 → Markdown/JSON（内置 OCR）
+
+不需要你手动切换，技能会自动尝试。
+
+### 5.4 善用本地模型省钱
+
+`local-ai` 处理最简单任务（翻译一句话、改文案、摘要），免费离线不耗 token。
+
+```
+把这个标题改成三个更吸引人的版本（用本机模型处理）
+```
+
+### 5.5 涉及"看听说"自动调 mimo
+
+图片理解、音视频分析、语音合成由 mimo-v2.5 处理，无需指定。比如：
+```
+帮我看一下这张图纸有什么问题：C:/图纸.png
+把这段文字转成语音
+```
+
+---
+
+## 6. Obsidian 生态技巧
+
+### 6.1 用 obsidian-cli 批量管理笔记
 
 ```
 搜索所有带 #项目 标签的笔记
 创建一个新笔记，frontmatter 里加上 project: 江阴博物馆
 ```
 
-### 5.2 用 obsidian-bases 创建数据库视图
+### 6.2 用 obsidian-bases 创建数据库视图
 
 ```
 创建一个 .base 文件，表格视图显示所有项目笔记的：名称、状态、截止日期
 按状态分组，按截止日期排序
 ```
 
-### 5.3 用 defuddle 抓网页内容
+### 6.3 用 defuddle 抓网页内容
 
 ```
 把这篇文章保存到 Obsidian：https://example.com/article
@@ -245,23 +293,22 @@ Claude 会按步骤排查，而不是瞎猜。
 
 ---
 
-## 6. 效率倍增器
+## 7. 商业 & 办公自动化技巧
 
-### 6.1 善用 batch 操作
+### 7.1 天眼查支撑决策
 
-- `batch-image-renamer` — 批量重命名图片
-- `dwg` — 批量 DWG↔DXF 转换
-- `ffmpeg` — 批量视频转码
+```
+查一下 XX 公司的股权结构和实际控制人
+评估这个供应商有没有诉讼风险
+列出江阴做光伏设备的公司
+```
 
-### 6.2 善用模板
+### 7.2 Outlook 直接安排日程
 
-- `docx` — Tendo 信纸模板
-- `pptx` — 模板编辑模式
-- `tendo-brand` — 统一品牌风格
+```
+下周三下午 3 点加一个产品评审会议
+查一下我这个月有哪些会议
+给张总回封邮件草稿，确认周五见面
+```
 
-### 6.3 善用 fallback 链
-
-- `pdf` — pdfplumber → docling → AI 视觉
-- `docling` — PDF/DOCX/图片 → Markdown/JSON（内置 OCR）
-
-不需要你手动切换，技能会自动尝试。
+注意：会通过本地 COM 自动拉起 Outlook，无需预先手动打开。

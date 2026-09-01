@@ -3,7 +3,7 @@
 
 用法:
     py -3 llama_chat.py "你的问题"
-    py -3 llama_chat.py -m phi4-mini "翻译成英文：你好世界"
+    py -3 llama_chat.py -m phi4-mini "把这段话改写成更正式的语气：..."
 
 支持的模型 (llama-server 已加载的模型):
     qwen2.5:7b  - Qwen2.5 7B (中文最强, ~61 tok/s)
