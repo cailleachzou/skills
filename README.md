@@ -13,7 +13,7 @@
 | **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
-| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机 | 本地模型处理最简单任务 — llama.cpp Vulkan + GTX 1080 Ti（qwen2.5:7b/14b 等），问答/改写/摘要；翻译走 docs-translate |
+| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机 | 本地模型处理最简单任务 — llama.cpp CUDA + RTX 5060 Laptop 8GB（qwen2.5:7b/14b 等），问答/改写/摘要；翻译走 docs-translate，视觉/OCR 走 mimo/docling |
 | **hf-cli**            | hf、huggingface、Hugging Face、模型下载、数据集、Spaces | Hugging Face Hub CLI — 下载/上传/管理模型、数据集、Spaces、Buckets、Repos、Jobs、Webhooks、Inference Endpoints 等（`hf` 替代已废弃的 `huggingface-cli`） |
 | **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 
@@ -100,6 +100,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 更新日志
 
+- **2026/09/08** **local-ai** 技能换机重写（联想 83LT / Ryzen 9 8945HX + RTX 5060 Laptop 8GB / Blackwell sm_120）：从零搭建 llama.cpp CUDA b10864（`C:\Users\caill\tools\llama-cpp\cuda`，CUDA 13.3 runtime 须另配 cudart zip），模型官方 HF 直连下载至 `D:\models\gguf`（Qwen2.5 7B/14B Q4_K_M 分片 GGUF）；后端 **Vulkan → CUDA**（解除旧 CC6.1 限制）；实测 7B 整卡 decode ~39 tok/s / prefill ~1687、14B `-ngl 36` ~14 tok/s、7B 纯 CPU ~11 tok/s；删除 vision.py/ocr.py（新机无 Intel NPU，视觉/OCR 归 mimo/docling）；llama_chat.py 去除 ollama blob 引用、改 chatml 模板与新路径
 - **2026/08/11** 新增 **hf-cli** 技能（Hugging Face Hub CLI）：`hf download/upload/models/datasets/spaces/jobs` 等，替代已废弃的 `huggingface-cli`；依赖 `hf`（pip `huggingface_hub` 1.27.0，命令在 `pythoncore-3.14-64\Scripts`，已加入用户 PATH）。同步新增 **ncm-dump** 技能（网易云 .ncm 加密音乐 → 通用 mp3/flac，AES-128 + 自定义 RC4，依赖 `pycryptodome`）
 - **2026/08/11** **local-ai** 技能：文本主力由 `qwen3:4b` 替换为 `qwen2.5:3b`（Qwen2.5-3B-Instruct，Hugging Face 官方 GGUF 经魔搭镜像下载，Q4_K_M）——去除默认深度思考；已删除 qwen3:4b 模型。当前通道：qwen2.5:3b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉）、docling+rapidocr（NPU OCR）、bge-m3（嵌入）、whisper-small（转写）
 - **2026/08/11** **local-ai** 技能：移除 **DeepSeek-R1-1.5B**（llama.cpp NPU 文本通道，生成文本不打印终端、无实用价值）——删除 `tools/llama-npu/`（2.3G）、`run-npu.bat` 及安装包；NPU 现仅用于 OCR（docling+rapidocr，约 5 倍加速）。当前通道：qwen3:4b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉）、docling+rapidocr（NPU OCR）、bge-m3（嵌入）、whisper-small（转写）

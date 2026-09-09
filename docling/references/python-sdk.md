@@ -64,6 +64,7 @@ Useful `PdfPipelineOptions` / base fields:
 | `do_code_enrichment` / `do_formula_enrichment` | Enrich code / formulas |
 | `ocr_options` | Choose/parametrize the OCR engine (see below) |
 | `table_structure_options` | e.g. `TableFormerMode.ACCURATE` vs `FAST` |
+| `heading_hierarchy_options` | Infer section-header levels; off by default (see below) |
 | `images_scale` / `generate_page_images` | Control rasterization |
 | `accelerator_options` | Pick device / thread count |
 | `artifacts_path` | Use pre-downloaded model artifacts (offline) |
@@ -86,6 +87,26 @@ opts = PdfPipelineOptions(do_ocr=True, ocr_options=OcrMacOptions())      # macOS
 
 Each engine is an optional dependency — see [slim-packaging.md](slim-packaging.md).
 
+### Recovering heading levels
+
+PDF headings all come out at `level=1` unless this stage is enabled. It infers the level from the
+PDF bookmarks, the outline numbering (`PART I` / `1.` / `1.1` / `(a)`) and the font styling, in
+that order of precedence.
+
+```python
+from docling.datamodel.pipeline_options import (
+    HeadingHierarchyOptions,
+    PdfPipelineOptions,
+)
+
+opts = PdfPipelineOptions(
+    heading_hierarchy_options=HeadingHierarchyOptions(enabled=True),
+    generate_parsed_pages=True,  # required by the font-style signal only
+)
+```
+
+The service equivalent is `do_pdf_heading_hierarchy` plus `pdf_heading_hierarchy_options`.
+
 ### Selecting the accelerator
 
 ```python
@@ -96,6 +117,37 @@ opts = PdfPipelineOptions(
     accelerator_options=AcceleratorOptions(device=AcceleratorDevice.CUDA, num_threads=8),
 )
 ```
+
+## Native PDF pipeline (no models)
+
+Extracts what the PDF already contains — one text item per native text cell, one
+picture per embedded bitmap — with docling-parse only. Very fast, but the result
+has no reading order, headings or tables. PDF input only.
+
+```python
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import NativePdfPipelineOptions
+from docling.document_converter import DocumentConverter, NativePdfFormatOption
+from docling_core.types.doc.page import TextCellUnit
+
+pipeline_options = NativePdfPipelineOptions(
+    text_cell_unit=TextCellUnit.LINE,  # or WORD / CHAR
+    generate_page_images=True,  # parse *and* render each page; False = parse only
+    images_scale=2.0,  # 144 DPI page images
+    generate_picture_images=True,  # decode the embedded bitmaps
+    # parser_threads defaults to all but one CPU thread (no model runs here, so
+    # accelerator_options.num_threads does not apply)
+)
+
+converter = DocumentConverter(
+    format_options={
+        InputFormat.PDF: NativePdfFormatOption(pipeline_options=pipeline_options)
+    }
+)
+result = converter.convert("report.pdf")
+```
+
+CLI equivalent: `docling report.pdf --pipeline native --from pdf`.
 
 ## VLM pipeline (local inference)
 
