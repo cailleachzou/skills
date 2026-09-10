@@ -12,14 +12,18 @@ DWG 操作 CLI —— 转换 / 提取 / 回填（dwg skill 入口）
   extract <dxf>        提取图纸文字 → JSON 清单（原文|类型|空间|图层|坐标|高度|旋转）
   apply <dxf> <json>   按 {原文:译文} 回填译文 → 输出 _ZH.dxf
   convert-back <dxf>   翻译后 DXF → DWG（_ZH.dwg）
+  translate <dwg>      前半程一步到位：DWG → <stem>_待译.txt（中间 DXF 自动清理）
+  apply-back <dwg> <json>  后半程一步到位：DWG + 译文 JSON → _ZH.dwg
 
 用法示例：
   py dwg.py check
   py dwg.py convert in.dwg            # in.dwg -> in.dxf
   py dwg.py convert in.dxf            # in.dxf -> in.dwg
-  py dwg.py extract in.dxf            # -> dwg_extract_<时间>/texts.json
+  py dwg.py extract in.dxf            # -> in_提取/texts.json + unique_texts.txt
   py dwg.py apply in.dxf texts_zh.json   # -> in_ZH.dxf
   py dwg.py convert-back in_ZH.dxf    # -> in_ZH.dwg
+  py dwg.py translate in.dwg          # -> in_待译.txt
+  py dwg.py apply-back in.dwg zh.json # -> in_ZH.dwg
 
 依赖：
   - Python 3 + ezdxf（py -3 -m pip install ezdxf）
@@ -29,13 +33,32 @@ DWG 操作 CLI —— 转换 / 提取 / 回填（dwg skill 入口）
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import json
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
 from pathlib import Path
+
+# Windows 控制台代码页不一定是 UTF-8（本机为 cp1252），中文提示会抛
+# UnicodeEncodeError 把整条命令崩掉。强制 stdout/stderr 走 UTF-8 并降级替换。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
+# ezdxf 首次导入时 fontTools 会扫描系统字体目录，本机的 mstmc.ttf 不是标准
+# TrueType，会往 stderr 喷两行警告污染命令输出。只静音这一次导入。
+with contextlib.redirect_stderr(io.StringIO()):
+    try:
+        import ezdxf  # noqa: F401
+    except ImportError:
+        ezdxf = None  # 真缺依赖时由各命令自行报错，那里的提示更完整
 
 # ---------------------------------------------------------------------------
 # 常量
@@ -48,6 +71,32 @@ ODA_CANDIDATES = [
 ACAD_VERSION = "ACAD2018"  # 目标版本，ODA 支持 ACAD2018/2013/2010/2007/2004...
 
 TEXT_TYPES = ("TEXT", "MTEXT", "ATTDEF", "ATTRIB")
+
+# MTEXT 内联控制码：\P 硬换行、\~ 不换行空格、\{ \} 字面花括号
+_MTEXT_CTRL = re.compile(r"\\P", re.IGNORECASE)
+
+
+def _norm_key(text: str) -> str:
+    """归一化匹配键：把 MTEXT 控制码折算成等价普通字符，并压缩空白。
+
+    翻译环节很容易把 \\P 当普通字符吞掉、或改写成真实换行，回填时精确匹配就会
+    失配——而且失配不报错，只是那段文字静默地没被翻译。归一键让"只差控制码"
+    的译文仍然能命中。
+    """
+    s = _MTEXT_CTRL.sub("\n", str(text))
+    s = s.replace("\\~", " ").replace("\\{", "{").replace("\\}", "}")
+    return " ".join(s.split())
+
+
+def _to_mtext(text: str) -> str:
+    """回填 MTEXT 前，把译文里的真实换行折算回 \\P。
+
+    MTEXT 内容中的换行必须写成 \\P；带真实 \\n 的字符串直接写回会产出坏 DXF。
+    译文自己已经带 \\P 的就原样保留，不重复折算。
+    """
+    if _MTEXT_CTRL.search(text):
+        return text
+    return text.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\\P")
 
 
 def find_oda() -> Path | None:
@@ -193,6 +242,17 @@ def apply_translations(dxf_path: Path, json_path: Path) -> tuple[int, int]:
     if not mapping:
         raise RuntimeError(f"译文清单为空或格式不对: {json_path}")
 
+    # 精确匹配 + 归一化兜底：MTEXT 的 \P/\~ 等控制码常被翻译环节改写，
+    # 归一化后仍能对上，避免"看着翻译了、其实没生效"的静默失配。
+    norm_index: dict[str, str] = {}
+    for k, v in mapping.items():
+        norm_index.setdefault(_norm_key(k), v)
+
+    def lookup(cur: str) -> str | None:
+        if cur in mapping:
+            return mapping[cur]
+        return norm_index.get(_norm_key(cur))
+
     doc = ezdxf.readfile(str(dxf_path))
     count = 0
     for entity in doc.entitydb:
@@ -201,14 +261,14 @@ def apply_translations(dxf_path: Path, json_path: Path) -> tuple[int, int]:
             continue
         try:
             if e.dxftype() == "MTEXT":
-                cur = e.text
-                if cur in mapping:
-                    e.text = mapping[cur]
+                new = lookup(e.text)
+                if new is not None:
+                    e.text = _to_mtext(new)
                     count += 1
             elif e.dxftype() in ("TEXT", "ATTDEF", "ATTRIB"):
-                cur = e.dxf.text
-                if cur in mapping:
-                    e.dxf.text = mapping[cur]
+                new = lookup(e.dxf.text)
+                if new is not None:
+                    e.dxf.text = new
                     count += 1
         except Exception:
             pass
@@ -290,7 +350,9 @@ def cmd_extract(args) -> int:
         print("未提取到任何文本（纯图形图纸？）", file=sys.stderr)
         return 1
 
-    out_dir = Path(tempfile.mkdtemp(prefix="dwg_extract_", dir=str(src.parent)))
+    # 固定目录名：可重复运行覆盖，不在用户图纸目录里留下随机命名的垃圾目录
+    out_dir = src.parent / (src.stem + "_提取")
+    out_dir.mkdir(parents=True, exist_ok=True)
     out_json = out_dir / "texts.json"
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(rows, f, ensure_ascii=False, indent=1)
@@ -329,8 +391,10 @@ def cmd_apply(args) -> int:
 
 
 def cmd_translate(args) -> int:
-    """一步到位：DWG→(临时DXF)→提取→输出待译清单→(Agent翻译)→回填→转回DWG。
-    中间 DXF 全在临时目录，结束后自动清理，用户只看到输入 DWG 和输出 _ZH.dwg。
+    """DWG→(临时DXF)→提取→输出待译清单。中间 DXF 在临时目录，结束后自动清理。
+
+    只负责前半程：翻译必须由 Agent 在对话中完成，之后用 apply-back 收尾。
+    用户最终拿到的是输入 DWG、<stem>_待译.txt 和 <stem>_ZH.dwg。
     """
     src = Path(args.dwg)
     if not src.exists():

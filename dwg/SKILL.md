@@ -44,11 +44,11 @@ DWG 图纸一站式操作：**ODA File Converter**（DWG↔DXF 无损双向转�
 用系统 Python（`py -3`，已装 ezdxf 1.4.4），**不要用裸 `python`**。
 
 ```
-py -3 "C:\Users\caill\.pi\agent\skills\dwg\scripts\dwg.py" check
-py -3 "C:\Users\caill\.pi\agent\skills\dwg\scripts\dwg.py" convert "输入.dwg"
-py -3 "C:\Users\caill\.pi\agent\skills\dwg\scripts\dwg.py" extract "输入.dxf"
-py -3 "C:\Users\caill\.pi\agent\skills\dwg\scripts\dwg.py" apply "输入.dxf" "译文.json"
-py -3 "C:\Users\caill\.pi\agent\skills\dwg\scripts\dwg.py" convert-back "输入_ZH.dxf"
+py -3 "C:\Users\caill\.claude\skills\dwg\scripts\dwg.py" check
+py -3 "C:\Users\caill\.claude\skills\dwg\scripts\dwg.py" convert "输入.dwg"
+py -3 "C:\Users\caill\.claude\skills\dwg\scripts\dwg.py" extract "输入.dxf"
+py -3 "C:\Users\caill\.claude\skills\dwg\scripts\dwg.py" apply "输入.dxf" "译文.json"
+py -3 "C:\Users\caill\.claude\skills\dwg\scripts\dwg.py" convert-back "输入_ZH.dxf"
 ```
 
 **示例（完整翻译，一步到位，无中间 DXF 残留）**：
@@ -62,7 +62,7 @@ py -3 ...dwg.py apply-back "C:\xx\input.dwg" "C:\xx\translations.json"  # → in
 **分步示例（想保留中间文件时）**：
 ```
 py -3 ...dwg.py convert "C:\xx\input.dwg"          # → input.dxf
-py -3 ...dwg.py extract "C:\xx\input.dxf"          # → 输出目录 texts.json / unique_texts.txt
+py -3 ...dwg.py extract "C:\xx\input.dxf"          # → C:\xx\input_提取\texts.json + unique_texts.txt
 # Agent 翻译 unique_texts.txt → translations.json  {"原文":"译文", ...}
 py -3 ...dwg.py apply "C:\xx\input.dxf" "C:\xx\translations.json"   # → input_ZH.dxf
 py -3 ...dwg.py convert-back "C:\xx\input_ZH.dxf"  # → input_ZH.dwg
@@ -79,13 +79,15 @@ py -3 ...dwg.py convert-back "C:\xx\input_ZH.dxf"  # → input_ZH.dwg
 ## 已知问题与排查
 
 - **ODA 转换失败**：输出目录会出现 `*.err` 文件，内容含具体报错行号。多为 DXF 编码混乱（GBK/UTF-8 混合）或实体结构损坏。先 `extract` 看能否读取，或先经 ezdxf 重存规范化编码再转换。
-- **回填命中率低**：译文原文与清单不一致（多余空格/换行/大小写）。用 `texts.json` 的 `text` 字段逐字复制，不要手打。
+- **回填命中率低**：译文原文与清单不一致（多余空格/换行/大小写）。用 `texts.json` 的 `text` 字段逐字复制，不要手打。回填已做归一化兜底（`\P` 等价真实换行、忽略首尾与连续空白差异），小的格式出入能自动救回。
+- **MTEXT 的 `\P` 是换行符**：MTEXT 内容里换行写作 `\P`，不是真实换行。翻译时**必须原样保留 `\P`**，也别把 `\P` 替换成真正的回车。回填会把译文里的真实换行折算回 `\P`，但若 `\P` 被整个删掉，那段文字会静默不翻译——表现为回填报告的数字低于预期。
+- **中文输出乱码/崩溃**：脚本已在启动时强制 stdout/stderr 走 UTF-8。若在极老环境仍报 `UnicodeEncodeError`，设 `PYTHONIOENCODING=utf-8` 或改用 Windows Terminal。
 - **图纸没文字**：`extract` 报"未提取到任何文本"，说明纯图形图纸。
 - **AutoCAD 兼容性**：ODA 产出 ACAD2018 格式 DWG，AutoCAD 2008+ 可开。需要旧版本改 `dwg.py` 顶部 `ACAD_VERSION`（ACAD2004/2007/2010/2013/2018）。
 
 ## For AI Agents
 
-- 固定用 `py -3` 调用 `C:\Users\caill\.pi\agent\skills\dwg\scripts\dwg.py`。
+- 固定用 `py -3` 调用 `C:\Users\caill\.claude\skills\dwg\scripts\dwg.py`。
 - 翻译步骤优先开 `subagent`（worker）执行：把 `unique_texts.txt` 内容交给子代理翻译，返回 JSON 对象。
 - 大文件转换 ODA 耗时 10-60 秒；`convert`/`convert-back` 用后台运行并检查产物大小 >0。
 - 产出 `_ZH.dwg` 后建议渲染对比原图验收（可用 mimo 多模态对比截图）。
