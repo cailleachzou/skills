@@ -362,6 +362,12 @@ def main() -> None:
         print("[提示] 批量任务通常是改写/分类/抽取，加 --no-think 可省约 90% token",
               file=sys.stderr)
 
+    # 9B 不并发：它的 KV 是 4 个 slot 共享的一个 32K 池子（kv_unified），
+    # 开并发只会互相挤。规格见 SKILL.md「一、本机一次只跑一个模型」。
+    if args.jobs > 1 and "9B" in _probe_model():
+        print("[警告] server 上跑的是 9B —— 9B 不能并发（KV 是 4 slot 共享的一个 32K 池子）。"
+              "改用 -j 1，或先切到 2B（start.sh）再批量跑", file=sys.stderr)
+
     print(f"[开始] {len(todo)} 条任务，并发 {args.jobs}，thinking="
           f"{'on' if args.think else 'off'} → {out_path}", file=sys.stderr)
 
