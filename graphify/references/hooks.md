@@ -20,7 +20,7 @@ If a post-commit hook already exists, graphify appends to it rather than replaci
 
 ## For native CLAUDE.md integration
 
-Run once per project to make graphify always-on in coding agent sessions:
+Run once per project to make graphify always-on in Claude Code sessions:
 
 ```bash
 graphify claude install

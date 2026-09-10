@@ -6,31 +6,32 @@
 
 | 技能                      | 触发关键词                | 功能                                |
 | ----------------------- | -------------------- | --------------------------------- |
+| **computer-repair-skill** | 电脑维修、C盘爆满、卡顿、流氓软件、断网、蓝屏、数据恢复、打印机、应用迁移、OpenClaw | 跨平台电脑维修助手 — 64 个按需加载 Playbook，覆盖诊断/清理/性能/网络/安全/开发者工具（先取证、再计划，确认后修改）；来源 [88lin/computer-repair-skill](https://github.com/88lin/computer-repair-skill) |
 | **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON（含 OCR） |
-| **docs-translate**    | 翻译、Word、PPT、PDF、离线、保留格式、批量 | 离线文档翻译（Word/PPT/PDF，保留格式）— 唯一翻译入口，Qwen2.5 本地引擎，含纯文本 `--text` |
-| **dwg-translate**     | 翻译、DWG、DXF、CAD、图纸、中文 | DWG 电气图纸英译中 — AutoCAD COM 直连 → 提取 → MIMO 批量翻译 → 回填 → 输出 *_ZH.dwg |
+| **dwg**               | DWG、DXF、CAD、图纸、翻译、转换、提取文字、_ZH | DWG 图纸操作 — ODA File Converter 转换（DWG↔DXF）+ ezdxf 提取/回填 + 对话翻译 → 输出 *_ZH.dwg |
 | **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
-| **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎，含 MiMo 补丁） |
+| **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎）— v1.9.11（uv tool 隔离安装）；⚠️ 需把 `tencentcloud-sdk-python-tmt` 钉在 3.1.70，否则启动即 ImportError |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
-| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机 | 本地模型处理最简单任务 — llama.cpp CUDA + RTX 5060 Laptop 8GB（qwen2.5:7b/14b 等），问答/改写/摘要；翻译走 docs-translate，视觉/OCR 走 mimo/docling |
-| **hf-cli**            | hf、huggingface、Hugging Face、模型下载、数据集、Spaces | Hugging Face Hub CLI — 下载/上传/管理模型、数据集、Spaces、Buckets、Repos、Jobs、Webhooks、Inference Endpoints 等（`hf` 替代已废弃的 `huggingface-cli`） |
+| **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
+| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；轻量任务用 MiniCPM5-2B（~85–107 tok/s / 128K ctx），pi coding agent 等代码推理用 Qwen3.8-9B-Distill（~55 tok/s / 32K ctx）；视觉/OCR 走 mimo/docling |
 | **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 
 ## 已安装插件（Plugins）
 
-| 插件                               | 源地址                                                                                   | 说明                                    |
-| -------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------- |
-| **claude-api**                   | anthropic-agent-skills                                                                | Claude API 技能 — SDK 集成、Tool Use、Streaming、Batch 等 |
-| **cli-anything**                 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything)                           | CLI 工具集成框架 — 通过 CLI-Hub 安装管理各类 CLI 技能 |
-| **claude-md-management**         | claude-plugins-official                                                               | CLAUDE.md 管理工具 — 项目/用户级指令文件管理 |
-| **code-review**                  | claude-plugins-official                                                               | 代码审查工具 — 多维度代码质量检查 |
-| **document-skills**              | anthropic-agent-skills                                                                | 文档处理技能 — docx/pdf/pptx/xlsx 创建编辑（替代本地版本） |
-| **frontend-design**              | claude-plugins-official                                                               | 前端设计辅助工具                              |
-| **obsidian-skills**              | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills)                   | Obsidian 集成技能 — 笔记管理、Defuddle 网页提取等   |
-| **playground**                   | claude-plugins-official                                                               | Playground 实验工具 — 交互式测试环境 |
-| **skill-creator**                | claude-plugins-official                                                               | 官方技能创建工具                              |
-| **superpowers**                  | claude-plugins-official                                                               | Claude Code 超级能力增强                    |
+> 下表按 `claude plugin list` 实测结果同步，**全部为 user scope**（换目录也生效）。
+
+| 插件                       | 源地址                     | 状态      | 说明                                    |
+| ------------------------ | ----------------------- | ------- | ------------------------------------- |
+| **claude-api**           | anthropic-agent-skills  | ⚠️ 已禁用  | Claude API 技能 — SDK 集成、Tool Use、Streaming、Batch 等（与内置 `claude-api` 技能重名，禁用以免打架） |
+| **claude-md-management** | claude-plugins-official | ✅ 启用    | CLAUDE.md 管理工具 — 项目/用户级指令文件管理           |
+| **code-review**          | claude-plugins-official | ✅ 启用    | 代码审查工具 — 多维度代码质量检查                    |
+| **document-skills**      | anthropic-agent-skills  | ✅ 启用    | 文档处理技能 — docx/pdf/pptx/xlsx 创建编辑     |
+| **example-skills**       | anthropic-agent-skills  | ✅ 启用    | 官方示例技能集（12 个）— algorithmic-art / canvas-design / doc-coauthoring / internal-comms / mcp-builder / slack-gif-creator / theme-factory / web-artifacts-builder / webapp-testing 等 |
+| **frontend-design**      | claude-plugins-official | ✅ 启用    | 前端设计辅助工具                              |
+| **playground**           | claude-plugins-official | ✅ 启用    | Playground 实验工具 — 交互式测试环境            |
+| **skill-creator**        | claude-plugins-official | ✅ 启用    | 官方技能创建工具                              |
+| **superpowers**          | claude-plugins-official | ✅ 启用    | Claude Code 超级能力增强（14 个流程技能）          |
 
 ## 目录结构
 
@@ -54,52 +55,53 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 学习资料
 
-新手上路？查看 [`learning/`](learning/) 目录：
-
-- [`learning/knowledge/skill-overview.md`](learning/knowledge/skill-overview.md) — 技能全景图（38 个技能按功能域分类）
-- [`learning/knowledge/workflow-examples.md`](learning/knowledge/workflow-examples.md) — 6 个真实工作流场景（从简单到复杂）
-- [`learning/knowledge/tips-and-tricks.md`](learning/knowledge/tips-and-tricks.md) — 使用技巧、常见坑、组合模式
-- [`learning/prompts/self-assessment.md`](learning/prompts/self-assessment.md) — 渐进式自测提示词（4 个关卡，直接粘贴使用）
+- [`learning/SKILL-MAP.md`](learning/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 10 个技能**
 
 ## 环境依赖
 
 ### Python 环境
 
-**Python 路径**（Windows）：`C:\Users\59620\AppData\Local\Python\python.exe`
-> 所有 Python 技能均使用此路径（不要用裸 `python`，Windows 上不存在）
+**Python 路径**（Windows）：`C:\Users\caill\AppData\Local\Programs\Python\Python314\python.exe`
+> 所有 Python 技能统一用 `py -3` 调用（唯一安装的 3.14.7）。勿用 `python3`——那是 Microsoft Store 的占位程序；裸 `python` 虽可用但不如 `py -3` 明确。
 
 | 技能            | Python 包          | 其他依赖                                                              |
 | --------------- | ----------------- | --------------------------------------------------------------------- |
-| **docling**     | 独立 venv（见下）  | docling venv（`C:\Users\59620\.venv-docling\`）；⚠️ 需设 `TORCH_COMPILE_DISABLE=1 TORCHINDUCTOR_DISABLE=1` |
-| **dwg-translate** | `ezdxf`、`pandas`、`pywin32` | 独立 venv（`C:\Users\59620\cad-translate-cli\.venv`，Python 3.14）；AutoCAD 2027（需手动打开一次完成 COM 注册）；MIMO_API_KEY（已写入 `~/.config/cli-anything-cad/config.json`） |
+| **docling**     | 独立 venv（见下）  | ✅ 已装 **2.126.0**（torch 2.14.0），venv 在 `C:\Users\caill\.venv-docling`（Python 3.12）|
+| **dwg** | `ezdxf` | ODA File Converter（`C:\Program Files\ODA\ODAFileConverter 27.1.0\`）；系统 Python `py -3`（ezdxf 1.4.4，无独立 venv、无 AutoCAD、无 MIMO） |
 | **ffmpeg**     | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
-| **pdf2zh**     | `click`, `pdfminer.six` | pdf2zh.exe（`C:\Program Files\pdf2zh\build\pdf2zh.exe`）           |
+| **pdf2zh**     | 无（uv tool 自带）  | ✅ 已装 **1.9.11**（uv tool 隔离环境）；版面走 onnxruntime，**不依赖 torch** |
 
-> **docling 用独立 venv**（`C:\Users\59620\.venv-docling\`，Python 3.12，勿用系统 Python）
-> 已装：docling 2.118.0 + torch 2.13.0（venv 约 1.1GB，模型缓存 `~/.cache/huggingface/` 约 2GB）
-> 调用：`C:\Users\59620\.venv-docling\Scripts\docling.exe convert <source> --to md --output <dir>`
+> **docling 用独立 venv**（勿用系统 Python）—— ✅ 已装于 `C:\Users\caill\.venv-docling`（Python 3.12.14；docling 2.126.0 + torch 2.14.0）
+> 调用：`C:\Users\caill\.venv-docling\Scripts\docling.exe convert <source> --to md --output <dir>`
+> 子命令只有 `convert` 与 `convert-remote`，**根级没有 `--version`**（`docling --version` 会转去加载流程并长时间无响应）
+> ⚠️ 需设 `TORCH_COMPILE_DISABLE=1 TORCHINDUCTOR_DISABLE=1`（torch 在无 MSVC 环境下报错）
+> 模型缓存 `~/.cache/huggingface/`，**首次运行才下载**（约 2GB）
 > 重建：`uv venv ~/.venv-docling --python 3.12 && uv pip install --python ~/.venv-docling docling`
-> wrapper：`docling/scripts/docling.ps1`（自动设环境变量 + 16GB 内存友好参数）
 
 ### CLI 工具
 
 | 工具                                                       | 技能路径            | 说明                       |
 | -------------------------------------------------------- | ----------------- | ------------------------ |
-| **AutoCAD 2027 (COM)**                                   | `dwg-translate/`   | DWG ↔ DXF 转换（ProgID `AutoCAD.Application.26`，SaveAs 25/24） |
+| **ODA File Converter 27.1.0**                            | `dwg/`             | DWG ↔ DXF 无损双向转换（严格校验，失败产出 `*.err` 含报错行号）|
 | **ffmpeg / ffprobe**                                     | `ffmpeg/`         | 音视频转码                    |
-| **pdf2zh.exe**                                           | `pdf2zh/`         | PDF 翻译（PDFMathTranslate 引擎）|
-| **hf**                                                   | `hf-cli/`         | Hugging Face Hub CLI（huggingface_hub 1.27.0，pip 安装，命令在 pythoncore Scripts，已入用户 PATH）|
+| **pdf2zh.exe**                                           | `pdf2zh/`         | ✅ 已装 v1.9.11 — `C:\Users\caill\.local\bin\pdf2zh.exe`（PDFMathTranslate 引擎）|
+| **docling.exe**                                          | `docling/`        | ✅ 已装 v2.126.0 — `C:\Users\caill\.venv-docling\Scripts\docling.exe`（独立 venv）|
+| **hf**                                                   | —（无配套技能）    | Hugging Face Hub CLI（`huggingface_hub`，pip 安装，命令在 `Python314\Scripts\hf.exe`，已入用户 PATH；直接用 CLI 即可）|
 
-### 其他环境
-
-| 工具 | 用途 |
-|------|------|
-| **Mermaid** | diagram-skill（渲染：Obsidian / Mermaid Live Editor） |
+> **uv tool 装的命令**（`pdf2zh`、`graphify`、`graphify-mcp`）位于 `C:\Users\caill\.local\bin\`，已用 `uv tool update-shell` 写入**用户 PATH**——⚠️ **只对之后新开的终端生效**，已开的窗口读不到。
+> graphify 的真实包版本是 **0.9.57**，而仓库内 `graphify/` 技能目录仍是 **0.9.26** 的副本（`graphify --help` 会就此告警，用 `graphify install --platform claude` 刷新）。
 
 ---
 
 ## 更新日志
 
+- **2026/09/10** **补齐缺失依赖**（全部隔离安装，不污染系统 Python）——① **docling** 2.126.0 → `C:\Users\caill\.venv-docling`（Python 3.12.14，torch 2.14.0）；② **graphify** 经 `uv tool install graphifyy` 装成 **0.9.57**；③ **pdf2zh** 经 `uv tool install` 装成 **1.9.11**；④ **pycryptodome** 3.23.0 补入系统 Python（ncm-dump 依赖）。**排障记录**：`pdf2zh 1.9.11` 装好后**启动即崩** —— `ImportError: cannot import name 'TextTranslateRequest' from 'tencentcloud.tmt.v20180321.models'`。根因是**上游依赖漂移**：该 SDK 新版移除了 `TextTranslateRequest`，而 pdf2zh 在模块**顶层**硬导入它，与是否使用腾讯翻译无关，因而连 `--help` 都跑不起来。修法：把 `tencentcloud-sdk-python-tmt` 钉到 **3.1.70**（该类尚存的版本），实测 `pdf2zh --version` 恢复正常。**环境变更**：uv tool 的可执行文件落在 `C:\Users\caill\.local\bin`，原先**不在 PATH**，已用 `uv tool update-shell` 写入用户 PATH（⚠️ 只对新开终端生效）。**顺带纠正四条版本事实**：① pdf2zh **1.8.0+ 要求 Python `<3.13`**，系统 Python 为 3.14，故 pip 在 3.14 上会**自动退回 1.7.9**（无版本约束）——uv 用 3.12 才装到 1.9.11，这正是旧文档通篇按 1.7.9 写的原因；② 1.9.11 **已支持 `-o/--output`**，旧文档「旧版 CLI 无 `-o`」作废；③ 1.9.11 版面改走 **onnxruntime，不再需要 torch**，旧文档的 torch 依赖描述不再成立；④ docling 根级**没有 `--version`**，只有 `convert` / `convert-remote` 两个子命令
+- **2026/09/10** 从 [88lin/computer-repair-skill](https://github.com/88lin/computer-repair-skill) 引入 **computer-repair-skill**（第三方技能，非本仓库自建）：跨平台（Windows/macOS/Linux）电脑维修助手，`SKILL.md` + `references/` 下 64 个按需加载 Playbook（诊断/清理/性能/网络/安全/备份/驱动/启动与 WinRE/BitLocker/分区/数据恢复/开发者工具/OpenClaw 配置），另含 `agents/openai.yaml`（Codex 侧适配）与 `references/tools-{windows,macos,linux}.md`；纯 Markdown、无可执行脚本，安装即被 Claude Code 自动发现。取 `skills/computer-repair-skill/` 整目录复制入本仓库，共 77 个文件
+- **2026/09/10** **死链清理**（承接上条文档同步，补完遗漏项）：① **学习资料**小节 4 条链接的目标文件已随学习资料重构删除（`learning/` 下现仅存 `SKILL-MAP.md`），全部改指该文件并按实描述——8 插件 / 34 技能，且**不含本仓库自建的 9 个技能**（原描述「38 个技能按功能域分类」亦不实）；② **插件表**按 `claude plugin list` 实测重建：删去从未安装的 `cli-anything`、`obsidian-skills` 两行，补上一直漏记的 `example-skills`，`claude-api` 标注**已禁用**（与内置同名技能冲突），新增「状态」列并注明全部为 user scope；③ CLI 工具表 `pdf2zh.exe` 行与依赖表「本机未安装」自相矛盾，已统一标注；④ `pdf2zh/SKILL.md` 失实声明订正：原文称「本机已装 PyPI 最新版 1.7.9」「## 安装（已完成）」，实测 `Python314\Lib\site-packages\pdf2zh` 与 `pdf2zh` 命令**均不存在**，改为顶部醒目标注未安装；Ollama 服务行标注「本机已于 2026-09-10 卸载，此路不通」并从 frontmatter description 中移除该引擎名。**注**：历史更新日志中的旧机器路径（`C:\Users\59620\`、`pythoncore-3.14-64`）按"不改写历史"原则原样保留
+- **2026/09/10** **文档同步**：README 环境依赖与清单对齐实机 —— ① 旧机器路径 `C:\Users\59620\` 订正为 `C:\Users\caill\`（Python 安装路径、hf 命令位置）；② 标注 **docling** 与 **pdf2zh** **本机未安装**（原文档称"已装"，实际既无 venv 也无 exe；PDF 文本链实走 `pymupdf`/`pdfplumber`/`pypdf`/`pypdfium2`）；③ 技能表删除已不存在的 **hf-cli**（于 77e87c9 随 volc-ark 一并删除，该次提交信息未提及）与 **diagram-skill**，"其他环境"小节随之清空；④ 补录 178b646 新增却遗漏至今的 **graphify**。历史更新日志中的旧机器路径按"不改写历史"原则原样保留
+- **2026/09/10** **dwg** 技能修复（**dwg-translate** 重构后的首次维护）：① SKILL.md 全部命令路径由 `C:\Users\caill\.pi\agent\skills\dwg\` 改为实际的 `C:\Users\caill\.claude\skills\dwg\`（原路径不存在，照抄必失败）；② 脚本启动强制 stdout/stderr 走 UTF-8 —— 本机控制台代码页为 cp1252 而非 936，所有中文 print 会抛 `UnicodeEncodeError` 直接崩掉命令；③ 静音 ezdxf 首次导入时 fontTools 扫描 `mstmc.ttf` 的 stderr 噪音；④ MTEXT 回填增加归一化容错匹配（`\P` 等价真实换行、忽略空白差异），并把译文里的真实换行折算回 `\P`，避免静默失配与坏 DXF；⑤ `extract` 输出目录由随机 `dwg_extract_<时间>/` 改为固定 `<stem>_提取/`，可重复运行不留垃圾；⑥ 补齐 `translate`/`apply-back` 的文档（原 docstring 与实现不符）。依赖核实：ezdxf 1.4.4（原文档称已装，实际缺失，本次补装）、ODA File Converter 27.1.0（已装），`check` 自检通过
+- **2026/09/10** **local-ai** 技能 v5.0 重写，对齐实机现状：模型换成 `D:\models\gguf` 现存的两个 —— **MiniCPM5-2B Q8_0**（轻量任务，纯文本 2.6B，实测 ~85–107 tok/s，随已生成长度衰减）与 **Qwen3.8-9B-Distill Q4_K_M**（代码/推理主力，`-c 32768` 实测 **~55 tok/s**；256K 时 ~37 tok/s，长上下文（~15K）约 43 tok/s）；llama.cpp 收敛到唯一构建 **cuda-b10883**（b10883 / CUDA 13.3，自带 cudart/cublas 13，旧 `cuda`/`cuda-new`/`cuda-b10872` 目录已删，须用 b10883 才能加载 9B 的 qwen35/Gated DeltaNet 架构）；**移除全部 CPU 路径**（不再静默降级，server 连不上直接报错提示）；两模型均为 thinking 模型，**默认开思考**（本机主要用途是跑 pi coding agent），关闭思考**必须走请求级** `chat_template_kwargs:{"enable_thinking":false}`（唯一有效机制，`llama_chat.py --no-think` 已内置；第三方 agent 不发该参数故天然开思考；server 端 `--reasoning off`/`--reasoning-budget 0`/`--chat-template-kwargs` 及 `--chat-template[-file]` 模板覆盖**实测全部失效**——上游 llama.cpp bug，PR #22336 至今未合并），实测同一改写请求 **8 tokens vs 300 tokens**；`chat.sh`/`chat.bat` 改为 `llama_chat.py` 薄封装（单轮逻辑只保留一份）；Qwen2.5 7B/14B、Qwen3.8-9B-Coder（输出塌缩不可用）均已删除
+- **2026/09/10** 移除 **docs-translate** 技能（离线 Word/PPT/PDF 翻译）——其模型全部指向本机 GGUF；同时**卸载 Ollama**（程序、`~/.ollama` 15G 模型、`OLLAMA_*` 环境变量、PATH 条目）。本机翻译能力调整：PDF 翻译改走 **pdf2zh**（保留 layout），纯文本翻译用主模型/mimo。注：卸载时该技能脚本的 `MODELS` 已全部失效（1 个指向 `.ollama`、2 个指向不存在的 `C:\Users\caill\models`），本机可用 GGUF 实际位于 `D:\models\gguf`
 - **2026/09/08** **local-ai** 技能换机重写（联想 83LT / Ryzen 9 8945HX + RTX 5060 Laptop 8GB / Blackwell sm_120）：从零搭建 llama.cpp CUDA b10864（`C:\Users\caill\tools\llama-cpp\cuda`，CUDA 13.3 runtime 须另配 cudart zip），模型官方 HF 直连下载至 `D:\models\gguf`（Qwen2.5 7B/14B Q4_K_M 分片 GGUF）；后端 **Vulkan → CUDA**（解除旧 CC6.1 限制）；实测 7B 整卡 decode ~39 tok/s / prefill ~1687、14B `-ngl 36` ~14 tok/s、7B 纯 CPU ~11 tok/s；删除 vision.py/ocr.py（新机无 Intel NPU，视觉/OCR 归 mimo/docling）；llama_chat.py 去除 ollama blob 引用、改 chatml 模板与新路径
 - **2026/08/11** 新增 **hf-cli** 技能（Hugging Face Hub CLI）：`hf download/upload/models/datasets/spaces/jobs` 等，替代已废弃的 `huggingface-cli`；依赖 `hf`（pip `huggingface_hub` 1.27.0，命令在 `pythoncore-3.14-64\Scripts`，已加入用户 PATH）。同步新增 **ncm-dump** 技能（网易云 .ncm 加密音乐 → 通用 mp3/flac，AES-128 + 自定义 RC4，依赖 `pycryptodome`）
 - **2026/08/11** **local-ai** 技能：文本主力由 `qwen3:4b` 替换为 `qwen2.5:3b`（Qwen2.5-3B-Instruct，Hugging Face 官方 GGUF 经魔搭镜像下载，Q4_K_M）——去除默认深度思考；已删除 qwen3:4b 模型。当前通道：qwen2.5:3b（iGPU 文本）、qwen2.5vl:3b（iGPU 视觉）、docling+rapidocr（NPU OCR）、bge-m3（嵌入）、whisper-small（转写）

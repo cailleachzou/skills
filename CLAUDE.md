@@ -40,12 +40,12 @@ head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
 
 ## CLI 工具技能（顶层独立）
 
-CLI 工具技能（文档解析 / CAD / FFmpeg / PDF 翻译 / DXF 复查）已提升为**顶层独立技能**，各自被 Claude 自动发现：
+CLI 工具技能（文档解析 / CAD / FFmpeg / PDF 翻译）已提升为**顶层独立技能**，各自被 Claude 自动发现：
 
-- **docling** — 文档解析与转换（PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含 OCR）
-- **dwg-translate** — DWG 电气图纸英译中（AutoCAD COM 直连 + MIMO 批量翻译 → `*_ZH.dwg`）
+- **docling** — 文档解析与转换（PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含 OCR）；⚠️ 本机未安装（无 venv）
+- **dwg** — DWG 图纸操作：ODA File Converter 转换（DWG↔DXF）+ ezdxf 提取/回填 + 对话翻译 → `*_ZH.dwg`（已弃用 AutoCAD COM 与 MIMO 依赖）
 - **ffmpeg** — 音视频转码、批量处理、预设管理
-- **pdf2zh** — PDF 翻译（保留 layout）
+- **pdf2zh** — PDF 翻译（保留 layout）；⚠️ 本机未安装
 
 每个技能目录结构：`SKILL.md` + 可选 `scripts/`。技能名与目录名一致。
 
