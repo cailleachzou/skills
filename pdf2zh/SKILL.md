@@ -16,7 +16,8 @@ description: "Translate PDFs with layout preserved (math formulas, two-column) v
 "C:/Users/caill/.claude/skills/local-ai/scripts/start.sh" minicpm &
 curl -s http://127.0.0.1:8080/health          # {"status":"ok"}
 
-# ② 翻译
+# ② 翻译（⚠️ -o 的目录必须已存在，1.9.11 不会自动创建，否则 FileNotFoundError）
+mkdir -p out
 OPENAILIKED_BASE_URL=http://127.0.0.1:8080/v1 \
   pdf2zh paper.pdf -s openailiked:minicpm5-2b \
     --lang-in en --lang-out zh-CN -t 4 -o out/
@@ -121,7 +122,7 @@ uv pip install --python "C:/Users/caill/AppData/Roaming/uv/tools/pdf2zh/Scripts/
 - **缓存**：`%TEMP%\cache\`。想强制重译，删该目录（`--ignore-cache` 实测无效，见上）。
 - **多线程**：`-t`，并发调翻译服务。
 - **命令会先打印一行 `not in git repo`** —— 探测当前目录是否 git 仓库，**无害**。
-- **指定页**：`--pages 1-3`；**指定输出目录**：`-o out/`。
+- **指定页**：`--pages 1-3`；**指定输出目录**：`-o out/`（**目录必须已存在**，1.9.11 不自动创建，实测 `FileNotFoundError`）。
 
 ## 排错
 
