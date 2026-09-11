@@ -1,0 +1,16 @@
+# ⚠️ 不能照抄官方 README 的「Python 3.12.3 + CUDA 12.9」组合：
+#    cu129 索引的 torch 最高只到 2.9.0，而本文件要求 2.10.0 —— 于是 pip
+#    **静默回落到 PyPI** 拿到 `2.10.0+cpu` 构建。不报错，只是 CUDA 不可用、
+#    慢十倍。实测踩到过（见 ledger Ruling 9）。
+#    本机是 CUDA 13（驱动 592.01，llama.cpp 侧亦为 CUDA 13.3），故走 cu130。
+# 本地版本号（+cu130）显式钉死：索引里没有就直接报错，不给静默回落留机会。
+torch==2.10.0+cu130
+torchvision==0.25.0+cu130
+transformers==4.57.1
+Pillow==12.1.1
+matplotlib==3.10.8
+einops==0.8.2
+addict==2.4.0
+easydict==1.13
+pymupdf==1.27.2.2
+psutil==7.2.2
