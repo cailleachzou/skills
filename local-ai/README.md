@@ -42,7 +42,7 @@
 | **vl8** Qwen3-VL-8B Q4_K_M | **7711 MiB** | ~440 MiB ⚠️ | 只在细粒度判别时用（见下） |
 | **OCR** Unlimited-OCR（bf16） | **7782 MiB** | ~370 MiB ⚠️ | 权重 6.7 GB，贴边 |
 
-`asr`（Qwen3-ASR-1.7B Q8_0，权重约 4.6 GB）未实测。这四个**同样受「一次只跑一个模型」约束** ——
+`asr`（Qwen3-ASR-1.7B Q8_0，权重约 2.8 GB，含 KV 合计约 4.6 GB）未实测。这四个**同样受「一次只跑一个模型」约束** ——
 切换走 `start.sh`，OCR 走 `ocr/run.sh`（它会先 `stop.sh` 腾显存）。详见 [`SKILL.md`](SKILL.md) 第十节。
 
 > ⚠️ **`vl4` 不能拿来做细粒度判别。** 实测同一张图换个问法结论就翻（横版 A4 图问「是不是
@@ -108,7 +108,8 @@ RTX 5060 Laptop 是 **Blackwell（`sm_120` / CC 12.0）**，需要 **CUDA 12.8+*
 | --- | --- | --- | --- |
 | **NVIDIA 驱动** | 592.01 | CUDA 13 + Blackwell 支持的地基 | NVIDIA 官网 / GeForce Experience |
 | **llama.cpp（CUDA 13.x 预编译包）** | `b10883` | 推理引擎本体 | 下载 `llama-b10883-bin-win-cuda-13.3-x64.zip`，解压到<br>`C:\Users\caill\tools\llama-cpp\cuda-b10883\` |
-| **GGUF 模型 ×2** | 见 §1.2 | 模型权重 | 放到 `D:\models\gguf\<模型名>\`（**建议放 D 盘**，合计 ~8.5GB） |
+| **GGUF 模型 ×8**（文本 2 + 多模态 6；多模态每个 = 权重 + 配套 mmproj） | 见 §1.2 与 [`SKILL.md`](SKILL.md) 第十节 | 模型权重 | 放到 `D:\models\gguf\<模型名>\`（**建议放 D 盘**）；文本 2 个合计 **~8.5GB**，多模态 6 个（`vl4`/`vl8`/`asr` 各一对）合计 **~11.9GB** |
+| **OCR 模型仓库 + venv** | 见 [`SKILL.md`](SKILL.md) 第十节 | 文档 OCR（baidu/Unlimited-OCR，bf16 权重 6.7GB）+ Python 依赖栈 | 仓库 `D:\models\unlimited-ocr\`（**~6.8GB**）+ venv `D:\models\venvs\unlimited-ocr\`（**~3.3GB**，`uv venv --python 3.12`） |
 | **Python** | 3.14.7 | 跑 `llama_chat.py` / `llama_batch.py` | 系统已装，用 `py -3` 调用 |
 | **curl** | Windows 自带 | `start.sh`/`stop.sh` 探测 server 状态 | 无需安装 |
 | **nvidia-smi** | 驱动自带 | `stop.sh` 轮询显存回收 | 无需安装 |
@@ -171,8 +172,12 @@ RTX 5060 Laptop 是 **Blackwell（`sm_120` / CC 12.0）**，需要 **CUDA 12.8+*
 nvidia-smi --query-gpu=name,driver_version,memory.total,memory.used --format=csv
 
 # 3. 放好模型文件
-ls -la "D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf"        # 2.68 GB
-ls -la "D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf" # 5.78 GB
+ls -la "D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf"           # 2.68 GB（文本，默认）
+ls -la "D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf"   # 5.78 GB（文本，按需）
+ls -la "D:/models/gguf/qwen3-vl-4b/Qwen3VL-4B-Instruct-Q4_K_M.gguf" # 2497 MB（+ mmproj 836 MB）
+ls -la "D:/models/gguf/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf" # 5028 MB（+ mmproj 752 MB）
+ls -la "D:/models/gguf/qwen3-asr-1.7b/Qwen3-ASR-1.7B-Q8_0.gguf"     # 2165 MB（+ mmproj 642 MB）
+ls -la "D:/models/unlimited-ocr/model-00001-of-000001.safetensors"  # 6673 MB（OCR 仓库；venv 见 §1.1 注）
 
 # 4. 启动（默认 2B）—— 在 Bash 工具里必须后台跑，见下方警告
 bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh
@@ -188,16 +193,26 @@ curl -s http://127.0.0.1:8080/v1/models       # 核对实际加载的模型
 
 ### 把脚本指向你自己的环境
 
-三个脚本里的绝对路径是**硬编码的**，换机器要么改脚本、要么建同样的目录：
+脚本里的绝对路径是**硬编码的**，换机器要么改脚本、要么建同样的目录：
 
 | 变量 | 位置 | 当前值 |
 | --- | --- | --- |
 | `LLAMA_DIR` | `start.sh` / `start.bat` | `C:/Users/caill/tools/llama-cpp/cuda-b10883` |
 | `MODEL_MINICPM` | `start.sh` / `start.bat` | `D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf` |
 | `MODEL_9B` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf` |
+| `MODEL_VL4` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-4b/Qwen3VL-4B-Instruct-Q4_K_M.gguf` |
+| `MMPROJ_VL4` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-4b/mmproj-Qwen3VL-4B-Instruct-F16.gguf` |
+| `MODEL_VL8` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf` |
+| `MMPROJ_VL8` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-8b/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf` |
+| `MODEL_ASR` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-asr-1.7b/Qwen3-ASR-1.7B-Q8_0.gguf` |
+| `MMPROJ_ASR` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-asr-1.7b/mmproj-Qwen3-ASR-1.7b-BF16.gguf` |
+| `UNLIMITED_OCR_DIR` | `ocr/ocr.py`（环境变量） | `D:/models/unlimited-ocr` |
+| `UNLIMITED_OCR_VENV` | `ocr/run.sh` + `ocr/ocr.py`（环境变量） | `D:/models/venvs/unlimited-ocr` |
 
-换模型时把这几个路径指到你的 GGUF 即可 —— 但**记得遵守 §1.3 的显存边界**：
+换模型时把这些路径指到你的 GGUF / 仓库即可 —— 但**记得遵守 §1.3 的显存边界**：
 8GB 卡上不要超过 9B @ Q4_K_M，上下文按 §1.1 的表给。
+多模态还多一条：`vl4`/`vl8`/`asr` 必须**权重与 mmproj 成对**替换（mmproj 是图像/音频投影器，
+少了它 `start.sh` 会加载失败）。`ocr` 是独立栈，仓库与 venv 两个路径在 `ocr/` 里改。
 
 ---
 
@@ -327,8 +342,10 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh
 
 - [`SKILL.md`](SKILL.md) — 技能全貌：派活三步法、三条派发路径、回执回流、prompt 实测经验
 - [llama.cpp 官方仓库](https://github.com/ggml-org/llama.cpp) — 构建下载与参数文档
-- `scripts/` — `start.sh` / `stop.sh` / `llama_chat.py` / `llama_batch.py` / `chat.sh`（+ `.bat` 版）
+- `scripts/` — `start.sh` / `stop.sh` / `llama_chat.py` / `llama_batch.py` / `llama_media.py`（媒体编解码）/ `chat.sh`（+ `.bat` 版）
+- `ocr/` — `run.sh` / `ocr.py` / `requirements.txt`（Unlimited-OCR 独立栈，见 [`SKILL.md`](SKILL.md) 第十节）
 
 ---
 
-*最后更新：2026-09-10 · 对应技能版本 v6.2 · 硬件 RTX 5060 Laptop 8GB / 驱动 592.01 / llama.cpp b10883 (CUDA 13.3)*
+*最后更新：2026-09-11（补多模态：`vl4` / `vl8` / `asr` / `ocr` 的依赖、复现与脚本常量对照）·
+对应技能版本 v6.2 · 硬件 RTX 5060 Laptop 8GB / 驱动 592.01 / llama.cpp b10883 (CUDA 13.3)*
