@@ -970,6 +970,12 @@ Expected: `2.10.0+cu130 True NVIDIA GeForce RTX 5060 Laptop GPU`
 
 - [ ] **Step 5: 写 ocr.py**
 
+> ⚠️ **下面这段代码块是初稿，不是最终交付物。** 实施与审查期间它又过了 6 个提交
+> （`7d89ed2` → `70f97a2` → `b2eba99` → `d45a9d6` → `c734a43` → `72b3f6b`），
+> 增补了转图容错、临时目录清理、回执产物校验、`--image-size` 降档旋钮、
+> 退出码语义、以及「不删用户目录」的清理边界等。
+> **以 `local-ai/ocr/ocr.py` 的实际内容为准，不要照抄本代码块。**
+
 创建 `C:\Users\caill\.claude\skills\local-ai\ocr\ocr.py`：
 
 ```python
