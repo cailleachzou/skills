@@ -1466,6 +1466,11 @@ set -a; source ~/.claude/.env; set +a
 
 在 `evals.json` 的 `evals` 数组末尾（现有 id 2 之后）追加：
 
+> ⚠️ **下面这个 JSON 块是初稿，不是最终交付物。** `b5a9e18` 实施时已对齐官方 schema：
+> 字段名由 `assertions` 改为 **`expectations`**、`files` 改成相对技能根目录的
+> `evals/iteration-1/...` 路径，并补齐了 id 0/1/2 的素材；id 5 的期望输出也不再是
+> 下面写的「三线表格」。**以 `local-ai/evals/evals.json` 的实际内容为准，不要照抄本代码块。**
+
 ```json
     {
       "id": 3,
