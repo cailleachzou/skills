@@ -1296,6 +1296,15 @@ bash .../ocr/run.sh --image scan.png --out ./out/
 
 - [ ] **Step 3: 改 `local-ai/SKILL.md` 里过时的边界描述**
 
+⚠️ **本步实际有三处，不是两处**（pre-flight scan 后修正）：除下面列出的两处，
+**frontmatter 的 `description` 末行**也写着 `视觉/OCR/音频走 mimo 或 docling，不在此技能。`
+—— Step 5 的验收 grep 会命中它，不改则验收永远无法通过。该行是技能的**触发机制**，
+应改为：
+
+```
+  视觉/OCR/音频也走本机多模态（vl4/vl8/asr/ocr，0 token、不出本机），视频与高难度视觉推理才回退 mimo。
+```
+
 把文件开头「复杂规划、跨系统重构留主模型；视觉/OCR/音频走 mimo 或 `docling`。」改为：
 
 ```
