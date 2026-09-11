@@ -15,11 +15,15 @@
     bash run.sh --image 图.png --out ./out/ --image-size 640   # 显存不够时降档
 """
 import argparse
+import contextlib
 import os
 import shutil
 import sys
 import tempfile
 import time
+
+# 见 _run_one：infer 会把识别正文写 stdout，推理期间一律重定向到这里
+_DEVNULL = open(os.devnull, "w", encoding="utf-8")
 
 MODEL_DIR = os.environ.get("UNLIMITED_OCR_DIR", "D:/models/unlimited-ocr")
 VENV_DIR = os.environ.get("UNLIMITED_OCR_VENV", "D:/models/venvs/unlimited-ocr")
@@ -200,18 +204,24 @@ def _run_one(model, tokenizer, args, image_file: str, out_path: str, page,
     preexisting 必须由调用方在 infer **之前**测好，再传进来（见 _warn_if_exists）。
     """
     try:
-        model.infer(
-            tokenizer,
-            prompt="<image>document parsing.",
-            image_file=image_file,
-            output_path=out_path,
-            base_size=1024,
-            image_size=image_size,
-            crop_mode=crop_mode,
-            max_length=args.max_length,
-            no_repeat_ngram_size=35, ngram_window=ngram_window,
-            save_results=True,
-        )
+        # ⚠️ model.infer() 会把逐行识别结果（<|det|>… **含证件号、姓名等正文**）
+        # 直接 print 到 stdout。识别结果已由 save_results=True 落到 result.md，
+        # 所以这里吞掉不丢信息；不吞的代价是**任何读本进程 stdout 的调用方
+        # 都会拿到证件正文** —— 主对话是外发的，实测踩过：批量驱动读 stdout
+        # 只是想拿计数，把毕业证书正文一起读进了对话。
+        with contextlib.redirect_stdout(_DEVNULL):
+            model.infer(
+                tokenizer,
+                prompt="<image>document parsing.",
+                image_file=image_file,
+                output_path=out_path,
+                base_size=1024,
+                image_size=image_size,
+                crop_mode=crop_mode,
+                max_length=args.max_length,
+                no_repeat_ngram_size=35, ngram_window=ngram_window,
+                save_results=True,
+            )
     except Exception as e:
         # 单页失败不中断整本 —— 与 llama_batch.py 的容错策略一致
         leftover = _cleanup_failed_dir(out_path, preexisting)

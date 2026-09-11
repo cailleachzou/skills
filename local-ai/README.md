@@ -30,6 +30,21 @@
 > 不报错，只是 decode 从 55 tok/s 掉到 37 tok/s。
 > **8GB 卡上不要贪上下文**，默认值（2B → 128K / 9B → 32K）已经是按显存算过的。
 
+**多模态四个模型（2026-09-11 实测整卡占用）**：
+
+| 配置 | 整卡占用 | 余量 / 8151 MiB | 说明 |
+| --- | --- | --- | --- |
+| **vl4** Qwen3-VL-4B Q4_K_M | **6956 MiB** | ~1195 MiB | 视觉默认 |
+| **vl8** Qwen3-VL-8B Q4_K_M | **7711 MiB** | ~440 MiB ⚠️ | 只在细粒度判别时用（见下） |
+| **OCR** Unlimited-OCR（bf16） | **7782 MiB** | ~370 MiB ⚠️ | 权重 6.7 GB，贴边 |
+
+`asr`（Qwen3-ASR-1.7B Q8_0，权重约 4.6 GB）未实测。这四个**同样受「一次只跑一个模型」约束** ——
+切换走 `start.sh`，OCR 走 `ocr/run.sh`（它会先 `stop.sh` 腾显存）。详见 [`SKILL.md`](SKILL.md) 第十节。
+
+> ⚠️ **`vl4` 不能拿来做细粒度判别。** 实测同一张图换个问法结论就翻（横版 A4 图问「是不是
+> 手机截图」答「是」；问「属于哪一类」答「证件」）。凡是要拿结论当事实用的二值/闭集判断，
+> **直接上 `vl8`**。理由与实测数据见 [`SKILL.md`](SKILL.md) 第十节。
+
 ### 1.2 两个模型怎么选出来的
 
 | | **MiniCPM5-2B Q8_0**（默认） | **Qwen3.8-9B-Distill Q4_K_M** |
@@ -133,8 +148,10 @@ RTX 5060 Laptop 是 **Blackwell（`sm_120` / CC 12.0）**，需要 **CUDA 12.8+*
 | 不装 | 为什么 |
 | --- | --- |
 | **ollama** | 2026-09-10 已彻底卸载 —— 多一层进程、多占一份显存，直连 llama-server 更快更可控 |
-| **PyTorch / transformers** | 推理全在 llama.cpp（C++）里，不需要 Python 推理栈 |
-| **mmproj（视觉投影）** | 两个模型都是**纯文本**。视觉 / OCR / 音频走 `mimo` 或 `docling` |
+| **PyTorch / transformers（装进系统 Python）** | 文本推理全在 llama.cpp（C++）里，不需要 Python 推理栈。OCR 栈确实要 torch + transformers，但**刻意隔离在独立 venv**（`D:\models\venvs\unlimited-ocr`），不污染系统 Python |
+
+> **mmproj（视觉投影）原先在这张表里** —— 2026-09-11 起 `vl4` / `vl8` / `asr` 各自带一个，
+> 视觉与音频已能**全本地**跑，不再需要回退 `mimo` 或 `docling`。见 [`SKILL.md`](SKILL.md) 第十节。
 
 ---
 
