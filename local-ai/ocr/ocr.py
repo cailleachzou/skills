@@ -58,31 +58,49 @@ def _model_label() -> str:
     return os.path.basename(MODEL_DIR.rstrip("/\\")) or MODEL_DIR
 
 
-def _warn_if_exists(out_path: str) -> None:
-    """目标子目录已存在且非空 → 明确告警。
+def _warn_if_exists(out_path: str) -> bool:
+    """目标子目录已存在且非空 → 明确告警；返回「本次推理前该目录是否已存在」。
 
     一次调用只处理一张图，同一 --out 重跑本来是合法的重试路径，覆盖是预期行为，
     所以**只告警、不改命名**（加 -2 后缀反而会让人找不到自己的结果）。
+
+    返回值供 _cleanup_failed_dir 判断「这目录是不是我们新建的」——
+    用户自建的目录不能连内容一起删。判据**必须在这里取**（infer 之前）：
+    失败之后再问「目录存在吗」必然为真，判不出是谁建的。
     """
-    if os.path.isdir(out_path) and os.listdir(out_path):
+    preexisting = os.path.isdir(out_path)
+    if preexisting and os.listdir(out_path):
         print(f"[警告] {out_path} 已存在且非空 —— 其中的旧产物将被覆盖", file=sys.stderr)
+    return preexisting
 
 
-def _cleanup_failed_dir(out_path: str) -> None:
-    """失败页在 infer 抛错前已经建了空目录（<out>/images/）。
+def _cleanup_failed_dir(out_path: str, preexisting: bool) -> bool:
+    """清理失败页留下的空壳目录。返回是否**未清理**（即可能残留空壳）。
 
-    别把它留在盘上冒充产物 —— 但若里面已有 result.md（上一轮的真产物），保留不动。
+    只清本次运行新建的目录。用户完全可能事先在 <out>/ 下建了同名目录放了别的
+    东西 —— 那种目录一律不动：_warn_if_exists 的告警说的是「旧产物会被覆盖」，
+    用户读不出「我会把整个目录连内容删掉」这层意思，删了就是数据丢失。
     """
-    if os.path.isdir(out_path) and not os.path.exists(os.path.join(out_path, "result.md")):
+    if preexisting:
+        return True
+    # 目录是我们新建的，整个删掉不会有误伤
+    if os.path.isdir(out_path):
         shutil.rmtree(out_path, ignore_errors=True)
+    return False
 
 
-def _report(out_dir: str, src: str, pages: int, results: list, elapsed: float) -> str:
-    """同 llama_batch.py 的回执格式 —— 主模型只读这一份就够。"""
+def _report(out_dir: str, src: str, pages: int, results: list, elapsed: float,
+            fatal: str = None) -> str:
+    """同 llama_batch.py 的回执格式 —— 主模型只读这一份就够。
+
+    fatal 是**文档级**失败（打不开 / 0 页），与「某页失败」不是一回事：
+    它不该伪装成一页，否则回执会自相矛盾（「输入（0 页）」与「总 1 ｜ 失败 1」并排）。
+    """
     path = os.path.join(out_dir, "ocr.report.md")
     ok = [r for r in results if r.get("error") is None]
     bad = [r for r in results if r.get("error") is not None]
     empt = [r for r in ok if r.get("empty")]
+    leftover = [r for r in bad if r.get("leftover")]
     lines = [
         "# OCR 回执",
         "",
@@ -92,6 +110,17 @@ def _report(out_dir: str, src: str, pages: int, results: list, elapsed: float) -
         f"- 模型：{_model_label()} (bf16, 本地 {MODEL_DIR})",
         f"- 耗时：{elapsed:.1f}s",
         "",
+    ]
+    if fatal:
+        lines += [
+            "## 文档级错误",
+            "",
+            fatal,
+            "",
+            "（文档未能打开 / 无页可处理，未执行任何页面推理）",
+            "",
+        ]
+    lines += [
         "## 计数",
         "",
         f"总 **{len(results)}** ｜ 成功 {len(ok)} ｜ 失败 **{len(bad)}**"
@@ -106,6 +135,11 @@ def _report(out_dir: str, src: str, pages: int, results: list, elapsed: float) -
         lines += ["| 页 | 错误 |", "| --- | --- |"]
         for r in bad:
             lines.append(f"| {r['page']} | {r['error']} |")
+    if leftover:
+        lines.append("")
+        lines.append("注：" + "、".join(f"第 {r['page']} 页" for r in leftover)
+                     + " 的输出目录在本次运行前已存在，按「不删用户目录」原则未清理，"
+                       "可能残留空壳目录。")
     lines += ["", "## 空结果清单", ""]
     if not empt:
         lines.append("无。")
@@ -156,11 +190,14 @@ def rasterize_pdf(pdf_path: str, dpi: int, tmp_dir: str) -> tuple:
 
 
 def _run_one(model, tokenizer, args, image_file: str, out_path: str, page,
-             image_size: int, crop_mode: bool, ngram_window: int) -> dict:
+             image_size: int, crop_mode: bool, ngram_window: int,
+             preexisting: bool) -> dict:
     """跑一页，并把「infer 没抛错」升级成「产物确实存在」。
 
     infer() 返回不代表有产物：save_results=True 写的是 <out>/result.md。上游建模
     代码一旦改名，回执就会把**不存在的路径**指给主模型 —— 回执失真等于契约失效。
+
+    preexisting 必须由调用方在 infer **之前**测好，再传进来（见 _warn_if_exists）。
     """
     try:
         model.infer(
@@ -177,23 +214,24 @@ def _run_one(model, tokenizer, args, image_file: str, out_path: str, page,
         )
     except Exception as e:
         # 单页失败不中断整本 —— 与 llama_batch.py 的容错策略一致
-        _cleanup_failed_dir(out_path)
-        return {"page": page, "output": None, "empty": False,
+        leftover = _cleanup_failed_dir(out_path, preexisting)
+        return {"page": page, "output": None, "empty": False, "leftover": leftover,
                 "error": f"{type(e).__name__}: {e}"}
 
     md = os.path.join(out_path, "result.md")
     if not os.path.exists(md):
-        _cleanup_failed_dir(out_path)
-        return {"page": page, "output": None, "empty": False,
+        leftover = _cleanup_failed_dir(out_path, preexisting)
+        return {"page": page, "output": None, "empty": False, "leftover": leftover,
                 "error": f"产物缺失：未生成 {os.path.basename(out_path)}/result.md"}
     try:
         with open(md, encoding="utf-8") as f:
             empty = not f.read().strip()
     except Exception as e:
-        return {"page": page, "output": None, "empty": False,
+        return {"page": page, "output": None, "empty": False, "leftover": False,
                 "error": f"产物不可读：{type(e).__name__}: {e}"}
     # 空白页本就无字 —— 归「空结果」一类，不算失败（照 llama_batch.py 的标签）
-    return {"page": page, "output": out_path, "empty": empty, "error": None}
+    return {"page": page, "output": out_path, "empty": empty, "leftover": False,
+            "error": None}
 
 
 def main() -> None:
@@ -254,35 +292,37 @@ def main() -> None:
         if args.image:
             total_pages = 1
             out_path = os.path.join(args.out, os.path.splitext(os.path.basename(args.image))[0])
-            _warn_if_exists(out_path)
+            # 必须在 infer 之前取 —— 失败后再问「目录存在吗」必然为真
+            preexisting = _warn_if_exists(out_path)
             results.append(_run_one(
                 model, tokenizer, args, args.image, out_path, page=1,
                 # 单页 Gundam（见文件头出处注释）
                 image_size=args.image_size if args.image_size is not None else 640,
                 crop_mode=True, ngram_window=NG_NGRAM_WINDOW_SINGLE,
+                preexisting=preexisting,
             ))
         else:
             tmp_dir = tempfile.mkdtemp(prefix="ocr_pdf_")
             page_count, page_paths, raster_errors, fatal = rasterize_pdf(
                 args.pdf, args.dpi, tmp_dir)
 
-            # 打不开 / 不是 PDF：给可读的中文错误，照常走回执路径，不裸 traceback
+            # 打不开 / 不是 PDF：给可读的中文错误，照常走回执路径，不裸 traceback。
+            # 走 fatal= 而不是伪装成一页 —— 否则回执里「输入（0 页）」会和
+            # 「总 1 ｜ 失败 1」并排，自相矛盾。
             if fatal is not None:
-                results.append({"page": "-", "output": None, "empty": False,
-                                "error": f"无法打开 PDF：{fatal}"})
-                report = _report(args.out, args.pdf, 0, results, time.time() - t0)
+                report = _report(args.out, args.pdf, 0, [], time.time() - t0,
+                                 fatal=f"无法打开 PDF：{fatal}")
                 print(f"[错误] 无法打开 PDF：{fatal}", file=sys.stderr)
-                print(f"[完成] 回执 → {report}（成功 0 失败 1）", file=sys.stderr)
+                print(f"[完成] 回执 → {report}（文档级错误，未处理任何页）", file=sys.stderr)
                 sys.exit(1)
 
             # 0 页 PDF：别静默写出「总 0 ｜ 成功 0 ｜ 失败 0」再 exit 0
             # （照 llama_batch.py:107 的 `if not tasks: sys.exit(...)`）
             if page_count == 0:
-                results.append({"page": "-", "output": None, "empty": False,
-                                "error": "PDF 没有页：文件可能是空的或已损坏"})
-                report = _report(args.out, args.pdf, 0, results, time.time() - t0)
+                report = _report(args.out, args.pdf, 0, [], time.time() - t0,
+                                 fatal="PDF 没有页：文件可能是空的或已损坏")
                 print("[错误] PDF 没有页：文件可能是空的或已损坏", file=sys.stderr)
-                print(f"[完成] 回执 → {report}（成功 0 失败 1）", file=sys.stderr)
+                print(f"[完成] 回执 → {report}（文档级错误，未处理任何页）", file=sys.stderr)
                 sys.exit(1)
 
             total_pages = page_count
@@ -292,17 +332,32 @@ def main() -> None:
                 if idx in raster_errors:
                     print(f"  [{idx}/{page_count}] {raster_errors[idx]}", file=sys.stderr)
                     results.append({"page": idx, "output": None, "empty": False,
-                                    "error": raster_errors[idx]})
+                                    "leftover": False, "error": raster_errors[idx]})
+                    continue
+                page_png = page_paths.get(idx)
+                if page_png is None:
+                    # 既不在 paths 也不在 errors —— 只有 doc 迭代出的页数 !=
+                    # doc.page_count 时才会走到这里。别用 page_paths[idx] 直接
+                    # KeyError 崩在 _report() 之前（那又回到「连回执都拿不到」），
+                    # 记一条 error 兜住，代价极小。
+                    print(f"  [{idx}/{page_count}] 该页未参与转图（页数不一致）",
+                          file=sys.stderr)
+                    results.append({
+                        "page": idx, "output": None, "empty": False, "leftover": False,
+                        "error": "内部错误：该页未参与转图（doc 页数与 page_count 不一致）",
+                    })
                     continue
                 out_path = os.path.join(args.out, f"page_{idx:04d}")
-                print(f"  [{idx}/{page_count}] {os.path.basename(page_paths[idx])}",
+                print(f"  [{idx}/{page_count}] {os.path.basename(page_png)}",
                       file=sys.stderr)
-                _warn_if_exists(out_path)
+                # 必须在 infer 之前取 —— 失败后再问「目录存在吗」必然为真
+                preexisting = _warn_if_exists(out_path)
                 results.append(_run_one(
-                    model, tokenizer, args, page_paths[idx], out_path, page=idx,
+                    model, tokenizer, args, page_png, out_path, page=idx,
                     # 多页 Base（见文件头出处注释）
                     image_size=args.image_size if args.image_size is not None else 1024,
                     crop_mode=False, ngram_window=NG_NGRAM_WINDOW_MULTI,
+                    preexisting=preexisting,
                 ))
 
         report = _report(args.out, args.pdf or args.image, total_pages, results,
