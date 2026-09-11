@@ -70,6 +70,7 @@ git clone https://github.com/cailleachzou/skills.git
 | **dwg** | `ezdxf` | ODA File Converter（`C:\Program Files\ODA\ODAFileConverter 27.1.0\`）；系统 Python `py -3`（ezdxf 1.4.4，无独立 venv、无 AutoCAD、无 MIMO） |
 | **ffmpeg**     | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
 | **pdf2zh**     | 无（uv tool 自带）  | ✅ 已装 **1.9.11**（uv tool 隔离环境）；版面走 onnxruntime，**不依赖 torch** |
+| **local-ai**   | 无（脚本只用标准库） | 文本/多模态 GGUF 见下；文档 OCR 另用独立 venv（见下） |
 
 > **docling 用独立 venv**（勿用系统 Python）—— ✅ 已装于 `C:\Users\caill\.venv-docling`（Python 3.12.14；docling 2.126.0 + torch 2.14.0）
 > 调用：`C:\Users\caill\.venv-docling\Scripts\docling.exe convert <source> --to md --output <dir>`
@@ -77,6 +78,13 @@ git clone https://github.com/cailleachzou/skills.git
 > ⚠️ 需设 `TORCH_COMPILE_DISABLE=1 TORCHINDUCTOR_DISABLE=1`（torch 在无 MSVC 环境下报错）
 > 模型缓存 `~/.cache/huggingface/`，**首次运行才下载**（约 2GB）
 > 重建：`uv venv ~/.venv-docling --python 3.12 && uv pip install --python ~/.venv-docling docling`
+
+> **local-ai 多模态另需**（GGUF 落在 `D:\models\gguf\`，每个模型 = 权重 + 配套 mmproj，均由 `hf download` 取得）：
+> - 视觉 `vl4` / `vl8`：`Qwen/Qwen3-VL-4B-Instruct-GGUF`（Q4_K_M **2497 MB** + mmproj F16 836 MB）、`Qwen/Qwen3-VL-8B-Instruct-GGUF`（Q4_K_M **5028 MB** + mmproj Q8_0 752 MB）
+> - 语音 `asr`：**社区仓库** `JamePeng2023/Qwen3-ASR-1.7B-GGUF`（Q8_0 **2165 MB** + mmproj BF16 642 MB；官方 Qwen 组织无此 GGUF）
+> - 文本：`MiniCPM5-2B-Q8_0.gguf` 2.68 GB、`Qwen3.8-9B-Q4_K_M.gguf` 5.78 GB（见 `local-ai/SKILL.md`）
+> - 文档 OCR：`baidu/Unlimited-OCR` 全仓库 → `D:/models/unlimited-ocr/`（约 6.8 GB），另建 venv `D:/models/venvs/unlimited-ocr`（`uv venv --python 3.12`；`torch==2.10.0` + `torchvision==0.25.0` 走 cu129 索引，官方测试组合为 Python 3.12.3 + CUDA 12.9）
+> - ⚠️ 上述**权重仍在下**（3 个 mmproj 已到位）：T3–T6 落地前 `start.sh vl4/vl8/asr` 与 `ocr/run.sh` 尚不可用
 
 ### CLI 工具
 

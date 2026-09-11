@@ -376,7 +376,7 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh            # 收工�
 | 图片理解、截图、图表 | `vl4` | Qwen3-VL-4B Q4_K_M | ~4.5 GB | `start.sh vl4` |
 | 同上，4B 不够时 | `vl8` | Qwen3-VL-8B Q4_K_M | ~6.4 GB ⚠️ | `start.sh vl8` |
 | 录音转写 | `asr` | Qwen3-ASR-1.7B Q8_0 | ~4.6 GB | `start.sh asr` |
-| 扫描件 / 复杂版面 / 长文档 | — | baidu/Unlimited-OCR | ~6.9 GB ⚠️ | `bash ocr/run.sh` |
+| 扫描件 / 复杂版面 / 公式表格 / 长文档 | — | baidu/Unlimited-OCR | ~6.9 GB ⚠️ | `bash ocr/run.sh` |
 
 `vl4` / `vl8` / `asr` 走同一个 `llama-server`，**依旧受「一次只跑一个模型」约束** ——
 切模型照旧用 `start.sh`（幂等）。`ocr` 是独立栈，`run.sh` 会**先 stop.sh 腾显存**再跑。
@@ -402,6 +402,9 @@ bash .../ocr/run.sh --image scan.png --out ./out/
 - **视频** —— 本地没有视频模型，这是硬缺口
 - 高质量开放式视觉推理（复杂图表分析、多图对比推理）—— 4B 扛不动这类
 - 本地返回空结果 / 明显幻觉 / 连续失败
+- ⚠️ **敏感资料不适用回退** —— 合同、证件、简历这类按内容类型直接判为本地，用户显式标注为敏感的
+  同样优先；**即便它本来符合回退条件**（比如机密合同要做的复杂图表分析），也不送 mimo ——
+  宁可换 `vl8` / `ocr` 慢一点，也不出本机。
 
 ### docling 还是 Unlimited-OCR
 
