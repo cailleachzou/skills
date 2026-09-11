@@ -757,6 +757,22 @@ import llama_media
         return ["失败"]
 ```
 
+**同时在 `_write_report` 里改掉失败统计的依据。** 现有实现是：
+
+```python
+    failed = [i for i, tags in tagged if "失败" in tags]
+```
+
+这是**列表成员检查**，不是子串检查 —— `"失败" in ["媒体读取失败"]` 为 `False`。
+不改的话，「媒体读取失败」的记录不计入失败数，回执会打印
+「成功 N ｜ 失败 0 ｜ 异常 M」这种自相矛盾的数字，且下面 `all_conn` 的判断也会连带失准。
+
+改为按 `error` 字段判定，不再依赖标签文案：
+
+```python
+    failed = [r["index"] for r in ordered if r.get("error")]
+```
+
 - [ ] **Step 4: 在回执建议里补一条针对性提示**
 
 在 `_write_report` 的 `advice` 构造段，把：
@@ -828,7 +844,8 @@ py -3 "C:/Users/caill/.claude/skills/local-ai/scripts/llama_batch.py" \
 cat D:/tmp/bad.report.md
 ```
 
-Expected: 1 条失败，回执异常清单标签为 **`媒体读取失败`**，且建议里出现「检查 JSONL 里 image/audio 的路径」。
+Expected: 回执计数为 **「总 1 ｜ 成功 0 ｜ 失败 1 ｜ 异常 1」**（若显示「失败 0 异常 1」说明
+失败统计没改对），异常清单标签为 **`媒体读取失败`**，且建议里出现「检查 JSONL 里 image/audio 的路径」。
 **若标签是「失败」而非「媒体读取失败」，说明 Step 3 没生效。**
 
 - [ ] **Step 8: 提交**
