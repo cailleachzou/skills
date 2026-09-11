@@ -83,8 +83,9 @@ git clone https://github.com/cailleachzou/skills.git
 > - 视觉 `vl4` / `vl8`：`Qwen/Qwen3-VL-4B-Instruct-GGUF`（Q4_K_M **2497 MB** + mmproj F16 836 MB）、`Qwen/Qwen3-VL-8B-Instruct-GGUF`（Q4_K_M **5028 MB** + mmproj Q8_0 752 MB）
 > - 语音 `asr`：**社区仓库** `JamePeng2023/Qwen3-ASR-1.7B-GGUF`（Q8_0 **2165 MB** + mmproj BF16 642 MB；官方 Qwen 组织无此 GGUF）
 > - 文本：`MiniCPM5-2B-Q8_0.gguf` 2.68 GB、`Qwen3.8-9B-Q4_K_M.gguf` 5.78 GB（见 `local-ai/SKILL.md`）
-> - 文档 OCR：`baidu/Unlimited-OCR` 全仓库 → `D:/models/unlimited-ocr/`（约 6.8 GB），另建 venv `D:/models/venvs/unlimited-ocr`（`uv venv --python 3.12`；`torch==2.10.0` + `torchvision==0.25.0` 走 cu129 索引，官方测试组合为 Python 3.12.3 + CUDA 12.9）
-> - ⚠️ 上述**权重仍在下**（3 个 mmproj 已到位）：T3–T6 落地前 `start.sh vl4/vl8/asr` 与 `ocr/run.sh` 尚不可用
+> - 文档 OCR：`baidu/Unlimited-OCR` 全仓库 → `D:/models/unlimited-ocr/`（约 6.8 GB），另建 venv `D:/models/venvs/unlimited-ocr`（`uv venv --python 3.12`；`torch==2.10.0` + `torchvision==0.25.0` 走 **cu130** 索引，官方测试组合为 Python 3.12.3 + CUDA 12.9）
+>   - ⚠️ **索引必须是 cu130，不是 cu129**：`ocr/requirements.txt` 已把本地版本号钉成 `+cu130`（`torch==2.10.0+cu130` / `torchvision==0.25.0+cu130`），索引不匹配会**直接报错**，不会静默回落 CPU 版（CPU 版会让 OCR 慢到不可用且不报错）
+> - ✅ **权重与 venv 均已到位**：6 个多模态 GGUF（`vl4`/`vl8`/`asr` 各一份权重 + 一份 mmproj，见上）+ OCR 全仓库 + venv `D:/models/venvs/unlimited-ocr`，`start.sh vl4/vl8/asr` 与 `ocr/run.sh` 均可直接用；实测显存账本见 [`local-ai/README.md`](local-ai/README.md) §1.1
 
 ### CLI 工具
 
