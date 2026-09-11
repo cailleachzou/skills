@@ -12,9 +12,9 @@
     bash run.sh --pdf 合同.pdf --out ./out/
     bash run.sh --image 扫描件.png --out ./out/
     bash run.sh --pdf 长文档.pdf --out ./out/ --dpi 200
+    bash run.sh --image 图.png --out ./out/ --image-size 640   # 显存不够时降档
 """
 import argparse
-import json
 import os
 import sys
 import tempfile
@@ -52,7 +52,7 @@ def _report(out_dir: str, src: str, pages: int, results: list, elapsed: float) -
             lines.append(f"| {r['page']} | {r['error']} |")
     lines += ["", "## 输出文件", ""]
     for r in ok:
-        lines.append(f"- 第 {r['page']} 页 → `{os.path.basename(r['output'])}`")
+        lines.append(f"- 第 {r['page']} 页 → `{os.path.basename(r['output'])}/result.md`")
     lines.append("")
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
@@ -87,6 +87,9 @@ def main() -> None:
     ap.add_argument("--out", required=True, help="输出目录（markdown 与回执写在这里）")
     ap.add_argument("--dpi", type=int, default=300, help="PDF 转图 DPI（默认 300）")
     ap.add_argument("--max-length", type=int, default=32768, help="单次生成上限")
+    ap.add_argument("--image-size", type=int, default=None,
+                    help="显存不够时的降档旋钮：覆盖送入模型的图像边长（越小越省显存、"
+                         "精度越低）。不传则 image 模式用 640、PDF 模式用 1024")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -97,7 +100,7 @@ def main() -> None:
 
     if not torch.cuda.is_available():
         sys.exit("[错误] CUDA 不可用 —— OCR 会在 CPU 上慢到不可用。"
-                 "检查 torch 是否为 cu129 版："
+                 "检查 torch 是否为 cu130 版："
                  "D:/models/venvs/unlimited-ocr/Scripts/python.exe -c "
                  "\"import torch; print(torch.__version__, torch.cuda.is_available())\"")
 
@@ -123,7 +126,9 @@ def main() -> None:
                 prompt="<image>document parsing.",
                 image_file=args.image,
                 output_path=out_path,
-                base_size=1024, image_size=640, crop_mode=True,
+                base_size=1024,
+                image_size=args.image_size if args.image_size is not None else 640,
+                crop_mode=True,
                 max_length=args.max_length,
                 no_repeat_ngram_size=35, ngram_window=128,
                 save_results=True,
@@ -146,7 +151,9 @@ def main() -> None:
                     prompt="<image>document parsing.",
                     image_file=page_png,
                     output_path=out_path,
-                    base_size=1024, image_size=1024, crop_mode=False,
+                    base_size=1024,
+                    image_size=args.image_size if args.image_size is not None else 1024,
+                    crop_mode=False,
                     max_length=args.max_length,
                     no_repeat_ngram_size=35, ngram_window=1024,
                     save_results=True,
