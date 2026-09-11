@@ -342,8 +342,9 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh
 
 - [`SKILL.md`](SKILL.md) — 技能全貌：派活三步法、三条派发路径、回执回流、prompt 实测经验
 - [llama.cpp 官方仓库](https://github.com/ggml-org/llama.cpp) — 构建下载与参数文档
-- `scripts/` — `start.sh` / `stop.sh` / `llama_chat.py` / `llama_batch.py` / `llama_media.py`（媒体编解码）/ `chat.sh`（+ `.bat` 版）
+- `scripts/` — `start.sh` / `stop.sh` / `llama_chat.py` / `llama_batch.py` / `llama_media.py`（媒体编解码）/ `chat.sh`（+ `.bat` 版；⚠️ 交互式封装**不支持媒体**，带图/带音频的单次任务请用 `llama_chat.py --image/--audio`）
 - `ocr/` — `run.sh` / `ocr.py` / `requirements.txt`（Unlimited-OCR 独立栈，见 [`SKILL.md`](SKILL.md) 第十节）
+- `references/mimo-api.md` — mimo CLI 调用参考（视频与高难度视觉推理的回退路径）
 
 ---
 

@@ -25,6 +25,11 @@ IMAGE_MIME = {
     ".bmp": "image/bmp",
 }
 
+# 音频白名单：与图片同一条家规 —— 不在表里就显式报错，别把 .m4a/.flac 原样
+# 送到 server 再吃一个不可读的失败。本机 asr 素材链路只实测过 wav（meeting.wav），
+# mp3/flac/m4a 是 llama-server 文档声称支持的常见容器，进来仍以 server 实际解不了为准。
+AUDIO_FORMATS = {"wav", "mp3", "flac", "m4a"}
+
 
 def encode_file(path: str) -> str:
     """读文件并 base64 编码。读不了直接抛，由调用方决定怎么记（单条失败还是整批退出）。"""
@@ -46,6 +51,10 @@ def _audio_part(path: str) -> dict:
     fmt = os.path.splitext(path)[1].lower().lstrip(".")
     if not fmt:
         raise ValueError(f"音频文件缺少扩展名，无法判断格式：{path}")
+    if fmt not in AUDIO_FORMATS:
+        raise ValueError(
+            f"不支持的音频格式：{path}（支持 {', '.join(sorted(AUDIO_FORMATS))}；"
+            f"其他格式先用 ffmpeg 转成 wav）")
     return {"type": "input_audio",
             "input_audio": {"data": encode_file(path), "format": fmt}}
 

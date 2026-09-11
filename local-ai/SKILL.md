@@ -400,7 +400,7 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh            # 收工�
 
 文本以外的三条本地路径。**能本地就本地** —— 不出本机、不花 token。
 
-| 用途 | 别名 | 模型 | 显存 | 入口 |
+| 用途 | 别名 | 模型 | 显存（模型估算，不含桌面；整卡实测见 `local-ai/README.md` §1.1） | 入口 |
 | --- | --- | --- | --- | --- |
 | 图片理解、截图、图表 | `vl4` | Qwen3-VL-4B Q4_K_M | ~4.5 GB | `start.sh vl4` |
 | 同上，4B 不够时 | `vl8` | Qwen3-VL-8B Q4_K_M | ~6.4 GB ⚠️ | `start.sh vl8` |
@@ -441,6 +441,8 @@ py -3 .../scripts/llama_chat.py --image a.png --image b.png "对比这两张图"
 # 批量：JSONL 每条绑定自己的文件（回执机制与纯文本批量一致）
 py -3 .../scripts/llama_batch.py scans.jsonl -o out.jsonl -j 1 --no-think
 #   {"id":"p1","prompt":"转成 markdown","image":"page_001.png"}
+#   ⚠️ 媒体批量化一律 -j 1：vl4/vl8/asr 同样是 4 slot 共享一个 KV 池，
+#   而一张图就吃掉 ~1K+ token，并发轻则互相挤、重则装不下
 
 # 文档 OCR（独立栈，先自动腾显存）
 bash .../ocr/run.sh --pdf contract.pdf --out ./out/
