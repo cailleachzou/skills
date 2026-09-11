@@ -1,6 +1,6 @@
 #!/bin/bash
 # local-ai 启动 / 切换脚本
-# 用法: ./start.sh [minicpm|9b] [port]      # 默认 minicpm (2B)
+# 用法: ./start.sh [minicpm|9b|vl4|vl8|asr] [port]      # 默认 minicpm (2B)
 #
 # Git Bash 别名（~/.bashrc）：  llama = 2B，  llama9 = 9B
 #
@@ -15,7 +15,8 @@
 # 服务端按官方推荐配置启动（MiniCPM5 官方 llama.cpp cookbook：
 #   llama-server -m <gguf> -ngl 99 -c <ctx> --jinja）。
 #
-# ⚠️ 思考开关不在这里 —— 两个模型都是 thinking 模型，但关闭思考**必须走请求级**
+# ⚠️ 思考开关不在这里 —— 只有两个文本模型 (minicpm / 9b) 是 thinking 模型；
+#    vl4 / vl8 / asr 是 Instruct / 转写模型，本身没有思考档。关闭思考**必须走请求级**
 #    参数 chat_template_kwargs（见 llama_chat.py）。服务端的 --reasoning off /
 #    --reasoning-budget 0 / --chat-template-kwargs 在本机 build(b10883) 上全部实测失效
 #    （llama.cpp 上游 bug，PR #22336 未合并）。

@@ -1,6 +1,6 @@
 @echo off
 REM local-ai start / switch script (Windows)
-REM Usage: start.bat [minicpm^|9b] [port]      (default: minicpm, i.e. 2B)
+REM Usage: start.bat [minicpm^|9b^|vl4^|vl8^|asr] [port]      (default: minicpm, i.e. 2B)
 REM
 REM Git Bash users have the aliases:  llama = 2B,  llama9 = 9B  (see ~/.bashrc).
 REM
@@ -11,11 +11,12 @@ REM NOTE: llama-server loads ONE model at a time and IGNORES the request "model"
 REM field, so switching = restarting this script. Don't flip-flop for single
 REM tasks -- pick one per round of work (see SKILL.md "一").
 REM
-REM NOTE: the thinking toggle is NOT here. Both models are thinking models, but
-REM disabling thinking must be done PER-REQUEST via chat_template_kwargs (see
-REM llama_chat.py). The server-side --reasoning off / --reasoning-budget 0 /
-REM --chat-template-kwargs are all measured BROKEN on this build (b10883) --
-REM an unfixed upstream llama.cpp bug (PR #22336, still open).
+REM NOTE: the thinking toggle is NOT here. Only the two TEXT models (minicpm / 9b)
+REM are thinking models; vl4 / vl8 / asr are Instruct / transcription models with
+REM no thinking mode. Disabling thinking must be done PER-REQUEST via
+REM chat_template_kwargs (see llama_chat.py). The server-side --reasoning off /
+REM --reasoning-budget 0 / --chat-template-kwargs are all measured BROKEN on this
+REM build (b10883) -- an unfixed upstream llama.cpp bug (PR #22336, still open).
 REM
 REM NOTE: no parenthesised blocks below -- an unescaped ")" inside an if(...)
 REM block silently terminates it early (that bug shipped once; see git log).
