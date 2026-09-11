@@ -964,9 +964,9 @@ D:/models/venvs/unlimited-ocr/Scripts/python.exe -c \
   "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'NO CUDA')"
 ```
 
-Expected: `2.10.0+cu129 True NVIDIA GeForce RTX 5060 Laptop GPU`
+Expected: `2.10.0+cu130 True NVIDIA GeForce RTX 5060 Laptop GPU`
 
-**若输出 `False`** —— pip 装到了 CPU 版。这会让 OCR 慢到不可用且**不报错**。重新安装并确认 `--index-url` 指向 `download.pytorch.org/whl/cu129`。
+**若输出 `False`** —— pip 装到了 CPU 版。这会让 OCR 慢到不可用且**不报错**。重新安装并确认 `--index-url` 指向 `download.pytorch.org/whl/cu130`。
 
 - [ ] **Step 5: 写 ocr.py**
 
@@ -1072,7 +1072,7 @@ def main() -> None:
 
     if not torch.cuda.is_available():
         sys.exit("[错误] CUDA 不可用 —— OCR 会在 CPU 上慢到不可用。"
-                 "检查 torch 是否为 cu129 版："
+                 "检查 torch 是否为 cu130 版："
                  "D:/models/venvs/unlimited-ocr/Scripts/python.exe -c "
                  "\"import torch; print(torch.__version__, torch.cuda.is_available())\"")
 
@@ -1209,7 +1209,9 @@ Expected:
 nvidia-smi --query-gpu=memory.used --format=csv,noheader
 ```
 
-Expected: 约 6.9 GB（贴近上限）。**若启动日志或推理速度异常慢**，说明有层掉到 CPU —— 先确认没有其他程序占显存，再考虑 `--image-size` 调小。
+Expected: 约 6.9 GB（贴近上限）。实测峰值 7782 / 8151 MiB，余量约 370 MiB，**无层掉到 CPU**。
+
+**若启动日志或推理速度异常慢**，说明有层掉到 CPU —— 先确认没有其他程序占显存，再考虑把 `--image-size` 调小降档（默认 `None`，即 image 模式 640 / PDF 模式 1024；显式传入时两种模式都按该值覆盖）。
 
 - [ ] **Step 10: 提交**
 
@@ -1420,7 +1422,11 @@ EOF
 
 - [ ] **Step 1: 准备 eval 输入素材**
 
-三个新用例引用的输入文件尚不存在，需要先造出来（现有用例的输入在 `iteration-1/inputs/` 下，跟随同一结构）：
+三个新用例引用的输入文件尚不存在，需要先造出来；`iteration-1/inputs/` 目录本身也**尚不存在**，需一并建出（沿用现有用例 `files` 字段的路径约定）。
+
+> ⚠️ **已知既有缺口（不属本任务范围）**：现有用例 id 0/1/2 的 `files` 同样指向
+> `iteration-1/inputs/{reviews_60,tickets_40,inquiries_30}.txt`，**这三个文件在仓库里从来就不存在**。
+> 本任务只补多模态用例（spec §6.4 的范围），不负责回填它们 —— 该缺口由最终整体审查裁量。
 
 ```bash
 mkdir -p "C:/Users/caill/.claude/skills/local-ai/evals/iteration-1/inputs/scans"
