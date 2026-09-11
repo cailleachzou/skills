@@ -33,7 +33,8 @@
 
 回执（给主模型「整体看一下」用）:
     跑完自动在输出文件旁边写一份 <out>.report.md（out.jsonl → out.report.md），内含
-    条数/成功/失败、异常清单（失败、空结果、原样回显、带代码块围栏、JSON 解析失败、过短）、
+    条数/成功/失败、异常清单（失败、空结果、原样回显、带代码块围栏、JSON 解析失败、过短、
+    媒体读取失败）、
     抽样几条、以及 **server 实际加载的模型名**。
     主模型只读这份回执就够了，**不要**把全量 out.jsonl 读进上下文 —— 那等于把省下的
     token 又原样花回去，还比自己做更慢。
@@ -134,7 +135,7 @@ def _call(task: dict, index: int, opts) -> dict:
     # 直接产出一条带 error 的记录 —— 与「调用失败」走同一条通道，不打断整批。
     try:
         content = llama_media.build_content(prompt, task.get("image"), task.get("audio"))
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError, TypeError) as e:
         return {"index": index, "id": task.get("id", str(index)), "prompt": prompt,
                 "result": None, "completion_tokens": 0, "elapsed": None,
                 "error": f"媒体读取失败: {e}"}
