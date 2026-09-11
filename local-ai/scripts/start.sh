@@ -25,15 +25,24 @@ set -e -u
 LLAMA_DIR="C:/Users/caill/tools/llama-cpp/cuda-b10883"
 MODEL_MINICPM="D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf"
 MODEL_9B="D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf"
+MODEL_VL4="D:/models/gguf/qwen3-vl-4b/Qwen3VL-4B-Instruct-Q4_K_M.gguf"
+MMPROJ_VL4="D:/models/gguf/qwen3-vl-4b/mmproj-Qwen3VL-4B-Instruct-F16.gguf"
+MODEL_VL8="D:/models/gguf/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf"
+MMPROJ_VL8="D:/models/gguf/qwen3-vl-8b/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf"
+MODEL_ASR="D:/models/gguf/qwen3-asr-1.7b/Qwen3-ASR-1.7B-Q8_0.gguf"
+MMPROJ_ASR="D:/models/gguf/qwen3-asr-1.7b/mmproj-Qwen3-ASR-1.7b-BF16.gguf"
 
 MODEL_TYPE="${1:-minicpm}"
 PORT="${2:-8080}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 usage() {
-  echo "用法: $0 [minicpm|9b] [port]"
+  echo "用法: $0 [minicpm|9b|vl4|vl8|asr] [port]"
   echo "  minicpm - MiniCPM5-2B Q8 GPU 整卡, 128K ctx (默认；批量 / 长文本 / 并发)"
   echo "  9b      - Qwen3.8-9B-Distill GPU 整卡, 32K ctx (pi agent / 复杂任务 / 代码)"
+  echo "  vl4     - Qwen3-VL-4B Q4_K_M + mmproj F16, 16K ctx (视觉/图片理解，默认视觉模型)"
+  echo "  vl8     - Qwen3-VL-8B Q4_K_M + mmproj Q8_0, 8K ctx (视觉备用；显存余量仅 ~500MB)"
+  echo "  asr     - Qwen3-ASR-1.7B Q8_0 + mmproj BF16, 32K ctx (语音转写)"
   echo ""
   echo "Git Bash 别名：llama = 2B，llama9 = 9B"
   echo "幂等：已经在跑目标模型就不重启；跑着别的模型会先停掉再启。"
@@ -41,7 +50,7 @@ usage() {
 }
 
 case "$MODEL_TYPE" in
-  minicpm|9b) ;;
+  minicpm|9b|vl4|vl8|asr) ;;
   *) usage; exit 1 ;;
 esac
 
@@ -51,9 +60,12 @@ running_model() {
   body=$(curl -s -m 3 "http://127.0.0.1:${PORT}/v1/models" 2>/dev/null) || return 1
   [ -n "$body" ] || return 1
   case "$body" in
-    *MiniCPM*)    echo minicpm ;;
-    *9B-Q4_K_M*)  echo 9b ;;
-    *)            echo unknown ;;
+    *MiniCPM*)         echo minicpm ;;
+    *9B-Q4_K_M*)       echo 9b ;;
+    *Qwen3VL-4B*)      echo vl4 ;;
+    *Qwen3VL-8B*)      echo vl8 ;;
+    *Qwen3-ASR-1.7B*)  echo asr ;;
+    *)                 echo unknown ;;
   esac
 }
 
@@ -95,5 +107,49 @@ case "$MODEL_TYPE" in
       --temp 0.6 \
       --top-p 0.95 \
       --top-k 20
+    ;;
+  vl4)
+    echo "启动 Qwen3-VL-4B (GPU 整卡, 16K ctx, 视觉)"
+    exec "$LLAMA_DIR/llama-server.exe" \
+      -m "$MODEL_VL4" \
+      --mmproj "$MMPROJ_VL4" \
+      -ngl 99 \
+      --host 127.0.0.1 \
+      --port "$PORT" \
+      -c 16384 \
+      --jinja \
+      --cache-type-k q8_0 \
+      --cache-type-v q8_0 \
+      --temp 0.7 \
+      --top-p 0.8
+    ;;
+  vl8)
+    echo "启动 Qwen3-VL-8B (GPU 整卡, 8K ctx, 视觉备用)"
+    exec "$LLAMA_DIR/llama-server.exe" \
+      -m "$MODEL_VL8" \
+      --mmproj "$MMPROJ_VL8" \
+      -ngl 99 \
+      --host 127.0.0.1 \
+      --port "$PORT" \
+      -c 8192 \
+      --jinja \
+      --cache-type-k q8_0 \
+      --cache-type-v q8_0 \
+      --temp 0.7 \
+      --top-p 0.8
+    ;;
+  asr)
+    echo "启动 Qwen3-ASR-1.7B (GPU 整卡, 32K ctx, 语音转写)"
+    exec "$LLAMA_DIR/llama-server.exe" \
+      -m "$MODEL_ASR" \
+      --mmproj "$MMPROJ_ASR" \
+      -ngl 99 \
+      --host 127.0.0.1 \
+      --port "$PORT" \
+      -c 32768 \
+      --jinja \
+      --cache-type-k q8_0 \
+      --cache-type-v q8_0 \
+      --temp 0.0
     ;;
 esac
