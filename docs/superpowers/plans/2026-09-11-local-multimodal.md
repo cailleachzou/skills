@@ -505,7 +505,10 @@ Expected: 打印 `[复用] 8080 上已经在跑 vl4，不重启`
 
 ```bash
 nohup bash start.sh vl8 > /tmp/llama_vl8.log 2>&1 &   # 同样后台启动
-sleep 15; grep -i "failed to fit params" /tmp/llama_vl8.log || echo "vl8 OK"
+sleep 15; curl -s http://127.0.0.1:8080/health
+# ⚠️ 不要用 "failed to fit params" 判断是否溢出 —— 见下方说明
+grep -iE "offloaded [0-9]+/[0-9]+ layers|clip_ctx" /tmp/llama_vl8.log   # 应看到 37/37 与 CUDA0
+nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader  # 应见接近整卡
 bash stop.sh
 
 nohup bash start.sh asr > /tmp/llama_asr.log 2>&1 &
@@ -513,7 +516,24 @@ sleep 15; curl -s http://127.0.0.1:8080/health
 bash stop.sh
 ```
 
-Expected: 两个都能起来；vl8 若出现 `failed to fit params` 说明余量不足，把 `-c 8192` 降到 `-c 4096` 后重试。
+Expected: 两个都能起来，且都在 GPU 上。
+
+> ⚠️ **不要用 `failed to fit params` 当作「溢出到 CPU」的判据 —— 该前提是错的。**
+> 实测 + 上游 issue 确认（llama.cpp #19437 / #23858）：这条 `n_gpu_layers already set
+> by user to 99, abort` 是 auto-fit 例程的 **WARN**，表示它因用户显式钉了 `-ngl` 而
+> **放弃自动分配**，随后启动照常按用户的值进行。它**不表示层掉到了 CPU**。
+> 实测 vl8 打出该消息，但 `offloaded 37/37 layers`、`clip_ctx: CLIP using CUDA0`、
+> 60 tok/s、显存增量 ~5.49 GB —— 全部在 GPU 上。
+>
+> **正确的 GPU 判据**（与 SKILL.md「GPU 生效判定」一致）：
+> `--list-devices` 见到 `CUDA0`、日志里 `offloaded N/N layers` 是满的、nvidia-smi
+> 显示整卡被占。**别用速度或这条警告文本猜。**
+>
+> vl8 的 8K ctx 予以保留 —— 它是备用模型（spec §4.5：只有 4B 明显不足时才切），
+> 需要够用的上下文，且实测工作正常。**若将来真观察到溢出**（加载失败或速度骤降），
+> 按 spec §4.5 的既定退路把 `-c 8192` 降到 `-c 4096`。
+>
+> 另注：整卡余量确实紧（稳态约 570 MiB / 8150 MiB），所以跑 vl8 时别同时开占显存的程序。
 
 - [ ] **Step 10: 提交**
 
