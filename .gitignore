@@ -22,3 +22,8 @@ skills-lock.json
 # mimo-cli 运行时目录（插件依赖 + cron 锁文件，非本仓库内容）
 .mimocode/
 
+
+# Obsidian 临时 UI 状态（每次打开都变，只提交静态配置）
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
