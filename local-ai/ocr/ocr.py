@@ -312,6 +312,9 @@ def main() -> None:
         print(f"[完成] 回执 → {report}（成功 {len(ok)} 失败 {len(bad)}）", file=sys.stderr)
         if bad and not ok:
             print("[提示] 全部失败：产物为空，原因见回执「异常清单」", file=sys.stderr)
+            # 全部失败要交非零退出码 —— 别和「PDF 打不开」(:276)、「0 页」(:286)
+            # 分裂成两种语义。回执已在上方落盘，这里只是补退出码。
+            sys.exit(1)
         elif bad:
             print(f"[提示] {len(bad)} 页失败、{len(ok)} 页成功；"
                   f"原因见回执「异常清单」，修好后可只重跑这些页", file=sys.stderr)
