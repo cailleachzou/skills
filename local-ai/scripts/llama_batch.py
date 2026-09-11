@@ -21,8 +21,9 @@
 输入格式（-f auto 时自动探测：首行能解析成 JSON 对象 → jsonl，否则 text）:
     text  : 每行一条 prompt（空行跳过）
     jsonl : {"id": "任意标识", "prompt": "必填", "system": "可选", "max_tokens": 100,
-             "temperature": 0.3}
+             "temperature": 0.3, "image": "页面.png", "audio": "录音.wav"}
             只有 prompt 必填，其余字段按需覆盖全局默认值。
+            image 可写单个路径或路径数组（多图）；音频走 audio 字段。
 
 输出：JSONL，每条一行，**保持输入顺序**（并发完成顺序会乱，已重排）:
     {"index": 0, "id": "0", "prompt": "...", "result": "...",
@@ -56,6 +57,8 @@ import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+
+import llama_media
 
 SERVER_URL = os.environ.get("LLAMA_SERVER_URL",
                             "http://127.0.0.1:8080/v1/chat/completions")
@@ -126,11 +129,21 @@ def _load_done(path: str) -> dict:
 def _call(task: dict, index: int, opts) -> dict:
     """单条调用：超时/报错都记进 error 字段，不抛出去打断整批。"""
     prompt = task["prompt"]
+
+    # 媒体读取失败重试没有意义（文件不会自己出现），所以放在重试循环之外，
+    # 直接产出一条带 error 的记录 —— 与「调用失败」走同一条通道，不打断整批。
+    try:
+        content = llama_media.build_content(prompt, task.get("image"), task.get("audio"))
+    except (OSError, ValueError) as e:
+        return {"index": index, "id": task.get("id", str(index)), "prompt": prompt,
+                "result": None, "completion_tokens": 0, "elapsed": None,
+                "error": f"媒体读取失败: {e}"}
+
     payload = json.dumps({
         "model": "local",
         "messages": ([{"role": "system", "content": task.get("system") or opts.system}]
                      if (task.get("system") or opts.system) else []) +
-                    [{"role": "user", "content": prompt}],
+                    [{"role": "user", "content": content}],
         "max_tokens": task.get("max_tokens", opts.max_tokens),
         "temperature": task.get("temperature", opts.temperature),
         "chat_template_kwargs": {"enable_thinking": bool(opts.think)},
@@ -201,6 +214,9 @@ def _unfence(text: str) -> str:
 def _anomalies(rec: dict, global_system: str) -> list:
     """给单条结果打异常标签；返回空列表 = 看着正常。"""
     if rec.get("error"):
+        # 媒体读取失败和「模型答得不好」是两回事：前者改文件路径即可，后者要改 prompt
+        if str(rec["error"]).startswith("媒体读取失败"):
+            return ["媒体读取失败"]
         return ["失败"]
 
     text = (rec.get("result") or "").strip()
@@ -241,7 +257,7 @@ def _write_report(out_path: str, ordered: list, args, elapsed: float) -> str:
     tagged = [(r["index"], _anomalies(r, args.system)) for r in ordered]
     tagmap = dict(tagged)
     bad = [(i, tags) for i, tags in tagged if tags]
-    failed = [i for i, tags in tagged if "失败" in tags]
+    failed = [r["index"] for r in ordered if r.get("error")]
     total_tok = sum(r.get("completion_tokens") or 0 for r in ordered)
 
     # 抽样：首 / 中 / 尾，外加第一条异常 —— 覆盖面够，又不至于让主模型读全量
@@ -306,6 +322,9 @@ def _write_report(out_path: str, ordered: list, args, elapsed: float) -> str:
         advice.append(f"失败 {len(failed)} 条：修好后加 `--resume` 只补这些，不用整批重跑。")
     if {t for _, tags in bad for t in tags} & {"原样回显", "JSON 解析失败", "带代码块围栏"}:
         advice.append("格式类异常多半是 prompt 没给 one-shot 示例 —— 见 SKILL.md「写 prompt 的实测经验」。")
+    if {t for _, tags in bad for t in tags} & {"媒体读取失败"}:
+        advice.append("媒体读取失败：检查 JSONL 里 image/audio 的路径是否正确、"
+                      "图片格式是否受支持（见 llama_media.IMAGE_MIME）。")
     if len(bad) > len(ordered) * 0.3 and not all_conn:
         advice.append("异常率超过三成，先改 prompt 小批量试跑，别急着全量重来。")
     if not advice:
