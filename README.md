@@ -14,7 +14,7 @@
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
 | **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
-| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo |
+| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo；**mimo 兜底路径的完整调用参考**（凭据 / 端点 / curl 模式 / 模型表 / TTS 音色）见 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md) |
 | **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 
 ## 已安装插件（Plugins）
@@ -105,6 +105,7 @@ git clone https://github.com/cailleachzou/skills.git
 ## 更新日志
 
 ### 2026-09-11
+- **CLAUDE.md 瘦身**（用户级 `~/.claude/CLAUDE.md`，8650 B → 4132 B，省 52%）：该文件**每次会话全文进上下文**，5 段低频内容合计占 56%，本次全部移出，**CLAUDE.md 内不留指针**。① 「插件坏了怎么自查」runbook **整段删除**（不建技能、不留指针）；② 「多模态任务处理（mimo API）」的 curl 调用参考 → 新建 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md)（「什么时候该回退」仍留在 `local-ai/SKILL.md`，不重复）；③ 删除「PDF 工具链」「密钥环境（2026-09）」「常用命令」三段。**注意**：`CLAUDE.md` 里的 `@import` 是启动时一并载入，省不了 token——真正省钱的出路只有「删掉」或「搬进按需加载的技能/reference」。改动前已备份至 `~/.claude/backups/CLAUDE.md.bak-20260911`
 - **local-ai 新增多模态三路径**：Qwen3-VL-4B/8B（视觉，`vl4`/`vl8`）、
   Qwen3-ASR-1.7B（语音，`asr`）走 llama.cpp 主干；baidu/Unlimited-OCR（文档解析）
   走独立 venv（`D:/models/venvs/unlimited-ocr`）
