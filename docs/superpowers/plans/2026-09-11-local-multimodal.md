@@ -900,10 +900,14 @@ Expected: `D:/models/venvs/unlimited-ocr/Scripts/python.exe` 存在，**且**
 创建 `C:\Users\caill\.claude\skills\local-ai\ocr\requirements.txt`：
 
 ```
-# Unlimited-OCR 官方测试过的组合（Python 3.12.3 + CUDA 12.9）
-# 本机驱动是 CUDA 13（592.01），向下兼容 CUDA 12.9 运行时
-torch==2.10.0
-torchvision==0.25.0
+# ⚠️ 不能照抄官方 README 的「Python 3.12.3 + CUDA 12.9」组合：
+#    cu129 索引的 torch 最高只到 2.9.0，而本文件要求 2.10.0 —— 于是 pip
+#    **静默回落到 PyPI** 拿到 `2.10.0+cpu` 构建。不报错，只是 CUDA 不可用、
+#    慢十倍。实测踩到过（见 ledger Ruling 9）。
+#    本机是 CUDA 13（驱动 592.01，llama.cpp 侧亦为 CUDA 13.3），故走 cu130。
+# 本地版本号（+cu130）显式钉死：索引里没有就直接报错，不给静默回落留机会。
+torch==2.10.0+cu130
+torchvision==0.25.0+cu130
 transformers==4.57.1
 Pillow==12.1.1
 matplotlib==3.10.8
@@ -920,13 +924,18 @@ psutil==7.2.2
 D:/models/venvs/unlimited-ocr/Scripts/python.exe -m pip install --upgrade pip
 D:/models/venvs/unlimited-ocr/Scripts/python.exe -m pip install \
   -r "C:/Users/caill/.claude/skills/local-ai/ocr/requirements.txt" \
-  --index-url https://download.pytorch.org/whl/cu129 \
+  --index-url https://download.pytorch.org/whl/cu130 \
   --extra-index-url https://pypi.org/simple
 ```
 
-> 若报「找不到 torch==2.10.0」 —— 说明 cu129 索引里没有这个版本号。先查可用版本：
-> `D:/models/venvs/unlimited-ocr/Scripts/python.exe -m pip index versions torch --index-url https://download.pytorch.org/whl/cu129`
-> 再改用该索引里最接近 2.10.0 的 CUDA 版（**不要退回默认索引，那会装成 CPU 版**）。
+> ⚠️ **索引必须是 cu130，不是 cu129。** cu129 的 torch 最高只到 2.9.0；
+> 写 `--index-url .../cu129` 加 `torch==2.10.0` 不会报「找不到」——pip 会**静默**
+> 去 `--extra-index-url` 拿 PyPI 的 `+cpu` 构建，装完看着成功，直到 Step 4 才发现
+> CUDA 不可用。requirements.txt 里已把版本钉成 `+cu130`，索引缺失时会**直接报错**。
+>
+> 若真的报错，先查该索引有什么：
+> `D:/models/venvs/unlimited-ocr/Scripts/python.exe -m pip index versions torch --index-url https://download.pytorch.org/whl/cu130`
+> **不要退回默认索引** —— 那必然装成 CPU 版。
 
 - [ ] **Step 4: 验证 torch 拿到的是 CUDA 版（关键）**
 
