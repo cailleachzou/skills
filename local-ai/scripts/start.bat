@@ -52,7 +52,7 @@ echo Usage: start.bat [minicpm^|9b^|vl4^|vl8^|asr] [port]
 echo   minicpm - MiniCPM5-2B Q8 GPU full offload, 128K ctx [default; batch / long text / concurrency]
 echo   9b      - Qwen3.8-9B-Distill GPU full offload, 32K ctx [pi agent / hard tasks / code]
 echo   vl4     - Qwen3-VL-4B Q4_K_M + mmproj F16, 16K ctx [vision, default vision model]
-echo   vl8     - Qwen3-VL-8B Q4_K_M + mmproj Q8_0, 8K ctx [vision fallback; only ~500MB VRAM left]
+echo   vl8     - Qwen3-VL-8B Q4_K_M + mmproj Q8_0, 8K ctx [vision fallback; only ~440 MiB VRAM left]
 echo   asr     - Qwen3-ASR-1.7B Q8_0 + mmproj BF16, 32K ctx [speech transcription]
 echo.
 echo Git Bash aliases:  llama = 2B,  llama9 = 9B

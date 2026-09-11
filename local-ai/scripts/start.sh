@@ -26,6 +26,8 @@ set -e -u
 LLAMA_DIR="C:/Users/caill/tools/llama-cpp/cuda-b10883"
 MODEL_MINICPM="D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf"
 MODEL_9B="D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf"
+# ⚠️ 改这个文件名前先看 evals/evals.json 的 id 3 —— 那里的断言写死了这个 basename
+#    （回执里的 server 模型名取自 GGUF basename，是 4B/8B 唯一的机械判别器）。
 MODEL_VL4="D:/models/gguf/qwen3-vl-4b/Qwen3VL-4B-Instruct-Q4_K_M.gguf"
 MMPROJ_VL4="D:/models/gguf/qwen3-vl-4b/mmproj-Qwen3VL-4B-Instruct-F16.gguf"
 MODEL_VL8="D:/models/gguf/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf"
@@ -42,7 +44,7 @@ usage() {
   echo "  minicpm - MiniCPM5-2B Q8 GPU 整卡, 128K ctx (默认；批量 / 长文本 / 并发)"
   echo "  9b      - Qwen3.8-9B-Distill GPU 整卡, 32K ctx (pi agent / 复杂任务 / 代码)"
   echo "  vl4     - Qwen3-VL-4B Q4_K_M + mmproj F16, 16K ctx (视觉/图片理解，默认视觉模型)"
-  echo "  vl8     - Qwen3-VL-8B Q4_K_M + mmproj Q8_0, 8K ctx (视觉备用；显存余量仅 ~500MB)"
+  echo "  vl8     - Qwen3-VL-8B Q4_K_M + mmproj Q8_0, 8K ctx (视觉备用；显存余量仅 ~440 MiB)"
   echo "  asr     - Qwen3-ASR-1.7B Q8_0 + mmproj BF16, 32K ctx (语音转写)"
   echo ""
   echo "Git Bash 别名：llama = 2B，llama9 = 9B"
