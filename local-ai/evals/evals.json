@@ -42,6 +42,46 @@
         "对缺失字段未编造内容（不出现凭空生成的公司名或金额）",
         "给出了问题条目的汇总说明"
       ]
+    },
+    {
+      "id": 3,
+      "name": "vision-batch-ocr",
+      "prompt": "用 local-ai 技能识别这批扫描页的文字。输入目录：inputs/scans/（3 张 PNG，每张一行印刷体文字）。把每页的文字转出来，结果存成 JSONL，每条一行，包含 index 与识别出的文字。",
+      "expected_output": "一个 JSONL 文件，3 条记录，每条的识别文字与图片内容一致",
+      "files": ["iteration-1/inputs/scans/"],
+      "assertions": [
+        "输出文件存在且是合法 JSONL",
+        "恰好包含 3 条记录",
+        "每条记录含 index 与文字两个字段",
+        "识别出的文字与图片内容一致（字母与数字正确）",
+        "回执文件 <out>.report.md 存在，且 server 实际模型为 Qwen3-VL"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "audio-transcribe",
+      "prompt": "用 local-ai 技能转写这段会议录音。输入文件：inputs/meeting.wav。把内容转写成文字，保留分段。",
+      "expected_output": "转写文本，内容与录音一致，且有合理分段",
+      "files": ["iteration-1/inputs/meeting.wav"],
+      "assertions": [
+        "输出非空",
+        "转写内容与录音音频一致（关键词语句正确）",
+        "不是原样回显 prompt 或空结果",
+        "输出为可读的中文文本"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "doc-ocr",
+      "prompt": "用 local-ai 技能解析这份扫描版文档。输入文件：inputs/scan_doc.png。把文档内容转成 markdown。",
+      "expected_output": "markdown 文件，内容与扫描件一致，版面结构（标题/段落/表格）得到保留",
+      "files": ["iteration-1/inputs/scan_doc.png"],
+      "assertions": [
+        "输出 markdown 文件存在",
+        "内容与扫描件文字一致",
+        "保留了基本的版面结构（标题或列表或表格）",
+        "回执文件 ocr.report.md 存在且计数正确"
+      ]
     }
   ]
 }
