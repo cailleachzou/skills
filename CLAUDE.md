@@ -42,10 +42,10 @@ head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
 
 CLI 工具技能（文档解析 / CAD / FFmpeg / PDF 翻译）已提升为**顶层独立技能**，各自被 Claude 自动发现：
 
-- **docling** — 文档解析与转换（PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含 OCR）；⚠️ 本机未安装（无 venv）
+- **docling** — 文档解析与转换（PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含 OCR）；✅ 已装 **2.126.0**，独立 venv `C:\Users\caill\.venv-docling`（Python 3.12，勿用系统 Python）
 - **dwg** — DWG 图纸操作：ODA File Converter 转换（DWG↔DXF）+ ezdxf 提取/回填 + 对话翻译 → `*_ZH.dwg`（已弃用 AutoCAD COM 与 MIMO 依赖）
 - **ffmpeg** — 音视频转码、批量处理、预设管理
-- **pdf2zh** — PDF 翻译（保留 layout）；⚠️ 本机未安装
+- **pdf2zh** — PDF 翻译（保留 layout）；✅ 已装 **1.9.11**（uv tool 隔离环境）；⚠️ 须把 `tencentcloud-sdk-python-tmt` 钉在 3.1.70，否则启动即 ImportError
 
 每个技能目录结构：`SKILL.md` + 可选 `scripts/`。技能名与目录名一致。
 
@@ -59,11 +59,11 @@ CLI 工具技能（文档解析 / CAD / FFmpeg / PDF 翻译）已提升为**顶�
 git commit -m "$(cat <<'EOF'
 简短描述
 
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+Co-Authored-By: Claude Code <noreply@anthropic.com>
 EOF
 )"
 ```
 
 ---
 
-*最后更新：2026-08-06*
+*最后更新：2026-09-11*

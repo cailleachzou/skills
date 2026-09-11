@@ -458,6 +458,9 @@ bash .../ocr/run.sh --image scan.png --out ./out/
   同样优先；**即便它本来符合回退条件**（比如机密合同要做的复杂图表分析），也不送 mimo ——
   宁可换 `vl8` / `ocr` 慢一点，也不出本机。
 
+**调用格式**（凭据、端点、curl 模式、任务→model 表、TTS 音色）见
+[`references/mimo-api.md`](references/mimo-api.md)。
+
 ### docling 还是 Unlimited-OCR
 
 两者都做文档解析，分工按「文档里有没有可选的文字」：
