@@ -884,10 +884,16 @@ EOF
 - [ ] **Step 1: 建 venv**
 
 ```bash
-uv venv --python 3.12 D:/models/venvs/unlimited-ocr
+uv venv --python 3.12 --seed D:/models/venvs/unlimited-ocr
 ```
 
-Expected: `D:/models/venvs/unlimited-ocr/Scripts/python.exe` 存在
+⚠️ **`--seed` 不能省。** `uv venv` 默认**不安装 pip**，而下面 Step 3 用的是
+`<venv>/Scripts/python.exe -m pip install` —— 没有 pip 就会以
+`No module named pip` 失败。实测踩到过（见 ledger Ruling 8）。
+
+Expected: `D:/models/venvs/unlimited-ocr/Scripts/python.exe` 存在，**且**
+`<venv>/Scripts/python.exe -m pip --version` 能打印出版本号。
+第二步是真正的门槛 —— 只检查 python.exe 存在会放过这个坑。
 
 - [ ] **Step 2: 写 requirements.txt**
 
