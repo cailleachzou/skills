@@ -39,6 +39,10 @@
     主模型只读这份回执就够了，**不要**把全量 out.jsonl 读进上下文 —— 那等于把省下的
     token 又原样花回去，还比自己做更慢。
 
+    ⚠️ 回执默认会回显「抽样」里的模型正文与异常摘要。**敏感材料**（合同 / 证件 /
+    会议转写正文）必须加 --redact —— 主对话是外发的（走 ANTHROPIC_BASE_URL），
+    正文被读进对话就等于出本机。见 SKILL.md「出口把关」。
+
 思考控制（重要，同 llama_chat.py）:
     两个模型都是 thinking 模型，**默认开思考**。批量任务多是改写/分类/抽取这类
     不需要推理的活，加 --no-think 能省 90% token（实测同一改写请求：关思考 8 tokens
@@ -252,8 +256,12 @@ def _write_report(out_path: str, ordered: list, args, elapsed: float) -> str:
     """把回执写到输出文件旁边，返回路径。
 
     这是「主模型整体看一下」的全部输入 —— 故意压到几十行，好让它不必碰全量结果。
+
+    --redact（敏感批量）时**不回显任何模型正文与路径**：去掉「抽样」段、异常清单只留
+    标签、输入/输出路径隐去。挡的是「正文经回执进主对话 → 出本机」这条通道。
     """
     path = _report_path(out_path)
+    redact = bool(getattr(args, "redact", False))
     by_index = {r["index"]: r for r in ordered}
     tagged = [(r["index"], _anomalies(r, args.system)) for r in ordered]
     tagmap = dict(tagged)
@@ -272,11 +280,14 @@ def _write_report(out_path: str, ordered: list, args, elapsed: float) -> str:
         picks.append(bad[0][0])
 
     out = [
-        f"# 批量回执 — {os.path.basename(out_path)}",
+        "# 批量回执 — " + ("（--redact：正文与路径均不回显）" if redact
+                            else os.path.basename(out_path)),
         "",
         f"- 生成：{datetime.now():%Y-%m-%d %H:%M}",
-        f"- 输入：{args.input}（{len(ordered)} 条）",
-        f"- 输出：{out_path}　← 全量结果在这里，按需再读，别整个读进来",
+        ("- 输入：（路径已隐去，--redact）（" + str(len(ordered)) + " 条）" if redact
+         else f"- 输入：{args.input}（{len(ordered)} 条）"),
+        ("- 输出：（路径已隐去，--redact）　← 全量结果在本地输出文件里，**别读进来**" if redact
+         else f"- 输出：{out_path}　← 全量结果在这里，按需再读，别整个读进来"),
         f"- **server 实际模型**：{_probe_model()}",
         f"- 并发 {args.jobs} ｜ thinking {'on' if args.think else 'off'} ｜ "
         f"{elapsed:.1f}s ｜ {total_tok} tok ｜ {total_tok / elapsed if elapsed else 0:.1f} tok/s",
@@ -292,6 +303,13 @@ def _write_report(out_path: str, ordered: list, args, elapsed: float) -> str:
 
     if not bad:
         out.append("无。")
+    elif redact:
+        # 只留标签：摘要列会回显模型正文（result）或异常原文（error）
+        out += ["| index | 标签 |", "| --- | --- |"]
+        for i, tags in bad[:20]:
+            out.append(f"| {i} | {'/'.join(tags)} |")
+        if len(bad) > 20:
+            out.append(f"| … | 其余 {len(bad) - 20} 条见本地输出文件 |")
     else:
         out += ["| index | 标签 | 摘要 |", "| --- | --- | --- |"]
         for i, tags in bad[:20]:
@@ -302,12 +320,16 @@ def _write_report(out_path: str, ordered: list, args, elapsed: float) -> str:
     out.append("")
 
     out += ["## 抽样", ""]
-    for i in picks:
-        rec = by_index[i]
-        tags = tagmap.get(i) or []
-        label = "异常: " + "/".join(tags) if tags else "正常"
-        out.append(f"- **#{i}**（{label}）{_clip(rec.get('result') or rec.get('error'))}")
-    out.append("")
+    if redact:
+        out += ["（--redact：本段已省略 —— 抽样会带出模型正文，"
+                "正文只落在本地输出文件里，`--redact` 去掉后可本地查看）", ""]
+    else:
+        for i in picks:
+            rec = by_index[i]
+            tags = tagmap.get(i) or []
+            label = "异常: " + "/".join(tags) if tags else "正常"
+            out.append(f"- **#{i}**（{label}）{_clip(rec.get('result') or rec.get('error'))}")
+        out.append("")
 
     # 连接类失败和「模型答得不好」是两回事，别给出误导性的建议
     conn_marks = ("URLError", "Timeout", "timeout", "ConnectionReset", "RemoteDisconnected")
@@ -363,6 +385,9 @@ def main() -> None:
     p.add_argument("--retries", type=int, default=1, help="单条失败重试次数（默认 1）")
     p.add_argument("--resume", action="store_true",
                    help="跳过输出文件中已成功的行，只补没跑完的")
+    p.add_argument("--redact", action="store_true",
+                   help="敏感批量：回执**不回显模型正文与路径**（去掉「抽样」段、异常清单只留"
+                        "标签、输入/输出路径隐去）—— 防正文经主对话外发")
     args = p.parse_args()
 
     args.think = not args.no_think
@@ -388,8 +413,11 @@ def main() -> None:
         print("[警告] server 上跑的是 9B —— 9B 不能并发（KV 是 4 slot 共享的一个 32K 池子）。"
               "改用 -j 1，或先切到 2B（start.sh）再批量跑", file=sys.stderr)
 
+    # --redact 时连 stderr 的路径也不回显 —— 它同样会进对话（Bash 工具的输出就是上下文）
+    shown_out = "（路径已隐去，--redact）" if args.redact else out_path
+
     print(f"[开始] {len(todo)} 条任务，并发 {args.jobs}，thinking="
-          f"{'on' if args.think else 'off'} → {out_path}", file=sys.stderr)
+          f"{'on' if args.think else 'off'} → {shown_out}", file=sys.stderr)
 
     results = dict(done)
     t0 = time.time()
@@ -420,7 +448,7 @@ def main() -> None:
     total_tok = sum(r.get("completion_tokens") or 0 for r in ordered)
     el = time.time() - t0
     print(f"[完成] {len(ordered)} 条（失败 {failed}）｜{total_tok} tok ｜"
-          f"{el:.1f}s ｜{total_tok/el if el else 0:.1f} tok/s → {out_path}",
+          f"{el:.1f}s ｜{total_tok/el if el else 0:.1f} tok/s → {shown_out}",
           file=sys.stderr)
     if failed:
         print(f"[提示] {failed} 条失败，结果里 error 字段有原因；"
@@ -429,7 +457,8 @@ def main() -> None:
     if out_path != "-":
         try:
             report = _write_report(out_path, ordered, args, el)
-            print(f"[回执] {report}（主模型读这份就够，别读全量 JSONL）", file=sys.stderr)
+            print(f"[回执] {'（路径已隐去，--redact）' if args.redact else report}"
+                  f"（主模型读这份就够，别读全量 JSONL）", file=sys.stderr)
         except Exception as e:
             print(f"[警告] 回执生成失败：{type(e).__name__}: {e}", file=sys.stderr)
 
