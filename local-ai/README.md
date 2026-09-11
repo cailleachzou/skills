@@ -25,10 +25,14 @@
 | **9B Q4_K_M，32K ctx** | **~6900 MiB** | ~1250 MiB | pi agent / 复杂任务 |
 | 9B Q4_K_M，256K ctx | 7561 MiB | ~590 MiB ⚠️ | **近满，速度掉 35%** |
 
-> **256K 那次是反面教材**：KV cache 几乎占满显存，启动日志会报
-> `failed to fit params ... n_gpu_layers already set to 99` —— 部分层被挤到 **CPU**。
-> 不报错，只是 decode 从 55 tok/s 掉到 37 tok/s。
+> **256K 那次是反面教材**：KV cache 几乎占满显存（7561 / 8151 MiB，余量 ~590 MiB），
+> decode 从 55 tok/s 掉到 37 tok/s —— **不报错，只是慢**。
 > **8GB 卡上不要贪上下文**，默认值（2B → 128K / 9B → 32K）已经是按显存算过的。
+>
+> ⚠️ **别把 `failed to fit params ... n_gpu_layers already set to 99` 当成「掉 CPU」。**
+> 它是 auto-fit 例程的 **WARN** —— 因为用户显式钉了 `-ngl`（本机脚本一律 `-ngl 99`），
+> 它放弃自动分配、按用户值继续。实测 vl8 出现这条时照样 `offloaded 37/37 layers`。
+> 正确判据是 **`offloaded N/N layers`** 与 **`--list-devices` 的 `CUDA0:`**。
 
 **多模态四个模型（2026-09-11 实测整卡占用）**：
 
@@ -272,7 +276,7 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh
 | 症状 | 原因 | 怎么查 / 怎么修 |
 | --- | --- | --- |
 | **速度慢 10 倍，但不报错** | 静默退回纯 CPU（CUDA 版本不匹配 / 未释放的显存挤掉层 / `-ngl` 没生效） | `llama-server.exe --list-devices` 必须看到 `CUDA0:`。<br>**别靠速度猜**，也别在刚强杀过 server 后立即测 |
-| **显存爆 / 部分层掉 CPU** | 上下文开太大（如 9B @ 256K）或并发超过 KV 池 | 日志搜 `failed to fit params`；按 §1.1 的表回退 `-c` |
+| **显存爆 / 部分层掉 CPU** | 上下文开太大（如 9B @ 256K）或并发超过 KV 池 | 看启动日志的 **`offloaded N/N layers`**（前后不等就是有层留在 CPU）；按 §1.1 的表回退 `-c`。⚠️ **不要用 `failed to fit params` 判断** —— 那只是「因 `-ngl` 被显式钉住而放弃自动分配」的告警，本机脚本一律 `-ngl 99`，它次次会误导 |
 | **启动后加载失败 / 不认架构** | llama.cpp 版本太旧（9B 是 `qwen35` 架构，需 `b10883`+） | 换构建；**换 build 前先复测思考开关**（见 §6） |
 
 **其他常见误判：**

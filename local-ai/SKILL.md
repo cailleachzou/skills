@@ -376,8 +376,12 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh            # 收工�
 | **32768（默认）** | **~55 tok/s** | ~172 tok/s | 整卡约 6.9 GB（含桌面） |
 | 262144（256K 上限） | ~37 tok/s | — | 7561 MiB / 8151（近满） |
 
-> 256K 比 32K 慢约 35%（55 → 37）：KV cache 几乎占满显存，日志会报
-> `failed to fit params ... n_gpu_layers already set to 99`，部分层被挤到 CPU。
+> 256K 比 32K 慢约 35%（55 → 37）：KV cache 几乎占满显存（7561 / 8151 MiB，余量仅 ~590 MiB）。
+>
+> ⚠️ **别拿 `failed to fit params ... n_gpu_layers already set to 99` 当「掉 CPU」的证据。**
+> 它是 auto-fit 例程的 **WARN** —— 因为用户显式钉了 `-ngl`，它放弃自动分配、按用户值继续。
+> 实测 vl8 出现这条时照样 `offloaded 37/37 layers`、`clip_ctx: CLIP using CUDA0`。
+> 判据是 **`offloaded N/N layers`** 与 **`--list-devices` 的 `CUDA0:`**，不是这行告警。
 >
 > ⚠️ **decode 随当前上下文长度衰减**：上下文到 ~15K 时实测约 **43 tok/s**（pi agent 真实负载）。
 > 上表是短上下文（几百 tokens）的数字。
