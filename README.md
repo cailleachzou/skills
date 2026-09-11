@@ -10,7 +10,7 @@
 | **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON（含 OCR） |
 | **dwg**               | DWG、DXF、CAD、图纸、翻译、转换、提取文字、_ZH | DWG 图纸操作 — ODA File Converter 转换（DWG↔DXF）+ ezdxf 提取/回填 + 对话翻译 → 输出 *_ZH.dwg |
 | **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
-| **pdf2zh**            | PDF 翻译、pdf2zh       | PDF 翻译（保留 layout，23+ 引擎）— v1.9.11（uv tool 隔离安装）；⚠️ 需把 `tencentcloud-sdk-python-tmt` 钉在 3.1.70，否则启动即 ImportError |
+| **pdf2zh**            | PDF 翻译、pdf2zh       | **默认走本地 2B**（MiniCPM5-2B + llama-server，0 token、不出本机）—— `-s openailiked:<模型>`；云端服务为质量兜底（1.9.11 实测 22 引擎）。v1.9.11（uv tool 隔离安装）；⚠️ 需把 `tencentcloud-sdk-python-tmt` 钉在 3.1.70，否则启动即 ImportError。Zotero 插件见技能内 `references/zotero-plugin.md` |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
 | **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
@@ -69,7 +69,7 @@ git clone https://github.com/cailleachzou/skills.git
 | **docling**     | 独立 venv（见下）  | ✅ 已装 **2.126.0**（torch 2.14.0），venv 在 `C:\Users\caill\.venv-docling`（Python 3.12）|
 | **dwg** | `ezdxf` | ODA File Converter（`C:\Program Files\ODA\ODAFileConverter 27.1.0\`）；系统 Python `py -3`（ezdxf 1.4.4，无独立 venv、无 AutoCAD、无 MIMO） |
 | **ffmpeg**     | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
-| **pdf2zh**     | 无（uv tool 自带）  | ✅ 已装 **1.9.11**（uv tool 隔离环境）；版面走 onnxruntime，**不依赖 torch** |
+| **pdf2zh**     | 无（uv tool 自带）  | ✅ 已装 **1.9.11**（uv tool 隔离环境）；版面走 onnxruntime，**不依赖 torch**；翻译引擎默认走本地 2B（`-s openailiked` + llama-server），云端为兜底 |
 | **local-ai**   | 无（脚本只用标准库） | 文本/多模态 GGUF 见下；文档 OCR 另用独立 venv（见下） |
 
 > **docling 用独立 venv**（勿用系统 Python）—— ✅ 已装于 `C:\Users\caill\.venv-docling`（Python 3.12.14；docling 2.126.0 + torch 2.14.0）
@@ -105,6 +105,7 @@ git clone https://github.com/cailleachzou/skills.git
 ## 更新日志
 
 ### 2026-09-11
+- **pdf2zh 技能重构**：① 默认路径改为**本地 2B 直连** —— `openailiked` + llama-server（`local-ai` 技能）接 MiniCPM5-2B，0 token、不出本机，含「BASE_URL 必须带 `/v1`」「服务名后的模型名只是标签（llama-server 忽略请求里的 model 字段）」「缓存键不含 `base_url`，换端点会命中旧译文」「pdf2zh 硬编码 `temperature: 0` 与 MiniCPM 推荐值 1.0 冲突」四条实操坑；② **服务表由 1.7.9 时代的 6 个订正为 1.9.11 源码实测的 22 个**，并指出上游 main 文档里的 `302ai`/`minimax` 在 1.9.11 中不存在；③ **订正上游事实**：`Byaidu/PDFMathTranslate` 已改名 `PDFMathTranslate/PDFMathTranslate`（旧路径 301，未归档仍在维护），2.0 主线迁至 `PDFMathTranslate-next`（`pdf2zh-next` 2.9.0，无 `-s`、改 `config.toml` + `PDF2ZH_` 前缀、Bing/Google 已 deprecated），本机仍只装老版 1.9.11；④ **新增 `references/zotero-plugin.md`**（Zotero 插件 `guaguastandup/zotero-pdf2zh`，本机未装 Zotero，通篇标注上游口径未实测）；⑤ **删除 `agent_translator_patch.py`（393 行）与 `test_agent_translator.py`（122 行）** —— 为 1.7.9 写、本机从未打上、未复验，其目标已由本地 2B 直连覆盖，且上游两版均无插件机制。**实测**（15 页 arXiv 双栏论文走本地 2B）：公式符号逐页保留零缺失、13 页约 5 分钟、`-t 4` 只吃满 2 槽；**`--ignore-cache` 实测无效**（复跑产出未翻译原文），强制重译须删 `%TEMP%\cache\`。设计见 `docs/superpowers/specs/2026-09-11-pdf2zh-skill-overhaul-design.md`，实测台账见 `docs/superpowers/plans/2026-09-11-pdf2zh-verification.md`
 - **CLAUDE.md 瘦身**（用户级 `~/.claude/CLAUDE.md`，8650 B → 4132 B，省 52%）：该文件**每次会话全文进上下文**，5 段低频内容合计占 56%，本次全部移出，**CLAUDE.md 内不留指针**。① 「插件坏了怎么自查」runbook **整段删除**（不建技能、不留指针）；② 「多模态任务处理（mimo API）」的 curl 调用参考 → 新建 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md)（「什么时候该回退」仍留在 `local-ai/SKILL.md`，不重复）；③ 删除「PDF 工具链」「密钥环境（2026-09）」「常用命令」三段。**注意**：`CLAUDE.md` 里的 `@import` 是启动时一并载入，省不了 token——真正省钱的出路只有「删掉」或「搬进按需加载的技能/reference」。改动前已备份至 `~/.claude/backups/CLAUDE.md.bak-20260911`
 - **local-ai 新增多模态三路径**：Qwen3-VL-4B/8B（视觉，`vl4`/`vl8`）、
   Qwen3-ASR-1.7B（语音，`asr`）走 llama.cpp 主干；baidu/Unlimited-OCR（文档解析）
