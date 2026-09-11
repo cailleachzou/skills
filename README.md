@@ -14,7 +14,7 @@
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
 | **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
-| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR 走 mimo/docling |
+| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo |
 | **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 
 ## 已安装插件（Plugins）
@@ -94,6 +94,14 @@ git clone https://github.com/cailleachzou/skills.git
 ---
 
 ## 更新日志
+
+### 2026-09-11
+- **local-ai 新增多模态三路径**：Qwen3-VL-4B/8B（视觉，`vl4`/`vl8`）、
+  Qwen3-ASR-1.7B（语音，`asr`）走 llama.cpp 主干；baidu/Unlimited-OCR（文档解析）
+  走独立 venv（`D:/models/venvs/unlimited-ocr`）
+- 显存账本：vl4 ~4.5GB / asr ~4.6GB / vl8 ~6.4GB（贴边，备用）/ ocr ~6.9GB（贴边）
+- 边界改写：图像/音频/文档**默认走本地**（隐私、0 token），视频与高难度视觉推理回退 mimo
+- docling 与 Unlimited-OCR 的分工：有字可选 → docling；扫描图 → Unlimited-OCR
 
 - **2026/09/10** **local-ai 新增 [`README.md`](local-ai/README.md)** —— 技能本身有 `SKILL.md` 讲「怎么派活」，缺的是一份**面向 8GB 笔记本显卡的安装与选型说明**，本次补齐。主要内容：① **把 8GB 显存作为一切决策的起点**，给出实测显存账本（2B@128K → 整卡 6514 MiB；9B@32K → ~6900；9B@256K → 7561/8151 **近满且慢 35%**，因 KV 溢出挤层到 CPU）；② **依赖清单分三档** —— 必须装（NVIDIA 驱动 592.01、llama.cpp `b10883` CUDA 13.3 预编译包、两个 GGUF、Python 3.14.7、curl、nvidia-smi）、可选（Git Bash 别名、pi CLI 0.85.1）、**刻意不装**（ollama 已卸载、PyTorch/transformers、mmproj）；③ 强调 **Python 侧零第三方依赖**（两个脚本只用标准库，无需 venv/pip）；④ **Blackwell 硬门槛**：`sm_120` 需 CUDA 12.8+，混入 CUDA 12 版构建会**静默退回纯 CPU**（慢 10 倍不报错），且必须 `b10883`+ 才能加载 9B 的 `qwen35`/Gated DeltaNet 架构；⑤ 解释**量化与上下文为何这么定**（2B 装得下就用 Q8_0、9B 卡在 Q4_K_M、KV 一律 `q8_0`），并给出 8GB 可行区间 **7B–9B @ Q4_K_M 是上限**；⑥ 从零复现步骤、脚本内三处硬编码路径（`LLAMA_DIR`/`MODEL_MINICPM`/`MODEL_9B`）的替换说明；⑦ 笔记本特有的散热/功耗/续航注意事项与收工 `stop.sh`；⑧ 8GB 上高频三坑排查表（静默退 CPU、显存爆挤层、架构不认）+ `--model` 只是标签的误判澄清
 - **2026/09/10** **补齐缺失依赖**（全部隔离安装，不污染系统 Python）——① **docling** 2.126.0 → `C:\Users\caill\.venv-docling`（Python 3.12.14，torch 2.14.0）；② **graphify** 经 `uv tool install graphifyy` 装成 **0.9.57**；③ **pdf2zh** 经 `uv tool install` 装成 **1.9.11**；④ **pycryptodome** 3.23.0 补入系统 Python（ncm-dump 依赖）。**排障记录**：`pdf2zh 1.9.11` 装好后**启动即崩** —— `ImportError: cannot import name 'TextTranslateRequest' from 'tencentcloud.tmt.v20180321.models'`。根因是**上游依赖漂移**：该 SDK 新版移除了 `TextTranslateRequest`，而 pdf2zh 在模块**顶层**硬导入它，与是否使用腾讯翻译无关，因而连 `--help` 都跑不起来。修法：把 `tencentcloud-sdk-python-tmt` 钉到 **3.1.70**（该类尚存的版本），实测 `pdf2zh --version` 恢复正常。**环境变更**：uv tool 的可执行文件落在 `C:\Users\caill\.local\bin`，原先**不在 PATH**，已用 `uv tool update-shell` 写入用户 PATH（⚠️ 只对新开终端生效）。**顺带纠正四条版本事实**：① pdf2zh **1.8.0+ 要求 Python `<3.13`**，系统 Python 为 3.14，故 pip 在 3.14 上会**自动退回 1.7.9**（无版本约束）——uv 用 3.12 才装到 1.9.11，这正是旧文档通篇按 1.7.9 写的原因；② 1.9.11 **已支持 `-o/--output`**，旧文档「旧版 CLI 无 `-o`」作废；③ 1.9.11 版面改走 **onnxruntime，不再需要 torch**，旧文档的 torch 依赖描述不再成立；④ docling 根级**没有 `--version`**，只有 `convert` / `convert-remote` 两个子命令

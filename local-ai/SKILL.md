@@ -10,7 +10,7 @@ description: >
   需要读写文件或多步闭环的，交给 pi 在本地跑完，主模型只看摘要。
   用户提到"本地处理 / 离线 / 断网 / 不耗 token / 省 token / 最简单任务 / 省电 / 隐私 / 本机模型"时同样使用本技能。
   不适用：需要准确事实知识、需要跨条全局推理、或本地小模型明显扛不住的高难度任务。
-  视觉/OCR/音频走 mimo 或 docling，不在此技能。
+  视觉/OCR/音频也走本机多模态（vl4/vl8/asr/ocr，0 token、不出本机），视频与高难度视觉推理才回退 mimo。
 compatibility: |
   硬件: AMD Ryzen 9 8945HX (16C/32T) + NVIDIA RTX 5060 Laptop 8GB VRAM (GB206 / Blackwell / sm_120 / CC 12.0) + 32GB DDR5，驱动 592.01
   软件:
@@ -54,7 +54,8 @@ allowed-tools: Bash(*)
 - **几十上百条同质小任务（最划算）** → `llama_batch.py` 并发，跑完自动落**回执**
 - **要读文件、多步决策** → pi 当本地 agent
 
-复杂规划、跨系统重构留主模型；视觉/OCR/音频走 mimo 或 `docling`。
+复杂规划、跨系统重构留主模型；视觉/OCR/音频默认走本机多模态（见「十、多模态」），
+视频与高难度视觉推理回退 mimo。
 
 ## 一、本机一次只跑一个模型
 
@@ -366,6 +367,57 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh            # 收工�
 > 测量提示：**别用单次请求、也别在刚强杀过 server 后立即测** —— 显存未完全释放时部分层会被挤到 CPU，
 > 读数能差一倍以上（曾在同样参数下测到 23 tok/s 的假值）。判断是否真上 GPU 请用 `--list-devices`，别靠速度猜。
 
+## 十、多模态：视觉 / 语音 / 文档 OCR
+
+文本以外的三条本地路径。**能本地就本地** —— 不出本机、不花 token。
+
+| 用途 | 别名 | 模型 | 显存 | 入口 |
+| --- | --- | --- | --- | --- |
+| 图片理解、截图、图表 | `vl4` | Qwen3-VL-4B Q4_K_M | ~4.5 GB | `start.sh vl4` |
+| 同上，4B 不够时 | `vl8` | Qwen3-VL-8B Q4_K_M | ~6.4 GB ⚠️ | `start.sh vl8` |
+| 录音转写 | `asr` | Qwen3-ASR-1.7B Q8_0 | ~4.6 GB | `start.sh asr` |
+| 扫描件 / 复杂版面 / 长文档 | — | baidu/Unlimited-OCR | ~6.9 GB ⚠️ | `bash ocr/run.sh` |
+
+`vl4` / `vl8` / `asr` 走同一个 `llama-server`，**依旧受「一次只跑一个模型」约束** ——
+切模型照旧用 `start.sh`（幂等）。`ocr` 是独立栈，`run.sh` 会**先 stop.sh 腾显存**再跑。
+
+### 调用
+
+```bash
+py -3 .../scripts/llama_chat.py --image photo.jpg "图里有什么"
+py -3 .../scripts/llama_chat.py --audio meeting.wav "转写并分段落"
+py -3 .../scripts/llama_chat.py --image a.png --image b.png "对比这两张图"
+
+# 批量：JSONL 每条绑定自己的文件（回执机制与纯文本批量一致）
+py -3 .../scripts/llama_batch.py scans.jsonl -o out.jsonl -j 1 --no-think
+#   {"id":"p1","prompt":"转成 markdown","image":"page_001.png"}
+
+# 文档 OCR（独立栈，先自动腾显存）
+bash .../ocr/run.sh --pdf contract.pdf --out ./out/
+bash .../ocr/run.sh --image scan.png --out ./out/
+```
+
+### 什么时候回退 mimo
+
+- **视频** —— 本地没有视频模型，这是硬缺口
+- 高质量开放式视觉推理（复杂图表分析、多图对比推理）—— 4B 扛不动这类
+- 本地返回空结果 / 明显幻觉 / 连续失败
+
+### docling 还是 Unlimited-OCR
+
+两者都做文档解析，分工按「文档里有没有可选的文字」：
+
+- **有字可选**（PDF/DOCX/PPTX 里本来就是文本）→ `docling`，快、准、结构化好
+- **是扫描图**（复杂版面、公式表格、长文档）→ `ocr/run.sh`（Unlimited-OCR）
+
+### 已知限制
+
+- ⚠️ **`vl8` 显存余量仅约 500 MB**：它是备用而非默认 —— 平时用 `vl4`，只在 4B 明显不够时切过来。溢出时把 ctx 降到 4K。
+- ⚠️ **OCR 贴边**（6.7GB 权重 / 6.9GB 可用）：跑前务必 `stop.sh`，别同时开占显存的程序。
+- ⚠️ **音频输入在 llama.cpp 里是 highly experimental**：大文件出问题的退路是启动时加 `--no-mmproj-offload`（音频编码器退回 CPU）。
+- 图像格式限 `llama_media.IMAGE_MIME` 里的六种（png/jpg/jpeg/gif/webp/bmp），其余显式报错。
+- OCR 需 `trust_remote_code=True`（百度官方 MIT 许可）—— 会执行仓库内的自定义建模代码。
+
 ## 注意事项
 
 - **思考控制走请求级参数（重要）**：两个模型都是 thinking 模型，**默认开思考**。关闭思考要在
@@ -390,4 +442,5 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh            # 收工�
 - **端口**：默认 8080，可用脚本第二参数或 `--port` 修改；批量脚本可用环境变量
   `LLAMA_SERVER_URL` 指定完整端点。
 - **温度**：MiniCPM 官方推荐 temp 1.0 / top_p 0.95；9B-Distill 官方推荐 temp 0.6 / top_p 0.95 / top_k 20。
-- **不负责的**：视觉/OCR/音频 → mimo 或 `docling`；无 mmproj 文件，两个模型均**纯文本**。
+- **文本模型的边界**：MiniCPM5-2B 与 Qwen3.8-9B 无 mmproj，均**纯文本**；
+  视觉/语音/OCR 走各自的多模态模型，见「十、多模态」。
