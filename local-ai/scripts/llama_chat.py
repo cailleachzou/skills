@@ -4,6 +4,8 @@
 用法:
     py -3 llama_chat.py "你的问题"                # 默认开启思考
     py -3 llama_chat.py --no-think "改一下这句话"   # 关思考，省 token / 更快
+    py -3 llama_chat.py --image photo.jpg "图里有什么"       # 视觉（需先 start.sh vl4）
+    py -3 llama_chat.py --audio meeting.wav "转写并分段落"    # 语音（需先 start.sh asr）
 
 模型由 llama-server 启动时决定（客户端不能切换）:
     minicpm - MiniCPM5-2B Q8_0，纯文本 2.6B，128K ctx，轻量任务，~85-107 tok/s
@@ -31,11 +33,14 @@
 本机一律走 GPU，不提供 CPU 降级 —— 静默退回 CPU 会让速度掉 10 倍还不报错。
 server 连不上时见 SKILL.md「GPU 生效判定」一节排障。
 """
+import os
 import argparse
 import json
 import sys
 import time
 import urllib.request
+
+import llama_media
 
 SERVER_URL = "http://127.0.0.1:8080/v1/chat/completions"
 
@@ -48,12 +53,15 @@ def _pick_text(message: dict) -> str:
 
 
 def chat_with_server(prompt: str, system: str = None, max_tokens: int = 512,
-                     temperature: float = 0.7, enable_think: bool = True) -> str:
+                     temperature: float = 0.7, enable_think: bool = True,
+                     images=None, audio=None) -> str:
     """通过 llama-server API 对话（CUDA GPU）。"""
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
+    # 无媒体时 build_content 返回纯字符串，行为与加多模态之前完全一致
+    messages.append({"role": "user",
+                     "content": llama_media.build_content(prompt, images, audio)})
 
     payload = json.dumps({
         "model": "local",
@@ -102,11 +110,19 @@ def main() -> None:
     parser.add_argument("-t", "--temperature", type=float, default=0.7, help="温度")
     parser.add_argument("--no-think", action="store_true",
                         help="关闭思考（默认开启）；简单改写/分类/抽取用它能省 90%% token")
+    parser.add_argument("--image", action="append", metavar="PATH",
+                        help="图片路径，可重复指定多张（需 server 跑着 vl4/vl8）")
+    parser.add_argument("--audio", metavar="PATH",
+                        help="音频路径（需 server 跑着 asr）")
 
     args = parser.parse_args()
 
-    print(chat_with_server(args.prompt, args.system, args.max_tokens,
-                           args.temperature, not args.no_think))
+    try:
+        print(chat_with_server(args.prompt, args.system, args.max_tokens,
+                               args.temperature, not args.no_think,
+                               images=args.image, audio=args.audio))
+    except (OSError, ValueError) as e:
+        sys.exit(f"[错误] 读取媒体文件失败：{e}")
 
 
 if __name__ == "__main__":
