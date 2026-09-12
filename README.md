@@ -98,14 +98,15 @@ git clone https://github.com/cailleachzou/skills.git
 | **hf**                                                   | —（无配套技能）    | Hugging Face Hub CLI（`huggingface_hub`，pip 安装，命令在 `Python314\Scripts\hf.exe`，已入用户 PATH；直接用 CLI 即可）|
 
 > **uv tool 装的命令**（`pdf2zh`、`graphify`、`graphify-mcp`）位于 `C:\Users\caill\.local\bin\`，已用 `uv tool update-shell` 写入**用户 PATH**——⚠️ **只对之后新开的终端生效**，已开的窗口读不到。
-> graphify 的真实包版本是 **0.9.57**，而仓库内 `graphify/` 技能目录仍是 **0.9.26** 的副本（`graphify --help` 会就此告警，用 `graphify install --platform claude` 刷新）。
+> graphify 的真实包版本是 **0.9.58**，仓库内 `graphify/` 技能目录已于 2026-09-12 用 `graphify install --platform claude` 同步到 **0.9.58**（`graphify/.graphify_version` 可查）。⚠️ **0.9.57 → 0.9.58 的 SKILL.md 内容逐字节相同**（md5 一致），只有版本戳变化 —— 该版本号的告警是纯版本比较，不代表技能内容有更新。
 
 ---
 
 ## 更新日志
 
 ### 2026-09-12
-- **主模型新增看图能力**（`~/.claude/CLAUDE.md` + `local-ai/SKILL.md` + 本 README 三处同步）：视觉从「只能走本机 `vl4`/`vl8` 或回退 mimo」变成**三选一** —— **单张图 + 要跟本对话上下文一起推理 + 不敏感 → 主模型直接读**（免起 server、不占显存、不受「一次只跑一个模型」约束），量大 / 逐条几十张 / 敏感 / 要严格 0 token 才落回本地链。**实测依据（唯一的实测部分）**：PIL 生成一张带随机码的自绘图（答案写进独立 key 文件、未打印到终端），主模型 Read 后读出 `30-C355`，与 key 逐字符一致 —— **只证明了「能读图」，未做「比 `vl4`/`vl8` 更准」的对照实测**，该说法在两份文档里均已标注为推断。**边界保留**：主模型在云端，图给它看 = **出本机**，故「敏感资料一律本地」这条硬约束同时排除主模型与 mimo 两条路
+- **graphify 技能同步 0.9.58**：用 `graphify install --platform claude` 把仓库内 `graphify/` 从 **0.9.57** 刷到 **0.9.58**（此前文档记的「技能目录是 0.9.26 副本」已过时，0.9.57 那次升级已修掉）。**实测结论：0.9.57 → 0.9.58 的 SKILL.md 逐字节相同**（`md5sum` 对比一致，`diff -rq` 仅 `.graphify_version` 不同）—— 该版本号告警是纯版本戳比较，不代表技能内容有变。备份留在 `.claude/backups/graphify-skill.bak-20260912/`（⚠️ **不能放在 `skills/` 下**：含 `SKILL.md` 的目录会被当成重复技能注册，本次已踩到并移出）
+- **graphify 音频依赖**：为跑通 `meeting.wav` 转写，装了 `uv tool install --upgrade 'graphifyy[video]'`（拉入 `faster-whisper`）。**未装时** `transcribe_all` 不报错而是返回空 + 一行 warning，静默丢音频 —— 以后 `detect` 到 video/audio 类别要确认这个 extra 在场。顺带这也把包从 0.9.57 带到了 0.9.58
 - **目录整理**：`learning/SKILL-MAP.md` → [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md)。该文件**不是技能**（无 `SKILL.md`），挂在 `skills/` 下易被误认为技能目录；清空后的 `learning/` 已移除，全仓库死链已复查
 - **插件表同步**：`claude-api` 由「⚠️ 已禁用」改为「✅ 启用」（改的是 `~/.claude/settings.json`，现 9 插件全启用）。原禁用理由「与内置 `claude-api` 技能重名，开了会打架」**未获证实**——官方文档因网络限制取不到，需新开会话输入 `/claude-api` 实测落点确认
 
