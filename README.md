@@ -14,7 +14,7 @@
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
 | **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
-| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo；**mimo 兜底路径的完整调用参考**（凭据 / 端点 / curl 模式 / 模型表 / TTS 音色）见 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md) |
+| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo；**单张图要跟对话上下文一起推理、且不敏感时，主模型自己就能看**（2026-09-12 起，免起本地模型）；**mimo 兜底路径的完整调用参考**（凭据 / 端点 / curl 模式 / 模型表 / TTS 音色）见 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md) |
 | **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 
 ## 已安装插件（Plugins）
@@ -105,6 +105,7 @@ git clone https://github.com/cailleachzou/skills.git
 ## 更新日志
 
 ### 2026-09-12
+- **主模型新增看图能力**（`~/.claude/CLAUDE.md` + `local-ai/SKILL.md` + 本 README 三处同步）：视觉从「只能走本机 `vl4`/`vl8` 或回退 mimo」变成**三选一** —— **单张图 + 要跟本对话上下文一起推理 + 不敏感 → 主模型直接读**（免起 server、不占显存、不受「一次只跑一个模型」约束），量大 / 逐条几十张 / 敏感 / 要严格 0 token 才落回本地链。**实测依据（唯一的实测部分）**：PIL 生成一张带随机码的自绘图（答案写进独立 key 文件、未打印到终端），主模型 Read 后读出 `30-C355`，与 key 逐字符一致 —— **只证明了「能读图」，未做「比 `vl4`/`vl8` 更准」的对照实测**，该说法在两份文档里均已标注为推断。**边界保留**：主模型在云端，图给它看 = **出本机**，故「敏感资料一律本地」这条硬约束同时排除主模型与 mimo 两条路
 - **目录整理**：`learning/SKILL-MAP.md` → [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md)。该文件**不是技能**（无 `SKILL.md`），挂在 `skills/` 下易被误认为技能目录；清空后的 `learning/` 已移除，全仓库死链已复查
 - **插件表同步**：`claude-api` 由「⚠️ 已禁用」改为「✅ 启用」（改的是 `~/.claude/settings.json`，现 9 插件全启用）。原禁用理由「与内置 `claude-api` 技能重名，开了会打架」**未获证实**——官方文档因网络限制取不到，需新开会话输入 `/claude-api` 实测落点确认
 
