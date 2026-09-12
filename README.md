@@ -23,7 +23,7 @@
 
 | 插件                       | 源地址                     | 状态      | 说明                                    |
 | ------------------------ | ----------------------- | ------- | ------------------------------------- |
-| **claude-api**           | anthropic-agent-skills  | ⚠️ 已禁用  | Claude API 技能 — SDK 集成、Tool Use、Streaming、Batch 等（与内置 `claude-api` 技能重名，禁用以免打架） |
+| **claude-api**           | anthropic-agent-skills  | ✅ 启用    | Claude API 技能 — SDK 集成、Tool Use、Streaming、Batch 等（2026-09-12 启用；此前因疑似与内置 `claude-api` 技能重名而禁用，**该理由未证实**） |
 | **claude-md-management** | claude-plugins-official | ✅ 启用    | CLAUDE.md 管理工具 — 项目/用户级指令文件管理           |
 | **code-review**          | claude-plugins-official | ✅ 启用    | 代码审查工具 — 多维度代码质量检查                    |
 | **document-skills**      | anthropic-agent-skills  | ✅ 启用    | 文档处理技能 — docx/pdf/pptx/xlsx 创建编辑     |
@@ -55,7 +55,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 学习资料
 
-- [`learning/SKILL-MAP.md`](learning/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 10 个技能**
+- [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 10 个技能**
 
 ## 环境依赖
 
@@ -103,6 +103,10 @@ git clone https://github.com/cailleachzou/skills.git
 ---
 
 ## 更新日志
+
+### 2026-09-12
+- **目录整理**：`learning/SKILL-MAP.md` → [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md)。该文件**不是技能**（无 `SKILL.md`），挂在 `skills/` 下易被误认为技能目录；清空后的 `learning/` 已移除，全仓库死链已复查
+- **插件表同步**：`claude-api` 由「⚠️ 已禁用」改为「✅ 启用」（改的是 `~/.claude/settings.json`，现 9 插件全启用）。原禁用理由「与内置 `claude-api` 技能重名，开了会打架」**未获证实**——官方文档因网络限制取不到，需新开会话输入 `/claude-api` 实测落点确认
 
 ### 2026-09-11
 - **pdf2zh 技能重构**：① 默认路径改为**本地 2B 直连** —— `openailiked` + llama-server（`local-ai` 技能）接 MiniCPM5-2B，0 token、不出本机，含「BASE_URL 必须带 `/v1`」「服务名后的模型名只是标签（llama-server 忽略请求里的 model 字段）」「缓存键不含 `base_url`，换端点会命中旧译文」「pdf2zh 硬编码 `temperature: 0` 与 MiniCPM 推荐值 1.0 冲突」四条实操坑；② **服务表由 1.7.9 时代的 6 个订正为 1.9.11 源码实测的 22 个**，并指出上游 main 文档里的 `302ai`/`minimax` 在 1.9.11 中不存在；③ **订正上游事实**：`Byaidu/PDFMathTranslate` 已改名 `PDFMathTranslate/PDFMathTranslate`（旧路径 301，未归档仍在维护），2.0 主线迁至 `PDFMathTranslate-next`（`pdf2zh-next` 2.9.0，无 `-s`、改 `config.toml` + `PDF2ZH_` 前缀、Bing/Google 已 deprecated），本机仍只装老版 1.9.11；④ **新增 `references/zotero-plugin.md`**（Zotero 插件 `guaguastandup/zotero-pdf2zh`，本机未装 Zotero，通篇标注上游口径未实测）；⑤ **删除 `agent_translator_patch.py`（393 行）与 `test_agent_translator.py`（122 行）** —— 为 1.7.9 写、本机从未打上、未复验，其目标已由本地 2B 直连覆盖，且上游两版均无插件机制。**实测**（15 页 arXiv 双栏论文走本地 2B）：公式符号逐页保留零缺失、13 页约 5 分钟、`-t 4` 只吃满 2 槽；**`--ignore-cache` 实测无效**（复跑产出未翻译原文），强制重译须删 `%TEMP%\cache\`。设计见 `docs/superpowers/specs/2026-09-11-pdf2zh-skill-overhaul-design.md`，实测台账见 `docs/superpowers/plans/2026-09-11-pdf2zh-verification.md`
