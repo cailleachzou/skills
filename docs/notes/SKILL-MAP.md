@@ -1,7 +1,7 @@
 # Claude Code 插件技能地图
 
 > 覆盖 **8 个插件、34 个技能**。`frontend-design` 和 `skill-creator` 各有两个插件来源，地图里合并成一行（`frontend-design` 的两个来源已逐字节比对，完全一致）。
-> 全部内容读自各技能真实的 `SKILL.md`，生成于 2026-09-10。**不含本机自建的那 10 个技能**（outlook / tyc-it / dwg 等）。
+> 全部内容读自各技能真实的 `SKILL.md`，生成于 2026-09-10。**不含本机自建的 7 个顶层技能**（`cli` / `docling` / `dwg` / `officecli` / `graphify` / `local-ai` / `computer-repair-skill`；其中 `cli` 下另有 4 个子技能）。
 
 ---
 
