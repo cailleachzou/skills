@@ -168,18 +168,23 @@ Expected: `git status --porcelain` 为空（干净）；文件清单恰好 5 个
 
 **若清单不符（多出 `scripts/` 等文件），停下来报告**——spec 的路径安全性结论基于「零 scripts/」这个前提。
 
-- [ ] **Step 2: 执行 4 次 `git mv`**
+- [ ] **Step 2: 建 `sub-skills/` 目录并执行 4 次 `git mv`**
 
-Run:
+⚠️ `cli/sub-skills/` 在 Task 1 结束时**并不存在**（T1 只建了 `cli/`）。
+`git mv` 不会自动创建目标父目录，直接搬会报 `fatal: destination directory does not exist`。
+所以必须先 `mkdir -p`：
+
 ```bash
-cd "C:/Users/caill/.claude/skills" && git mv ffmpeg cli/sub-skills/ffmpeg && git mv ncm-dump cli/sub-skills/ncm-dump && git mv pdf2zh cli/sub-skills/pdf2zh && git mv tyc-it cli/sub-skills/tyc-it
+cd "C:/Users/caill/.claude/skills" && mkdir -p cli/sub-skills && git mv ffmpeg cli/sub-skills/ffmpeg && git mv ncm-dump cli/sub-skills/ncm-dump && git mv pdf2zh cli/sub-skills/pdf2zh && git mv tyc-it cli/sub-skills/tyc-it
 ```
 
 - [ ] **Step 3: 验证迁移结果与历史保留**
 
-Run:
+⚠️ 本步**故意**让 `ls` 失败（旧路径应当消失），因此**不能用 `&&` 串联**——
+`&&` 会在 `ls` 失败处截断，后面的 rename 检查根本不会跑。用 `;` 分隔：
+
 ```bash
-cd "C:/Users/caill/.claude/skills" && find cli -type f | sort && echo "--- 顶层是否还有残留 ---" && ls -d ffmpeg ncm-dump pdf2zh tyc-it 2>&1 | head -5 && echo "--- git 是否识别为 rename ---" && git status --porcelain | head -20
+cd "C:/Users/caill/.claude/skills" && find cli -type f | sort; echo "--- 顶层是否还有残留（预期 4 行 No such file）---"; ls -d ffmpeg ncm-dump pdf2zh tyc-it 2>&1 | head -5; echo "--- git 是否识别为 rename ---"; git status --porcelain | head -20
 ```
 
 Expected:
