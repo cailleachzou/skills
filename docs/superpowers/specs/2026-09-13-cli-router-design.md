@@ -229,14 +229,24 @@ arguments: [tool]
 
 ### 6 个功能场景
 
+材料已钉死（2026-09-13 实测存在）：
+
 | # | 场景 | 材料 | 预期 |
 |---|---|---|---|
-| 1 | 视频转码 | 任选一个 mp4 | router → ffmpeg，**真产出文件** |
-| 2 | ncm 解密 | 任选一个 .ncm | router → ncm-dump，**真产出 mp3/flac** |
-| 3 | PDF 翻译 | 任选一篇论文 PDF | router → pdf2zh，**真产出 `*-zh.pdf`** |
+| 1 | 视频转码 | `C:\Users\caill\Videos\NVIDIA\Desktop\Desktop 2026.09.10 - 18.10.36.01.mp4` | router → ffmpeg，**真产出文件** |
+| 2 | ncm 解密 | `D:\CloudMusic\VipSongsDownload\ALI - Wild Side.ncm` | router → ncm-dump，**真产出 mp3/flac** |
+| 3 | PDF 翻译 | `C:\Users\caill\Downloads\Documents\5_学籍在线验证报告_邹景焘.pdf`（1 页 / 418 字符 / born-digital） | router → pdf2zh，**真产出 `*-en.pdf`**（zh→en） |
 | 4 | 企业查询 | 任一家公司名 | router → tyc-it，**真返回企业数据** |
 | 5 | 不命中 | 「帮我看看这个 Excel 怎么做透视表」 | router **认输**，不调任何子技能 |
 | 6 | 非法工具名 | `/cli` 后跟一个不存在的工具名 | 列出 4 个合法值，不猜 |
+
+**素材操作纪律**：
+
+- 场景 1、3 的产物写到临时目录，不污染 `Videos\` 与 `Downloads\Documents\`
+- 场景 2 **先把 .ncm 拷到临时目录再解密**，不在 `VipSongsDownload\` 内生成产物
+- 场景 3 的素材含个人信息（姓名、学籍、在线验证码）。pdf2zh 默认走本地 MiniCPM5-2B、
+  不出本机，符合隐私要求；**测试时不得切换到云端翻译服务**（google / deepl 等）
+- 说明：场景 3 目标语言为**英语**（`--lang-out en`）
 
 ### 2 个机制验证（本次新增，因文档未明文）
 
