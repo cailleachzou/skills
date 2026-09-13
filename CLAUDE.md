@@ -39,14 +39,17 @@ head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
 - **技能评估**：通过 `/skill-creator` 工作流运行（测试用例在 `<skill>/evals/evals.json`）：draft → subagent test → human review → improve → repeat
 - ⚠️ `claude --skill --eval` 不是真实 CLI 命令（已用 `claude --help` 验证），勿用
 
-## CLI 工具技能（顶层独立）
+## CLI 工具技能
 
-CLI 工具技能（文档解析 / CAD / FFmpeg / PDF 翻译）已提升为**顶层独立技能**，各自被 Claude 自动发现：
+**两类并存**：
 
-- **docling** — 文档解析与转换（PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON，含 OCR）；✅ 已装 **2.126.0**，独立 venv `C:\Users\caill\.venv-docling`（Python 3.12，勿用系统 Python）
-- **dwg** — DWG 图纸操作：ODA File Converter 转换（DWG↔DXF）+ ezdxf 提取/回填 + 对话翻译 → `*_ZH.dwg`（已弃用 AutoCAD COM 与 MIMO 依赖）
-- **ffmpeg** — 音视频转码、批量处理、预设管理
-- **pdf2zh** — PDF 翻译（保留 layout）；✅ 已装 **1.9.11**（uv tool 隔离环境）；⚠️ 须把 `tencentcloud-sdk-python-tmt` 钉在 3.1.70，否则启动即 ImportError
+- **路由器型** —— `cli`：容器型统一入口，下辖 4 个子技能（ffmpeg / ncm-dump / pdf2zh / tyc-it），
+  位于 `cli/sub-skills/`，**不被自动发现**，只能经路由器进入。说自然语言自动触发，
+  或 `/cli` 列清单、`/cli <工具名>` 直取子技能说明书。
+  ⚠️ **维护硬规则**：停用子技能必须「移出目录 + 删索引行」，**禁止**留 `xxx.disabled/`
+  ——2026-08-06 拆掉旧路由器 `cli-anything` 就是因为这类残留腐化了索引。
+- **顶层独立型** —— `docling` / `dwg` / `officecli` / `graphify` / `local-ai` /
+  `computer-repair-skill`：各自被 Claude 自动发现。
 
 每个技能目录结构：`SKILL.md` + 可选 `scripts/`。技能名与目录名一致。
 

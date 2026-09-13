@@ -9,13 +9,10 @@
 | **computer-repair-skill** | 电脑维修、C盘爆满、卡顿、流氓软件、断网、蓝屏、数据恢复、打印机、应用迁移、OpenClaw | 跨平台电脑维修助手 — 64 个按需加载 Playbook，覆盖诊断/清理/性能/网络/安全/开发者工具（先取证、再计划，确认后修改）；来源 [88lin/computer-repair-skill](https://github.com/88lin/computer-repair-skill) |
 | **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON（含 OCR） |
 | **dwg**               | DWG、DXF、CAD、图纸、翻译、转换、提取文字、_ZH | DWG 图纸操作 — ODA File Converter 转换（DWG↔DXF）+ ezdxf 提取/回填 + 对话翻译 → 输出 *_ZH.dwg |
-| **ffmpeg**            | FFmpeg、转码、视频、音频    | 音视频转码、批量处理、预设管理、会话管理 |
-| **pdf2zh**            | PDF 翻译、pdf2zh       | **默认走本地 2B**（MiniCPM5-2B + llama-server，0 token、不出本机）—— `-s openailiked:<模型>`；云端服务为质量兜底（1.9.11 实测 22 引擎）。v1.9.11（uv tool 隔离安装）；⚠️ 需把 `tencentcloud-sdk-python-tmt` 钉在 3.1.70，否则启动即 ImportError。Zotero 插件见技能内 `references/zotero-plugin.md` |
+| **cli** | CLI 工具统一入口 | 容器型路由器，含 4 个子工具：**ffmpeg**（转码/剪辑/批处理）、**ncm-dump**（网易云 .ncm 解密）、**pdf2zh**（PDF 翻译，默认本地 2B）、**tyc-it**（天眼查商查）。调用方式：说自然语言自动触发，或 `/cli` 列清单、`/cli <工具名>` 直取。详细说明见 `cli/sub-skills/<name>/SKILL.md` |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
-| **tyc-it**            | 天眼查、企业查询、尽调、股权、风险 | 天眼查 CLI「天眼一下」— 商业查询、尽调、主体核验、关联关系、司法风险等 |
 | **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
 | **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo；**单张图要跟对话上下文一起推理、且不敏感时，主模型自己就能看**（2026-09-12 起，免起本地模型）；**mimo 兜底路径的完整调用参考**（凭据 / 端点 / curl 模式 / 模型表 / TTS 音色）见 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md) |
-| **ncm-dump**          | ncm、网易云、加密音乐、mp3、flac | 解密网易云 .ncm 加密音乐 → 通用 mp3/flac（AES-128 + 自定义 RC4 变体） |
 
 ## 已安装插件（Plugins）
 
@@ -55,7 +52,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 学习资料
 
-- [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 10 个技能**
+- [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 7 个顶层技能**（`cli` 下另有 4 个子技能）
 
 ## 环境依赖
 
@@ -68,8 +65,8 @@ git clone https://github.com/cailleachzou/skills.git
 | --------------- | ----------------- | --------------------------------------------------------------------- |
 | **docling**     | 独立 venv（见下）  | ✅ 已装 **2.126.0**（torch 2.14.0），venv 在 `C:\Users\caill\.venv-docling`（Python 3.12）|
 | **dwg** | `ezdxf` | ODA File Converter（`C:\Program Files\ODA\ODAFileConverter 27.1.0\`）；系统 Python `py -3`（ezdxf 1.4.4，无独立 venv、无 AutoCAD、无 MIMO） |
-| **ffmpeg**     | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
-| **pdf2zh**     | 无（uv tool 自带）  | ✅ 已装 **1.9.11**（uv tool 隔离环境）；版面走 onnxruntime，**不依赖 torch**；翻译引擎默认走本地 2B（`-s openailiked` + llama-server），云端为兜底 |
+| **cli → ffmpeg**（子技能） | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
+| **cli → pdf2zh**（子技能） | 无（uv tool 自带）  | ✅ 已装 **1.9.11**（uv tool 隔离环境）；版面走 onnxruntime，**不依赖 torch**；翻译引擎默认走本地 2B（`-s openailiked` + llama-server），云端为兜底 |
 | **local-ai**   | 无（脚本只用标准库） | 文本/多模态 GGUF 见下；文档 OCR 另用独立 venv（见下） |
 
 > **docling 用独立 venv**（勿用系统 Python）—— ✅ 已装于 `C:\Users\caill\.venv-docling`（Python 3.12.14；docling 2.126.0 + torch 2.14.0）
@@ -92,8 +89,8 @@ git clone https://github.com/cailleachzou/skills.git
 | 工具                                                       | 技能路径            | 说明                       |
 | -------------------------------------------------------- | ----------------- | ------------------------ |
 | **ODA File Converter 27.1.0**                            | `dwg/`             | DWG ↔ DXF 无损双向转换（严格校验，失败产出 `*.err` 含报错行号）|
-| **ffmpeg / ffprobe**                                     | `ffmpeg/`         | 音视频转码                    |
-| **pdf2zh.exe**                                           | `pdf2zh/`         | ✅ 已装 v1.9.11 — `C:\Users\caill\.local\bin\pdf2zh.exe`（PDFMathTranslate 引擎）|
+| **ffmpeg / ffprobe**                                     | `cli/sub-skills/ffmpeg/` | 音视频转码                    |
+| **pdf2zh.exe**                                           | `cli/sub-skills/pdf2zh/` | ✅ 已装 v1.9.11 — `C:\Users\caill\.local\bin\pdf2zh.exe`（PDFMathTranslate 引擎）|
 | **docling.exe**                                          | `docling/`        | ✅ 已装 v2.126.0 — `C:\Users\caill\.venv-docling\Scripts\docling.exe`（独立 venv）|
 | **hf**                                                   | —（无配套技能）    | Hugging Face Hub CLI（`huggingface_hub`，pip 安装，命令在 `Python314\Scripts\hf.exe`，已入用户 PATH；直接用 CLI 即可）|
 
