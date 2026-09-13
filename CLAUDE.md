@@ -15,7 +15,8 @@
 ```
 skills/
 ├── CLAUDE.md                    ← 本文件
-├── README.md                    ← 全量技能清单 + 环境依赖 + 更新日志
+├── README.md                    ← 全量技能清单 + 环境依赖
+├── CHANGELOG.md                 ← 封存档案（2026-05-18 → 2026-09-13），不再新增
 └── <skill-name>/
     ├── SKILL.md                 ← 核心：YAML frontmatter + 说明
     ├── scripts/                 ← 可选：脚本文件
@@ -51,13 +52,19 @@ CLI 工具技能（文档解析 / CAD / FFmpeg / PDF 翻译）已提升为**顶�
 
 ## 文档同步
 
-- `README.md` — 全量技能清单 + 环境依赖 + 更新日志（中文），每次技能增删改同步更新
+- `README.md` — 全量技能清单 + 环境依赖（中文），每次技能增删改同步更新
+- `CHANGELOG.md` — **封存档案，不再新增**。变更记录自 2026-09-13 起改由 **commit message** 承载
 
 ## Git 提交规范
+
+提交信息**即变更日志** —— 自 2026-09-13 起不再往 `README.md` / `CHANGELOG.md` 追加日志，所以 message 要写清「做了什么 / 为什么 / 实测结论」，别只写一行标题：
 
 ```bash
 git commit -m "$(cat <<'EOF'
 简短描述
+
+- 具体变更与理由
+- 实测结论 / 踩坑
 
 Co-Authored-By: Claude Code <noreply@anthropic.com>
 EOF
@@ -66,4 +73,4 @@ EOF
 
 ---
 
-*最后更新：2026-09-11*
+*最后更新：2026-09-13*
