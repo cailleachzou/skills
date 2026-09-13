@@ -463,13 +463,22 @@ cd "C:/Users/caill/.claude/skills" && grep -n "pdf2zh\|tyc-it\|ncm-dump\|ffmpeg"
 
 - [ ] **Step 3: 同步 README.md 的依赖表与命令路径表**
 
-Run:
+⚠️ 本步覆盖**两个**目录路径行，不是只有一个。Task 2 的评审发现计划初稿漏掉了 `ffmpeg/`：
+
 ```bash
-cd "C:/Users/caill/.claude/skills" && grep -n "pdf2zh/" README.md | head -10
+cd "C:/Users/caill/.claude/skills" && grep -n '`ffmpeg/\|`pdf2zh/\|`ncm-dump/\|`tyc-it/' README.md
 ```
 
-把指向 `pdf2zh/` 的目录路径改为 `cli/sub-skills/pdf2zh/`。
-**注意**：`pdf2zh.exe` 的安装路径 `C:\Users\caill\.local\bin\pdf2zh.exe` **不变**（uv tool 装的，与技能目录无关）。
+必须先跑上面这条命令拿到**实际**的命中行，再逐行改。基于 2026-09-13 的实测，预期存在两行：
+
+| 行 | 现状 | 改为 |
+|---|---|---|
+| README.md:95 | `\| **ffmpeg / ffprobe** \| \`ffmpeg/\` \| 音视频转码 \|` | 路径列改为 `` `cli/sub-skills/ffmpeg/` `` |
+| README.md:96 | `\| **pdf2zh.exe** \| \`pdf2zh/\` \| ...` | 路径列改为 `` `cli/sub-skills/pdf2zh/` `` |
+
+`ncm-dump` 与 `tyc-it` 预计无目录路径行——但**以实际 grep 结果为准**，有就一并改。
+
+**注意**：`pdf2zh.exe` 的安装路径 `C:\Users\caill\.local\bin\pdf2zh.exe` **不变**（uv tool 装的，与技能目录无关）；`ffmpeg / ffprobe` 的二进制路径同理不变。只改**技能目录**那一列。
 
 - [ ] **Step 4: 改写 CLAUDE.md 的 CLI 小节**
 
