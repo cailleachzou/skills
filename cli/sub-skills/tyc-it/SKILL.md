@@ -6,7 +6,6 @@ description: 天眼查 CLI"天眼一下"（TYC It）商业查询入口。用于�
 # 天眼一下
 
 英文名：TYC It
-建议唤起命令：`/tyc-it`
 
 ## 工具架构
 
