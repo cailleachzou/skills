@@ -12,6 +12,7 @@
 | **cli** | CLI 工具统一入口 | 容器型路由器，含 4 个子工具：**ffmpeg**（转码/剪辑/批处理）、**ncm-dump**（网易云 .ncm 解密）、**pdf2zh**（PDF 翻译，默认本地 2B）、**tyc-it**（天眼查商查）。调用方式：说自然语言自动触发，或 `/cli` 列清单、`/cli <工具名>` 直取。详细说明见 `cli/sub-skills/<name>/SKILL.md` |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
+| **kdocs** | 金山文档、WPS云文档、kdocs、云文档、周报、AI PPT、接龙转表格、表单收集、网页剪藏、知识库、文档翻译 | 金山文档官方 Skill（v2.6.16）— 经 `kdocs-cli` 操作云端文档：智能文档(.otl)/Word/Excel/PDF/PPT/智能表格/多维表格/智能表单 + 个人知识库的读写、搜索、分享、整理；来源 [wpsai.wpscdn.cn/skillhub](https://wpsai.wpscdn.cn/skillhub/pro/v2.6.16/kdocs.zip) |
 | **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo；**单张图要跟对话上下文一起推理、且不敏感时，主模型自己就能看**（2026-09-12 起，免起本地模型）；**mimo 兜底路径的完整调用参考**（凭据 / 端点 / curl 模式 / 模型表 / TTS 音色）见 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md) |
 
 ## 已安装插件（Plugins）
@@ -52,7 +53,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 学习资料
 
-- [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 7 个顶层技能**（`cli` 下另有 4 个子技能）
+- [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 8 个顶层技能**（`cli` 下另有 4 个子技能）
 
 ## 环境依赖
 
@@ -93,6 +94,7 @@ git clone https://github.com/cailleachzou/skills.git
 | **pdf2zh.exe**                                           | `cli/sub-skills/pdf2zh/` | ✅ 已装 v1.9.11 — `C:\Users\caill\.local\bin\pdf2zh.exe`（PDFMathTranslate 引擎）|
 | **docling.exe**                                          | `docling/`        | ✅ 已装 v2.126.0 — `C:\Users\caill\.venv-docling\Scripts\docling.exe`（独立 venv）|
 | **hf**                                                   | —（无配套技能）    | Hugging Face Hub CLI（`huggingface_hub`，pip 安装，命令在 `Python314\Scripts\hf.exe`，已入用户 PATH；直接用 CLI 即可）|
+| **kdocs-cli**                                            | `kdocs/`          | ✅ 已装 v2.6.16 — `C:\Users\caill\AppData\Local\kdocs-cli\kdocs-cli.exe`（官方 setup.ps1 安装并写入用户 PATH；SHA256 校验通过）。认证走 `kdocs-cli auth login`（浏览器 OAuth，Token 存系统密钥链）；⚠️ **仅支持 WPS 个人账号**，企业账号会 403001 |
 
 > **uv tool 装的命令**（`pdf2zh`、`graphify`、`graphify-mcp`）位于 `C:\Users\caill\.local\bin\`，已用 `uv tool update-shell` 写入**用户 PATH**——⚠️ **只对之后新开的终端生效**，已开的窗口读不到。
 > graphify 的真实包版本是 **0.9.58**，仓库内 `graphify/` 技能目录已于 2026-09-12 用 `graphify install --platform claude` 同步到 **0.9.58**（`graphify/.graphify_version` 可查）。⚠️ **0.9.57 → 0.9.58 的 SKILL.md 内容逐字节相同**（md5 一致），只有版本戳变化 —— 该版本号的告警是纯版本比较，不代表技能内容有更新。
