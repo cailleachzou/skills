@@ -129,7 +129,7 @@ RTX 5060 Laptop 是 **Blackwell（`sm_120` / CC 12.0）**，需要 **CUDA 12.8+*
 | 依赖 | 本机版本 | 作用 | 怎么装 |
 | --- | --- | --- | --- |
 | **NVIDIA 驱动** | 592.01 | CUDA 13 + Blackwell 支持的地基 | NVIDIA 官网 / GeForce Experience |
-| **llama.cpp（CUDA 13.x 预编译包）** | `b10883` | 推理引擎本体 | 下载 `llama-b10883-bin-win-cuda-13.3-x64.zip`，解压到<br>`C:\Users\caill\tools\llama-cpp\cuda-b10883\` |
+| **llama.cpp（CUDA 13.x 预编译包）** | `b10883` | 推理引擎本体 | 下载 `llama-b10883-bin-win-cuda-13.3-x64.zip`，解压到<br>`LLAMA_DIR` 指的目录（默认值见下方变量表） |
 | **GGUF 模型 ×8**（文本 2 + 多模态 6；多模态每个 = 权重 + 配套 mmproj） | 见 §1.2 与 [`SKILL.md`](SKILL.md) 第十节 | 模型权重 | 放到 `D:\models\gguf\<模型名>\`（**建议放 D 盘**）；文本 2 个合计 **~8.5GB**，多模态 6 个（`vl4`/`vl8`/`asr` 各一对）合计 **~11.9GB** |
 | **OCR 模型仓库 + venv** | 见 [`SKILL.md`](SKILL.md) 第十节 | 文档 OCR（baidu/Unlimited-OCR，bf16 权重 6.7GB）+ Python 依赖栈 | 仓库 `D:\models\unlimited-ocr\`（**~6.8GB**）+ venv `D:\models\venvs\unlimited-ocr\`（**~3.3GB**，`uv venv --python 3.12`） |
 | **Python** | 3.14.7 | 跑 `llama_chat.py` / `llama_batch.py` | 系统已装，用 `py -3` 调用 |
@@ -189,7 +189,7 @@ RTX 5060 Laptop 是 **Blackwell（`sm_120` / CC 12.0）**，需要 **CUDA 12.8+*
 
 ```bash
 # 1. 确认驱动和显卡就位 —— 必须能看到 CUDA0
-"C:/Users/caill/tools/llama-cpp/cuda-b10883/llama-server.exe" --list-devices
+"$LLAMA_DIR/llama-server.exe" --list-devices
 #    期望输出: CUDA0: NVIDIA GeForce RTX 5060 Laptop GPU
 #    ⚠️ 看不到 CUDA0 = 已经静默退回 CPU，别继续往下走
 
@@ -207,7 +207,7 @@ ls -la "D:/models/gguf/qwen3-asr-1.7b/Qwen3-ASR-1.7B-Q8_0.gguf"     # 2165 MB（
 ls -la "D:/models/unlimited-ocr/model-00001-of-000001.safetensors"  # 6673 MB（OCR 仓库；venv 见 §1.1 注）
 
 # 4. 启动（默认 2B）—— 在 Bash 工具里必须后台跑，见下方警告
-bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh
+bash ~/.claude/skills/local-ai/scripts/start.sh
 
 # 5. 等几秒，确认就绪
 curl -s http://127.0.0.1:8080/health          # {"status":"ok"}
@@ -279,7 +279,7 @@ export MODEL_MINICPM="D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf"
 `start.sh` 本身就是幂等的，切换不用手动停：
 
 ```bash
-bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh 9b   # 需要 9B 时才切
+bash ~/.claude/skills/local-ai/scripts/start.sh 9b   # 需要 9B 时才切
 #   [复用] 已在跑目标模型 → 直接返回，不重启、不丢前缀缓存
 #   [切换] 跑着别的 → 先 stop.sh（等显存真回收）再启
 ```
@@ -317,7 +317,7 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh 9b   # 需要 9B �
 GPU 能力锁死。笔记本还额外付出**发热、风扇噪音、续航**的代价。
 
 ```bash
-bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh
+bash ~/.claude/skills/local-ai/scripts/stop.sh
 ```
 
 `stop.sh` 杀进程后会**轮询显存直到真的回落**才返回，不是 `sleep` 固定秒数 ——
