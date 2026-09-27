@@ -85,14 +85,17 @@ start_server() {
 
 # ── 串行化：两个终端同时敲 pi 时，别让两个 start.sh 互相抢显存 ──────────────
 LOCK="${TMPDIR:-/tmp}/pi-ensure-${PORT}.lock"
+LOCKED=0
 for _ in $(seq 1 120); do                          # 最多等 60s
   if mkdir "$LOCK" 2>/dev/null; then
     trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+    LOCKED=1
     break
   fi
   [ -n "$(find "$LOCK" -maxdepth 0 -mmin +3 2>/dev/null)" ] && rmdir "$LOCK" 2>/dev/null   # 陈旧锁
   sleep 0.5
 done
+[ "$LOCKED" = 1 ] || echo "[warn] ${LOCK} 等了 60s 仍被占用 —— 未持锁继续，可能与并发的 start.sh 抢显存" >&2
 
 # ── 拿锁之后再判一次状态（第二个进场的人应该直接复用第一个起好的）────────────
 case "$(health)" in

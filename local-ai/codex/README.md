@@ -128,7 +128,7 @@ Qwen3.8 原版模板第 83-86 行：
 ```
 codex/
 ├── start-codex.sh          # 入口：生成模板 → 幂等判断 → 调 start.sh 带模板起服务
-├── prepare.py              # 三个子命令：template / catalog / check-template
+├── prepare.py              # 四个子命令：template / catalog / check-template / show
 ├── template-9b.jinja       # 生成物（9B 合并版模板）
 └── template-minicpm.jinja  # 生成物（2B 原版模板，无需补丁）
 ```
