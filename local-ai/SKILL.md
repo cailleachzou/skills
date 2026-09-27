@@ -4,27 +4,35 @@ description: 本机本地模型层（llama.cpp CUDA + RTX 5060 Laptop 8GB）—�
 compatibility: |-
   硬件: AMD Ryzen 9 8945HX (16C/32T) + NVIDIA RTX 5060 Laptop 8GB VRAM (GB206 / Blackwell / sm_120 / CC 12.0) + 32GB DDR5，驱动 592.01
   软件:
-  - llama.cpp 预编译版 b10883 (CUDA 13.3): `C:\Users\caill\tools\llama-cpp\cuda-b10883\llama-server.exe`
+  - llama.cpp 预编译版 b10883 (CUDA 13.3): `$LLAMA_DIR/llama-server.exe`
+    （默认 `C:/Users/caill/tools/llama-cpp/cuda-b10883`；装到别处就 `export LLAMA_DIR=<该目录>`，
+    脚本读的就是这个变量）
   - 该目录自带 cudart64_13.dll / cublas64_13.dll（CUDA 13 runtime 已含，无需另配 cudart zip）
   - ⚠️ 必须用 b10883：9B-Distill 是 qwen35 架构（Gated DeltaNet / SSM 混合），旧版 llama.cpp 不认这个架构
   - ollama 已于 2026-09-10 彻底卸载，本技能不再依赖 ollama
   - pi CLI (@earendil-works/pi-coding-agent)：本地 agent 层，provider `llamacpp` 已配在
-    `~/.pi/agent/models.json`（baseUrl http://localhost:8080/v1，两个模型 cost 均为 0）。
-    `settings.json` 的 `packages` 已清空（原为 pi-subagents），实测默认参数 11s 跑完 10 条改写；
-    ⚠️ 若重装 pi-subagents 这类编排扩展，必须加 `--no-extensions`，否则约 7K 的编排提示词
-    会让小模型陷入死循环（实测 400s+ 零产出）
+    `~/.pi/agent/models.json`（baseUrl http://localhost:8080/v1，四个模型 cost 均为 0）。
+    **2026-09-26 起 `pi` 是「本地 ornith 一键入口」**（自动确保 llamaOT 就绪、退出时停掉
+    本次拉起的 server；详见「用法 3」）。`pi-up` = 原版 pi，`pi --model X` / 非 TTY 调用
+    一律直通不碰 server。
+    ⚠️ `settings.json` 的 `packages` **现有 4 个包**（pi-subagents / pi-btw / pi-web-access /
+    pi-hermes-memory），不是「已清空」；装了编排类扩展就得加 `--no-extensions`，否则约 7K 的
+    编排提示词会让小模型陷入死循环（实测 400s+ 零产出；清空后 11s 跑完 10 条改写）
   GGUF 模型 (位于 D:\models\gguf\):
   - minicpm5-2b/MiniCPM5-2B-Q8_0.gguf (2.68GB) — **默认模型**，~85–107 tok/s，128K ctx
-  - qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf (5.78GB) — 按需（pi agent / 复杂任务），~55 tok/s @32K
-  - Git Bash 别名（`~/.bashrc`）：`llama` = 2B，`llama9` = 9B；scripts 目录本身在 PATH 里
-  ⚠️ 两个模型都是 thinking 模型，**默认开思考**（本机主要用来跑 pi coding agent）。
+  - qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf (5.78GB) — 按需（pi agent / 复杂任务），~55 tok/s @64K
+  - ornith-1.5-9b/Ornith-1.5-9B-Q4_K_M.gguf (5.78GB) — 9B 级备选；+mmproj (879MB) 后
+    **一个模型兼做文本+视觉**。架构与 9B-Distill 同构，实测同速（同条件 34 vs 35 tok/s）
+  - Git Bash 别名（`~/.bashrc`）：`llama` = 2B，`llama9` = 9B，`llamaOT` = ornith，
+    `llamaOV` = ornith-vl；scripts 目录本身在 PATH 里
+  ⚠️ 三个文本模型（2B / 9B / Ornith）都是 thinking 模型，**默认开思考**（本机主要用来跑 pi coding agent）。
      要关思考必须走请求级 `chat_template_kwargs`（`llama_chat.py --no-think` / `llama_batch.py --no-think` 已内置）；
      server 启动参数全部实测无效 —— 见下方「思考控制」一节
 metadata:
   author: Cailleach Zou
   version: "6.2"
   created: 2026-08-11
-  updated: 2026-09-10
+  updated: 2026-09-24
 allowed-tools: Bash(*)
 ---
 
@@ -63,15 +71,15 @@ allowed-tools: Bash(*)
   整体覆盖面其实比 9B 更广。**别把它当成「9B 的降级备用」。**
 - 只有**任务本身确实难**时才切 9B（`llama9` / `start.sh 9b`）—— 代码、长链推理这类 ——
   并且把这一轮所有 9B 的活攒在一起一次干完，跑完切回 2B。
-- **要并发的任务、以及超过 32K 的单条任务，永远留在 2B** —— 9B 既不能并发，池子也只有 32K。
+- **要并发的任务、以及超过 64K 的单条任务，永远留在 2B** —— 9B 既不能并发，池子也只有 64K。
 - 单条 / 少量任务**不为它切模型** —— 有什么用什么。
 
 ⚠️ **9B 不并发 —— 这是硬规则，不是偏好。** 要并发就切 2B。
 
-理由：`-c 32768` 时 `/slots` 显示每槽 `n_ctx = 32768`，看着像 4 路各 32K，**其实不是**。
-启动日志写的是 `n_slots = 4, n_ctx_slot = 32768, kv_unified = 'true'` —— `kv_unified` 意味着
-KV 是**一个共享池**，4 个 slot 从同一个 32K 的池子里取。加上整卡只剩不到 1GB 余量
-（实测 6891 MiB / 8151，其中模型权重本身就占 5502 MiB），拿 9B 开并发轻则互相挤、重则装不下。
+理由：`-c 65536` 时 `/slots` 显示每槽 `n_ctx = 65536`，看着像 4 路各 64K，**其实不是**。
+启动日志写的是 `n_slots = 4, n_ctx_slot = 65536, kv_unified = 'true'` —— `kv_unified` 意味着
+KV 是**一个共享池**，4 个 slot 从同一个 64K 的池子里取。加上整卡只剩不到 1GB 余量
+（实测 7228 MiB / 8151，其中模型权重本身就占 5502 MiB），拿 9B 开并发轻则互相挤、重则装不下。
 
 2B 没这个问题：池子 128K、每槽 32K，并发 4 稳定跑（实测约 2× 串行吞吐）。
 
@@ -97,13 +105,42 @@ KV 是**一个共享池**，4 个 slot 从同一个 32K 的池子里取。加上
 | 这一轮主要是 | 用哪个 | 为什么 |
 | --- | --- | --- |
 | 批量同质小任务、长文本、要并发、单条改写、**agent 多步闭环** | **2B**（默认，多半已经在跑） | 存量状态；它也有 tool use，覆盖面更广 |
-| 代码、长链推理这类真正难的活（上下文 < 32K） | **9B** | 只有这种才值得切 |
-| 单条 > 32K | **2B**（别切 9B） | 9B 的共享池只有 32K，装不下 |
+| 代码、长链推理这类真正难的活（上下文 < 64K） | **9B** | 只有这种才值得切 |
+| 9B 级的备选（**要视觉**，或在意开思考的稳定性） | **`ornith`** / **`ornith-vl`** | 见下方「Ornith」说明 |
+| 单条 > 64K | **2B**（别切 9B） | 9B 的共享池只有 64K，装不下 |
+
+**Ornith-1.5-9B** —— 2026-09-24 实测接入的第二个 9B 级选项，两个入口：
+
+- **`start.sh ornith`** —— 纯文本，64K ctx。
+- **`start.sh ornith-vl`** —— 同一权重 + mmproj，32K ctx，**文本 + 视觉一个模型搞定**。
+  ⚠️ 两个配置共用同一 GGUF basename，`running_model()` 靠 `/props` 的 `modalities.vision`
+  区分（带 mmproj 才是 true）。所以**回执里的 server 模型名分不出这两者**，别拿它当判别器。
+
+同为 `qwen35` 架构、33 blocks、同款 5.38 GiB Q4_K_M，**与 9B-Distill 同速同量级**
+（同场次 64K 下 56 vs 54 tok/s；16 条批量 11.1s vs 11.2s），中文批量任务上 16/16 全对、格式合规打平。
+**它不是「更强的 9B」，默认仍用 `9b`**；只有这三处差异才是选它的理由：
+
+- **视觉实测可用**：mmproj 0.86 GiB。默认 ctx 压到 **32K**（整卡 7734 MiB）——
+  因为 64K 下实测 **7833 MiB = 整卡 96%**，只剩 ~318 MiB，比已知贴边的 `vl8`（~440 MiB）还紧，
+  图像编码再要缓冲区，溢出就是「不报错只变慢」。想要 64K 就把那行 `-c 32768` 改成 `-c 65536`，风险自负。
+  拿官方评测图当测试，它答对所有 5 个对比模型名，且 SWE-bench Verified **70.6**、TB2.1 **47**、
+  对照组 69.4 / 53.2 / 73.4 / 52 —— 与官方 README 表格逐项吻合。
+  **真正的价值场景是「agent 能看图」**：`9b` 没有视觉，`vl4`/`vl8` 没有 tool use 和推理，
+  而 `ornith-vl` 两者都有（代价是 ctx 只有 32K）。
+- **开思考时更稳**：同一条逻辑题各跑 6 次，Ornith 吐空 **1/6**，9B-Distill 吐空 **4/6**（1500 tok 全烧在推理里）。
+  ⚠️ 这同时说明**「开思考吐空」是这条栈的既有毛病**，别当成 Ornith 的特性。实测关思考 6/6 全对且更短。
+- 官方宣称的 agentic/编码能力（SWE-bench Verified 70.6）**本机没有实测**，不构成选它的理由。
+
+> ⚠️ **`start.sh` / `start.bat` 的模型判别顺序有坑**：Ornith 的 basename 里也含 `9B-Q4_K_M`，
+> 且两者判别方向**相反** —— `start.sh` 是 `case` 首匹配，`*Ornith*` 必须在 `*9B-Q4_K_M*` **之前**；
+> `start.bat` 是顺序覆盖、**后匹配胜**，Ornith 那行必须在 9b 那行**之后**。
+> 顺序错了会让 `start.sh 9b` 误报「已经在跑 9b」并静默返回，实际跑的还是 Ornith（已实测复现并修复）。
+> 这也是「回执里的 server 模型名」那个闭环检查点唯一的机械依据，别删。
 
 切换不用自己动手 —— **`start.sh` 本身就是幂等的**：
 
 ```bash
-bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh 9b        # 需要 9B 时才切
+bash ~/.claude/skills/local-ai/scripts/start.sh 9b        # 需要 9B 时才切
 ```
 
 它会先问在跑的是哪个模型：已经是目标 → 打印 `[复用]` 直接返回（不重启、不丢前缀缓存）；
@@ -131,7 +168,7 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh 9b        # 需要 
 把它停掉 —— 尤其是用 `run_in_background` 起的那个 shell，别留在后台吃资源。
 
 ```bash
-bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh
+bash ~/.claude/skills/local-ai/scripts/stop.sh
 ```
 
 `stop.sh` 杀进程后会**轮询显存直到真的回落**才返回（驱动回收有延迟；不等的话，
@@ -144,7 +181,7 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh
 适合条数少（≲10 条）或只要一次结果。
 
 ```bash
-py -3 "C:\Users\caill\.claude\skills\local-ai\scripts\llama_chat.py" "用一句话介绍量子计算"
+py -3 ~/.claude/skills/local-ai/scripts/llama_chat.py "用一句话介绍量子计算"
 py -3 "...\llama_chat.py" --no-think "把这句话改得正式些：这方案不太行"   # 关思考，省 90% token
 py -3 "...\llama_chat.py" -s "只输出JSON" -n 200 "抽取姓名和公司：张三在字节跳动"
 bash ".../scripts/chat.sh"                                             # 交互式
@@ -196,6 +233,31 @@ py -3 "...\llama_batch.py" tasks.jsonl -o out.jsonl --no-think \
 | 并发 8 | 2.1s | 178 tok/s ← 超过 slot 数，收益基本没了 |
 
 ### 用法 3：pi 当本地 agent（能自己读写文件的 subagent）
+
+> ⚠️ **`pi` 已被 wrapper 接管（2026-09-26 起）** —— 在终端敲 `pi` 就等于「确保 Ornith-1.5-9B
+> （= `llamaOT`）在 8080 就绪 → 进 pi → 退出时把它停掉」，不必再手动 `start.sh` / `stop.sh`。
+> 本节下面那套「先起 server、再 `pi -p --provider llamacpp --model X`」的老用法**照旧有效**：
+>
+> | 你的调用 | 行为 |
+> | --- | --- |
+> | `pi`（交互终端里） | 确保 **ornith** 就绪 → 进 TUI → 退出时停掉**本次拉起的**那份 |
+> | `pi -p …`（非 TTY：脚本、Claude 的 Bash 工具） | **直通原版 pi**，不碰 server |
+> | `pi --model X` / `pi --provider X` | **直通原版 pi**，不碰 server |
+> | `pi-up …` | 原版 pi（云端 provider / 任意模型） |
+> | `PI_FORCE=1 pi …` | 非交互时也强制走编排 |
+> | `PI_KEEP=1 pi …` | 退出后**保留** server（连跑多条时省去重复加载） |
+>
+> ⚠️ 两条必须知道的语义：**①** 8080 上跑着**别的**模型时，`pi` 会照 `start.sh` 的既有语义
+> **把它切掉**（会打断别处正在跑的本地批量），退出时**不会切回**；**②** 已经在跑 ornith 时
+> 只复用不重启，退出时**也不停** —— 那份不归它，可能是别处 `llamaOT` 起的。
+> ⚠️ 实现分散在**四处**，改默认模型（比如以后要 ornith-vl）必须同时改：
+> `~/.bashrc` 的 `pi()`、PowerShell profile 的 `pi`、`~/.local/bin/pi.cmd`、`scripts/pi-ensure.sh`。
+> ⚠️ 子命令（`pi update` / `pi list` / `pi --version`…）一律直通，不会为了一句版本号去起 7GB 模型。
+
+> ⚠️ **现状核对（2026-09-26）**：`~/.pi/agent/settings.json` 的 `packages` 目前**有 4 个包**
+> （pi-subagents / pi-btw / pi-web-access / pi-hermes-memory），不是别处写的「已清空」。
+> 按下面第五节记的实测（装编排类扩展时 9B 会陷进约 7K 的编排提示词里死循环），**批量任务仍应加
+> `--no-extensions`**；wrapper 不会替你加 —— 保留扩展是刻意的选择。
 
 上面两种用法都只是「文本进 → 文本出」。当任务需要**读文件、看情况决定下一步、写回结果**时，
 用 pi（已全局安装，provider `llamacpp` 已配好），**全程本机、零 token、断网可跑**。
@@ -346,14 +408,34 @@ curl -s -m 2 http://127.0.0.1:8080/health   # {"status":"ok"} 就说明已就绪
 启动 / 切换都用同一个命令（**幂等**，**默认 2B**）：
 
 ```bash
-bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh           # 2B MiniCPM5，~85–107 tok/s，128K ctx
-bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh 9b        # 9B-Distill，~55 tok/s，32K ctx
-bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh            # 收工：停掉并等显存回收
-# Git Bash 别名（~/.bashrc）：llama = 2B，llama9 = 9B
+bash ~/.claude/skills/local-ai/scripts/start.sh           # 2B MiniCPM5，~85–107 tok/s，128K ctx
+bash ~/.claude/skills/local-ai/scripts/start.sh 9b        # 9B-Distill，~55 tok/s，64K ctx
+bash ~/.claude/skills/local-ai/scripts/start.sh ornith     # Ornith-1.5-9B 文本版，64K ctx（9B 级备选）
+bash ~/.claude/skills/local-ai/scripts/start.sh ornith-vl  # 同上 + mmproj，32K ctx（文本+视觉）
+bash ~/.claude/skills/local-ai/scripts/stop.sh            # 收工：停掉并等显存回收
+# Git Bash 别名（~/.bashrc）：llama = 2B，llama9 = 9B，llamaOT = ornith，llamaOV = ornith-vl
 # Windows CMD 用 start.bat / stop.bat（参数同上）
 ```
 
-> `scripts` 目录本身已在用户 PATH 里，所以 `start.sh` / `stop.sh` / `llama` / `llama9` 都可以直接敲。
+> ⚠️ **codex 要用另一个入口**。codex 0.154 只讲 Responses API，每个请求同时带
+> `instructions` 和一条 `developer` 消息 → llama-server 转成**两条 system** →
+> Qwen3.8 原版模板直接 raise，**每个**请求都 500
+> （`System message must be at the beginning.`）。所以要换一份合并 system 的模板：
+>
+> ```bash
+> nohup bash ~/.claude/skills/local-ai/codex/start-codex.sh 9b > /tmp/llama.log 2>&1 &
+> codex -p local
+> ```
+>
+> `start.sh 9b` 起的 9B 服务**不能**给 codex 用。原因、codex 侧改了哪些文件、
+> 以及 Windows 沙箱把工具全拒掉的现状，见 [`codex/README.md`](codex/README.md)。
+
+> `scripts` 目录本身已在用户 PATH 里，所以 `start.sh` / `stop.sh` / `llama` / `llama9` / `llamaOT` / `llamaOV` 都可以直接敲。
+> ⚠️ 别名只在**交互式 shell** 里生效 —— 在工具里跑要用 `start.sh ornith` 这种全称。
+>
+> ⚠️ **PowerShell 不读 `~/.bashrc`** —— 它读 `~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1`，
+> 那边另有一套函数（`llama` / `llama9` / `llamaOT` / `llamaOV` / `llamavl4` / `llamavl8` / `llamaasr` / `llamastop`），
+> 名字相同但**必须两边分别维护**。新开窗口生效，当前窗口用 `. $PROFILE` 重载。
 
 `start.sh` 已经在跑目标模型就 `[复用]` 不重启；跑着别的才先停后启。所以它同时是「启动」和「切换」，
 不需要先手动查、也不需要先手动杀。
@@ -384,10 +466,15 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/stop.sh            # 收工�
 
 | `-c` | decode | prefill | VRAM |
 | --- | --- | --- | --- |
-| **32768（默认）** | **~55 tok/s** | ~172 tok/s | 整卡约 6.9 GB（含桌面） |
+| 32768（旧默认） | 53.8 / 56.7 tok/s | ~172 tok/s | 6608 MiB |
+| **65536（现默认）** | **55.9 / 51.0 tok/s** | — | **7228 MiB**（比 32K 只多 620 MiB）|
 | 262144（256K 上限） | ~37 tok/s | — | 7561 MiB / 8151（近满） |
 
-> 256K 比 32K 慢约 35%（55 → 37）：KV cache 几乎占满显存（7561 / 8151 MiB，余量仅 ~590 MiB）。
+> **32K → 64K 是白送的**（2026-09-24 同场次背靠背、各测两次）：decode 无差别
+> （53.8–56.7 vs 51.0–55.9，差在噪声内），只多占 620 MiB。所以默认从 32K 提到了 64K。
+> 256K 比 64K 慢约 30%（53 → 37），KV 几乎占满显存（7561 / 8151，余量 ~590 MiB）。
+> ⚠️ 表中 VRAM 是**整卡**（含桌面），桌面占用本身波动 ±500 MiB —— 同日 9B 在 64K 下也测到过 7701 MiB。
+> 别把这里的绝对值当精确预算，看余量请以当下的 `nvidia-smi` 为准。
 >
 > ⚠️ **别拿 `failed to fit params ... n_gpu_layers already set to 99` 当「掉 CPU」的证据。**
 > 它是 auto-fit 例程的 **WARN** —— 因为用户显式钉了 `-ngl`，它放弃自动分配、按用户值继续。

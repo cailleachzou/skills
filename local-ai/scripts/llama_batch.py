@@ -407,10 +407,10 @@ def main() -> None:
         print("[提示] 批量任务通常是改写/分类/抽取，加 --no-think 可省约 90% token",
               file=sys.stderr)
 
-    # 9B 不并发：它的 KV 是 4 个 slot 共享的一个 32K 池子（kv_unified），
+    # 9B 不并发：它的 KV 是 4 个 slot 共享的一个 64K 池子（kv_unified），
     # 开并发只会互相挤。规格见 SKILL.md「一、本机一次只跑一个模型」。
     if args.jobs > 1 and "9B" in _probe_model():
-        print("[警告] server 上跑的是 9B —— 9B 不能并发（KV 是 4 slot 共享的一个 32K 池子）。"
+        print("[警告] server 上跑的是 9B —— 9B 不能并发（KV 是 4 slot 共享的一个 64K 池子）。"
               "改用 -j 1，或先切到 2B（start.sh）再批量跑", file=sys.stderr)
 
     # --redact 时连 stderr 的路径也不回显 —— 它同样会进对话（Bash 工具的输出就是上下文）
