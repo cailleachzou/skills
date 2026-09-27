@@ -27,3 +27,7 @@ skills-lock.json
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/cache
+
+# 模型与派生数据 —— 不入库
+*.gguf
+evals/out/

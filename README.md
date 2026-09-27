@@ -9,11 +9,13 @@
 | **computer-repair-skill** | 电脑维修、C盘爆满、卡顿、流氓软件、断网、蓝屏、数据恢复、打印机、应用迁移、OpenClaw | 跨平台电脑维修助手 — 64 个按需加载 Playbook，覆盖诊断/清理/性能/网络/安全/开发者工具（先取证、再计划，确认后修改）；来源 [88lin/computer-repair-skill](https://github.com/88lin/computer-repair-skill) |
 | **docling**           | Docling、文档解析、PDF解析、转Markdown、提取表格 | 文档解析与转换（IBM Docling）— PDF/DOCX/PPTX/XLSX/HTML/图片/音频 → Markdown/JSON（含 OCR） |
 | **dwg**               | DWG、DXF、CAD、图纸、翻译、转换、提取文字、_ZH | DWG 图纸操作 — ODA File Converter 转换（DWG↔DXF）+ ezdxf 提取/回填 + 对话翻译 → 输出 *_ZH.dwg |
+| **cad-automation** | CAD自动化、AutoCAD、二次开发、pyautocad、win32com、AutoLISP、图层、标注、块、三维建模、中望CAD、浩辰CAD | CAD 自动化绘图 — 三栈协同：`win32com`/`pyautocad` 连真实 AutoCAD 出 DWG → `ezdxf` 离线生成 DXF → `CadQuery`/FreeCAD 参数化 3D；含绘图/编辑/图层/标注/块与属性/选择集/3D/打印/LISP/批量转换，16 章铁律与六大踩坑速查；来源 [delancy827/cad-skills](https://github.com/delancy827/cad-skills) |
+| **cad-designer** | CAD设计、制图规范、国标、参数化设计、图层管理、标注标准、批量出图、设计检查清单、冲压模具 | CAD 设计指导 — 先定"画什么才对"再交给 cad-automation 出图：图纸类型/用途/验证等级判定、国标制图规范、图层与标注标准、L1–L4 验证层级、出图策略与设计检查清单；来源 [delancy827/cad-skills](https://github.com/delancy827/cad-skills) |
 | **cli** | CLI 工具统一入口 | 容器型路由器，含 4 个子工具：**ffmpeg**（转码/剪辑/批处理）、**ncm-dump**（网易云 .ncm 解密）、**pdf2zh**（PDF 翻译，默认本地 2B）、**tyc-it**（天眼查商查）。调用方式：说自然语言自动触发，或 `/cli` 列清单、`/cli <工具名>` 直取。详细说明见 `cli/sub-skills/<name>/SKILL.md` |
 | **officecli**         | Office、docx、xlsx、pptx | 创建/检查/修改 Office 文档（.docx/.xlsx/.pptx） |
 | **graphify**          | 代码库、架构、知识图谱、文件关系、god nodes、graphify-out | 把任意目录（代码/文档/论文/图片/视频）转成持久知识图谱 — 社区检测、god nodes、query/path/explain；输出交互式 HTML + GraphRAG JSON + GRAPH_REPORT.md |
 | **kdocs** | 金山文档、WPS云文档、kdocs、云文档、周报、AI PPT、接龙转表格、表单收集、网页剪藏、知识库、文档翻译 | 金山文档官方 Skill（v2.6.16）— 经 `kdocs-cli` 操作云端文档：智能文档(.otl)/Word/Excel/PDF/PPT/智能表格/多维表格/智能表单 + 个人知识库的读写、搜索、分享、整理；来源 [wpsai.wpscdn.cn/skillhub](https://wpsai.wpscdn.cn/skillhub/pro/v2.6.16/kdocs.zip) |
-| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 32K；别名 `llama9`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo；**单张图要跟对话上下文一起推理、且不敏感时，主模型自己就能看**（2026-09-12 起，免起本地模型）；**mimo 兜底路径的完整调用参考**（凭据 / 端点 / curl 模式 / 模型表 / TTS 音色）见 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md) |
+| **local-ai**          | 本地模型、离线、最简单任务、省电、隐私、本机、本地 agent、批量改写/分类/抽取 | 本机本地模型 — llama.cpp CUDA b10883 + RTX 5060 Laptop 8GB；**默认 2B**（MiniCPM5-2B，~85–107 tok/s / 128K，并发 4 ≈ 2× 串行；别名 `llama`），需要 pi agent / 代码 / 复杂推理时才切 **9B**（Qwen3.8-9B-Distill，~55 tok/s / 64K；别名 `llama9`），另有 9B 级备选 **`ornith` / `ornith-vl`**（Ornith-1.5-9B，同速；后者带 mmproj，**文本+视觉一个模型、agent 能看图**；别名 `llamaOT` / `llamaOV`）；批量跑完自动落 `<out>.report.md` 回执，主模型只读回执；读写文件/多步闭环交给 pi CLI 当本地 agent；`start.sh` 幂等切换、`stop.sh` 收工释放显存；视觉/OCR/音频默认走本地多模态（`vl4`/`vl8`/`asr`/`ocr`，0 token、不出本机），视频与高难度视觉推理回退 mimo；**单张图要跟对话上下文一起推理、且不敏感时，主模型自己就能看**（2026-09-12 起，免起本地模型）；**mimo 兜底路径的完整调用参考**（凭据 / 端点 / curl 模式 / 模型表 / TTS 音色）见 [`local-ai/references/mimo-api.md`](local-ai/references/mimo-api.md) |
 
 ## 已安装插件（Plugins）
 
@@ -53,7 +55,7 @@ git clone https://github.com/cailleachzou/skills.git
 
 ## 学习资料
 
-- [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 8 个顶层技能**（`cli` 下另有 4 个子技能）
+- [`docs/notes/SKILL-MAP.md`](docs/notes/SKILL-MAP.md) — **插件技能地图**（8 个插件 / 34 个技能，按使用场景分桶，附触发词速查）；⚠️ 只覆盖**插件**技能，**不含本仓库自建的 10 个顶层技能**（`cli` 下另有 4 个子技能）
 
 ## 环境依赖
 
@@ -65,7 +67,9 @@ git clone https://github.com/cailleachzou/skills.git
 | 技能            | Python 包          | 其他依赖                                                              |
 | --------------- | ----------------- | --------------------------------------------------------------------- |
 | **docling**     | 独立 venv（见下）  | ✅ 已装 **2.126.0**（torch 2.14.0），venv 在 `C:\Users\caill\.venv-docling`（Python 3.12）|
-| **dwg** | `ezdxf` | ODA File Converter（`C:\Program Files\ODA\ODAFileConverter 27.1.0\`）；系统 Python `py -3`（ezdxf 1.4.4，无独立 venv、无 AutoCAD、无 MIMO） |
+| **dwg** | `ezdxf` | ODA File Converter（`C:\Program Files\ODA\ODAFileConverter 27.1.0\`）；系统 Python `py -3`（ezdxf 1.4.4，无独立 venv、不依赖 AutoCAD、无 MIMO） |
+| **cad-automation** | `pywin32` | ✅ **pywin32 312** 已装（cp314 wheel）；✅ 本机已装 **AutoCAD 2027**（`C:\Program Files\Autodesk\AutoCAD 2027`，COM ProgID `AutoCAD.Application` → `AutoCAD.Application.26` 已注册）；`ezdxf` 1.4.4 复用 dwg 的；⚠️ `cadquery` **未装**（仅走 3D 参数化路线时才需要）；无 CAD 时按技能内铁律自动降级 ezdxf 离线出 DXF |
+| **cad-designer** | 无（纯文档） | 零依赖 |
 | **cli → ffmpeg**（子技能） | `click >= 8.0`    | ffmpeg, ffprobe（PATH 中）                                            |
 | **cli → pdf2zh**（子技能） | 无（uv tool 自带）  | ✅ 已装 **1.9.11**（uv tool 隔离环境）；版面走 onnxruntime，**不依赖 torch**；翻译引擎默认走本地 2B（`-s openailiked` + llama-server），云端为兜底 |
 | **local-ai**   | 无（脚本只用标准库） | 文本/多模态 GGUF 见下；文档 OCR 另用独立 venv（见下） |
@@ -80,10 +84,10 @@ git clone https://github.com/cailleachzou/skills.git
 > **local-ai 多模态另需**（GGUF 落在 `D:\models\gguf\`，每个模型 = 权重 + 配套 mmproj，均由 `hf download` 取得）：
 > - 视觉 `vl4` / `vl8`：`Qwen/Qwen3-VL-4B-Instruct-GGUF`（Q4_K_M **2497 MB** + mmproj F16 836 MB）、`Qwen/Qwen3-VL-8B-Instruct-GGUF`（Q4_K_M **5028 MB** + mmproj Q8_0 752 MB）
 > - 语音 `asr`：**社区仓库** `JamePeng2023/Qwen3-ASR-1.7B-GGUF`（Q8_0 **2165 MB** + mmproj BF16 642 MB；官方 Qwen 组织无此 GGUF）
-> - 文本：`MiniCPM5-2B-Q8_0.gguf` 2.68 GB、`Qwen3.8-9B-Q4_K_M.gguf` 5.78 GB（见 `local-ai/SKILL.md`）
+> - 文本：`MiniCPM5-2B-Q8_0.gguf` 2.68 GB、`Qwen3.8-9B-Q4_K_M.gguf` 5.78 GB、`Ornith-1.5-9B-Q4_K_M.gguf` 5.78 GB + `mmproj-Ornith-1.5-9B-BF16.gguf` 879 MB（后者的 mmproj 只有 `start.sh ornith-vl` 需要）（来源 `ornith-ai/Ornith-1.5-9B-GGUF`，见 `local-ai/SKILL.md`）
 > - 文档 OCR：`baidu/Unlimited-OCR` 全仓库 → `D:/models/unlimited-ocr/`（约 6.8 GB），另建 venv `D:/models/venvs/unlimited-ocr`（`uv venv --python 3.12`；`torch==2.10.0` + `torchvision==0.25.0` 走 **cu130** 索引，官方测试组合为 Python 3.12.3 + CUDA 12.9）
 >   - ⚠️ **索引必须是 cu130，不是 cu129**：`ocr/requirements.txt` 已把本地版本号钉成 `+cu130`（`torch==2.10.0+cu130` / `torchvision==0.25.0+cu130`），索引不匹配会**直接报错**，不会静默回落 CPU 版（CPU 版会让 OCR 慢到不可用且不报错）
-> - ✅ **权重与 venv 均已到位**：6 个多模态 GGUF（`vl4`/`vl8`/`asr` 各一份权重 + 一份 mmproj，见上）+ OCR 全仓库 + venv `D:/models/venvs/unlimited-ocr`，`start.sh vl4/vl8/asr` 与 `ocr/run.sh` 均可直接用；实测显存账本见 [`local-ai/README.md`](local-ai/README.md) §1.1
+> - ✅ **权重与 venv 均已到位**：文本 3 个 GGUF（2B / 9B-Distill / Ornith-1.5-9B）+ Ornith 的 mmproj + 多模态 6 个（`vl4`/`vl8`/`asr` 各一份权重 + 一份 mmproj，见上）+ OCR 全仓库 + venv `D:/models/venvs/unlimited-ocr`，`start.sh minicpm/9b/ornith/ornith-vl/vl4/vl8/asr` 与 `ocr/run.sh` 均可直接用；实测显存账本见 [`local-ai/README.md`](local-ai/README.md) §1.1
 
 ### CLI 工具
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 r"""
-DWG 操作 CLI —— 转换 / 提取 / 回填（dwg skill 入口）
+DWG 操作 CLI —— 转换 / 提取 / 回填 / 外参（dwg skill 入口）
 
 基于 ODA File Converter + ezdxf，无 AutoCAD、无 MIMO 依赖。
 
@@ -14,6 +14,7 @@ DWG 操作 CLI —— 转换 / 提取 / 回填（dwg skill 入口）
   convert-back <dxf>   翻译后 DXF → DWG（_ZH.dwg）
   translate <dwg>      前半程一步到位：DWG → <stem>_待译.txt（中间 DXF 自动清理）
   apply-back <dwg> <json>  后半程一步到位：DWG + 译文 JSON → _ZH.dwg
+  xref <dwg>...        查看 / 修改图纸的**外部参照路径**（不改块名、不动图面）
 
 用法示例：
   py dwg.py check
@@ -24,6 +25,8 @@ DWG 操作 CLI —— 转换 / 提取 / 回填（dwg skill 入口）
   py dwg.py convert-back in_ZH.dxf    # -> in_ZH.dwg
   py dwg.py translate in.dwg          # -> in_待译.txt
   py dwg.py apply-back in.dwg zh.json # -> in_ZH.dwg
+  py dwg.py xref in.dwg               # 列出外参（块名 / 路径 / 目标是否存在）
+  py dwg.py xref in.dwg --set '[R]Building D=..\[R]_ZH\[R]Building D_ZH.dwg' --apply
 
 依赖：
   - Python 3 + ezdxf（py -3 -m pip install ezdxf）
@@ -279,6 +282,89 @@ def apply_translations(dxf_path: Path, json_path: Path) -> tuple[int, int]:
 
 
 # ---------------------------------------------------------------------------
+# 外部参照（xref）
+# ---------------------------------------------------------------------------
+# 参照路径在 DXF 里就是 BLOCK 表项上的 group code 1（明文，形如 `..\[R]_ZH\x.dwg`），
+# 块名本身不含路径信息——改路径不影响图面显示，图面仍显示原块名。
+#
+# ⚠ 必须用 flags & 4 筛「真外参」。直接按「group code 1 有值」去找会误伤普通块：
+#   实测图纸里 CA-BG / CA-CR / AUDIT_I_xxx 这类普通块（flags=0）的 group 1 写着
+#   `Acad:XRef` 占位串，照改就把它们改坏了。
+XREF_FLAG = 4
+
+
+def _iso_convert(src: Path, work: Path, tag: str, out_ext: str) -> Path:
+    """把 src 复制到 work/<tag>/in 后再交给 ODA，产物落在 work/<tag>/out。
+
+    ODA 会把「输入目录里的所有文件」一起转换，直接传 src.parent（oda_convert_one
+    的默认行为）会在一个有 20 张图的目录里老老实实转 20 遍。隔离后每次只转 1 个，
+    顺带绕开中文/特殊字符文件名在命令行上的坑。
+    """
+    in_dir = work / tag / "in"
+    in_dir.mkdir(parents=True, exist_ok=True)
+    staged = in_dir / (tag + src.suffix.lower())
+    shutil.copy2(src, staged)
+    return oda_convert_one(staged, work / tag / "out", out_ext)
+
+
+def list_xrefs(dxf_path: Path) -> list[dict]:
+    """列出图纸里真正的外部参照。返回 [{name, path, flags}]。"""
+    import ezdxf
+
+    doc = ezdxf.readfile(str(dxf_path))
+    out: list[dict] = []
+    for blk in doc.blocks:
+        flags = blk.block.dxf.get("flags", 0)
+        if not (flags & XREF_FLAG):
+            continue
+        out.append({
+            "name": blk.name,
+            "path": str(blk.block.dxf.get("xref_path", "") or ""),
+            "flags": flags,
+        })
+    return out
+
+
+def resolve_xref(dwg_dir: Path, path: str) -> Path | None:
+    """按图纸所在目录把参照路径解析成绝对路径；空路径返回 None。
+
+    相对路径是相对**图纸（DWG）所在目录**、不是相对 CWD——判断"参照断没断"时
+    这一点最常搞错。
+    """
+    if not path:
+        return None
+    p = Path(path.replace("\\", "/"))
+    return p if p.is_absolute() else (dwg_dir / p)
+
+
+def set_xrefs(dxf_path: Path, mapping: dict[str, str]) -> tuple[list[tuple[str, str, str]], set[str]]:
+    """按 {块名: 新路径} 改外参。返回 (改动清单, 没命中的块名)。
+
+    只动 flags & 4 的块；块名不在 mapping 里的一律原样保留（不猜、不编路径）。
+    """
+    import ezdxf
+
+    doc = ezdxf.readfile(str(dxf_path))
+    changes: list[tuple[str, str, str]] = []
+    hit: set[str] = set()
+    for blk in doc.blocks:
+        if not (blk.block.dxf.get("flags", 0) & XREF_FLAG):
+            continue
+        if blk.name not in mapping:
+            continue
+        hit.add(blk.name)
+        old = str(blk.block.dxf.get("xref_path", "") or "")
+        new = mapping[blk.name]
+        if old == new:
+            continue
+        blk.block.dxf.xref_path = new
+        changes.append((blk.name, old, new))
+    if changes:
+        doc.saveas(str(dxf_path))
+    return changes, set(mapping) - hit
+
+
+# ---------------------------------------------------------------------------
 # 子命令
 # ---------------------------------------------------------------------------
 
@@ -388,6 +474,86 @@ def cmd_apply(args) -> int:
     out = dxf.with_name(dxf.stem + "_ZH.dxf")
     print(f"✓ 回填 {count}/{total} 条 → {out.name}")
     return 0
+
+
+def cmd_xref(args) -> int:
+    """查看 / 修改外部参照路径。
+
+    无 --set 时只列出（只读）；给了 --set 但没给 --apply 时是预演；
+    加 --apply 才原地写回，写回前把原文件备份到 <图纸目录>/_work/backup-before-xref/。
+    """
+    paths = [Path(p) for p in args.dwg]
+    for p in paths:
+        if not p.exists():
+            print(f"文件不存在: {p}", file=sys.stderr)
+    paths = [p for p in paths if p.exists()]
+    if not paths:
+        return 2
+
+    mapping: dict[str, str] = {}
+    for item in (args.set or []):
+        name, sep, path = item.partition("=")
+        if not sep or not name.strip():
+            print(f"--set 格式应为 '块名=新路径'，收到: {item}", file=sys.stderr)
+            return 2
+        mapping[name.strip()] = path.strip()
+    if mapping and not args.apply:
+        print("（预演模式：只报差异，不写回；确认无误后加 --apply）\n")
+
+    rc = 0
+    for dwg in paths:
+        work = Path(tempfile.mkdtemp(prefix="dwg_xref_"))
+        try:
+            print(f"### {dwg.name}")
+            dxf = _iso_convert(dwg, work, "src", "dxf")
+            found = list_xrefs(dxf)
+            if not found:
+                print("    （无外部参照）")
+            for x in found:
+                tgt = resolve_xref(dwg.parent, x["path"])
+                if not x["path"]:
+                    mark = "  ✗空路径"
+                elif tgt is None:
+                    mark = ""
+                else:
+                    mark = "  ✓ 目标存在" if tgt.exists() else "  ✗ 目标缺失"
+                print(f"    {x['name']}  →  {x['path']}{mark}")
+
+            if not mapping:
+                continue
+
+            changes, unhit = set_xrefs(dxf, mapping)
+            if unhit:
+                print(f"    ⚠ 未改动（不在图中或不是外参）: {', '.join(sorted(unhit))}")
+            if not changes:
+                print("    无改动")
+                continue
+            for name, old, new in changes:
+                print(f"    改 {name}: {old}  →  {new}")
+            if not args.apply:
+                continue
+
+            out = _iso_convert(dxf, work, "out", "dwg")
+            backup_dir = (Path(args.backup_dir) if args.backup_dir
+                          else dwg.parent / "_work" / "backup-before-xref")
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(dwg, backup_dir / dwg.name)
+            shutil.move(str(out), str(dwg))
+            print(f"    ✓ 已写回 {dwg.name}（改 {len(changes)} 处）")
+
+            if args.verify:
+                vdxf = _iso_convert(dwg, work, "chk", "dxf")
+                print("    复核（从写回后的 DWG 重新读出）:")
+                for x in list_xrefs(vdxf):
+                    tgt = resolve_xref(dwg.parent, x["path"])
+                    mark = "✓ 存在" if (tgt and tgt.exists()) else "✗ 缺失"
+                    print(f"      {x['name']} → {x['path']}  [{mark}]")
+        except Exception as exc:
+            print(f"    [错误] {type(exc).__name__}: {exc}", file=sys.stderr)
+            rc = 1
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+    return rc
 
 
 def cmd_translate(args) -> int:
@@ -516,6 +682,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("dwg")
     p.add_argument("json")
 
+    p = sub.add_parser("xref", help="查看/修改外部参照路径（默认只列只演，--apply 才写回）")
+    p.add_argument("dwg", nargs="+", help="一张或多张 DWG")
+    p.add_argument("--set", action="append", metavar="块名=路径",
+                   help="要改的参照，形如 '[R]Building D=..\\[R]_ZH\\[R]Building D_ZH.dwg'，可重复")
+    p.add_argument("--apply", action="store_true", help="真正写回（不加则只预演）")
+    p.add_argument("--backup-dir", metavar="DIR",
+                   help="原文件备份目录（默认 <图纸目录>/_work/backup-before-xref）")
+    p.add_argument("--verify", action="store_true", help="写回后从 DWG 重新读出复核")
+
     args = parser.parse_args(argv)
     handlers = {
         "check": cmd_check,
@@ -525,6 +700,7 @@ def main(argv: list[str] | None = None) -> int:
         "convert-back": cmd_convert_back,
         "translate": cmd_translate,
         "apply-back": cmd_apply_back,
+        "xref": cmd_xref,
     }
     return handlers[args.cmd](args)
 

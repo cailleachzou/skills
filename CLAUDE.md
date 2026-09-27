@@ -48,8 +48,8 @@ head -20 skills/<skill-name>/SKILL.md  # 检查 YAML frontmatter
   或 `/cli` 列清单、`/cli <工具名>` 直取子技能说明书。
   ⚠️ **维护硬规则**：停用子技能必须「移出目录 + 删索引行」，**禁止**留 `xxx.disabled/`
   ——2026-08-06 拆掉旧路由器 `cli-anything` 就是因为这类残留腐化了索引。
-- **顶层独立型** —— `docling` / `dwg` / `officecli` / `graphify` / `local-ai` /
-  `computer-repair-skill`：各自被 Claude 自动发现。
+- **顶层独立型** —— `docling` / `dwg` / `cad-automation` / `cad-designer` / `kdocs` /
+  `officecli` / `graphify` / `local-ai` / `computer-repair-skill`：各自被 Claude 自动发现。
 
 每个技能目录结构：`SKILL.md` + 可选 `scripts/`。技能名与目录名一致。
 
