@@ -1,8 +1,8 @@
 @echo off
 REM local-ai start / switch script (Windows)
-REM Usage: start.bat [minicpm^|9b^|vl4^|vl8^|asr] [port]      (default: minicpm, i.e. 2B)
+REM Usage: start.bat [minicpm^|9b^|ornith^|ornith-vl^|vl4^|vl8^|asr] [port]      (default: minicpm, i.e. 2B)
 REM
-REM Git Bash users have the aliases:  llama = 2B,  llama9 = 9B  (see ~/.bashrc).
+REM Git Bash users have the aliases:  llama = 2B,  llama9 = 9B,  llamaOT = ornith,  llamaOV = ornith-vl  (see ~/.bashrc).
 REM
 REM Idempotent: reuses the running server if it already serves the target model;
 REM otherwise stops it first (waiting for VRAM to come back) and starts the target.
@@ -11,7 +11,7 @@ REM NOTE: llama-server loads ONE model at a time and IGNORES the request "model"
 REM field, so switching = restarting this script. Don't flip-flop for single
 REM tasks -- pick one per round of work (see SKILL.md "一").
 REM
-REM NOTE: the thinking toggle is NOT here. Only the two TEXT models (minicpm / 9b)
+REM NOTE: the thinking toggle is NOT here. Only the three TEXT models (minicpm / 9b / ornith)
 REM are thinking models; vl4 / vl8 / asr are Instruct / transcription models with
 REM no thinking mode. Disabling thinking must be done PER-REQUEST via
 REM chat_template_kwargs (see llama_chat.py). The server-side --reasoning off /
@@ -22,15 +22,21 @@ REM NOTE: no parenthesised blocks below -- an unescaped ")" inside an if(...)
 REM block silently terminates it early (that bug shipped once; see git log).
 
 setlocal enabledelayedexpansion
-set LLAMA_DIR=C:\Users\caill\tools\llama-cpp\cuda-b10883
-set MODEL_MINICPM=D:\models\gguf\minicpm5-2b\MiniCPM5-2B-Q8_0.gguf
-set MODEL_9B=D:\models\gguf\qwen3.8-9b-distill\Qwen3.8-9B-Q4_K_M.gguf
-set MODEL_VL4=D:\models\gguf\qwen3-vl-4b\Qwen3VL-4B-Instruct-Q4_K_M.gguf
-set MMPROJ_VL4=D:\models\gguf\qwen3-vl-4b\mmproj-Qwen3VL-4B-Instruct-F16.gguf
-set MODEL_VL8=D:\models\gguf\qwen3-vl-8b\Qwen3VL-8B-Instruct-Q4_K_M.gguf
-set MMPROJ_VL8=D:\models\gguf\qwen3-vl-8b\mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf
-set MODEL_ASR=D:\models\gguf\qwen3-asr-1.7b\Qwen3-ASR-1.7B-Q8_0.gguf
-set MMPROJ_ASR=D:\models\gguf\qwen3-asr-1.7b\mmproj-Qwen3-ASR-1.7b-BF16.gguf
+REM Every path below can be overridden by an environment variable of the SAME name.
+REM Set it beforehand and the built-in default is left alone -- see README "Installing Elsewhere".
+if not defined LLAMA_DIR set "LLAMA_DIR=C:\Users\caill\tools\llama-cpp\cuda-b10883"
+if not defined MODEL_MINICPM set "MODEL_MINICPM=D:\models\gguf\minicpm5-2b\MiniCPM5-2B-Q8_0.gguf"
+if not defined MODEL_9B set "MODEL_9B=D:\models\gguf\qwen3.8-9b-distill\Qwen3.8-9B-Q4_K_M.gguf"
+REM Ornith-1.5-9B: same qwen35 arch as 9B-Distill, measured same speed / same VRAM class.
+REM NOTE the detection order further down -- it differs from start.sh on purpose.
+if not defined MODEL_ORNITH set "MODEL_ORNITH=D:\models\gguf\ornith-1.5-9b\Ornith-1.5-9B-Q4_K_M.gguf"
+if not defined MMPROJ_ORNITH set "MMPROJ_ORNITH=D:\models\gguf\ornith-1.5-9b\mmproj-Ornith-1.5-9B-BF16.gguf"
+if not defined MODEL_VL4 set "MODEL_VL4=D:\models\gguf\qwen3-vl-4b\Qwen3VL-4B-Instruct-Q4_K_M.gguf"
+if not defined MMPROJ_VL4 set "MMPROJ_VL4=D:\models\gguf\qwen3-vl-4b\mmproj-Qwen3VL-4B-Instruct-F16.gguf"
+if not defined MODEL_VL8 set "MODEL_VL8=D:\models\gguf\qwen3-vl-8b\Qwen3VL-8B-Instruct-Q4_K_M.gguf"
+if not defined MMPROJ_VL8 set "MMPROJ_VL8=D:\models\gguf\qwen3-vl-8b\mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf"
+if not defined MODEL_ASR set "MODEL_ASR=D:\models\gguf\qwen3-asr-1.7b\Qwen3-ASR-1.7B-Q8_0.gguf"
+if not defined MMPROJ_ASR set "MMPROJ_ASR=D:\models\gguf\qwen3-asr-1.7b\mmproj-Qwen3-ASR-1.7b-BF16.gguf"
 set MMPROJ_ARG=
 set HERE=%~dp0
 
@@ -41,6 +47,8 @@ set PORT=%2
 if "%PORT%"=="" set PORT=8080
 
 if "%MODEL_TYPE%"=="9b" goto :start_9b
+if "%MODEL_TYPE%"=="ornith" goto :start_ornith
+if "%MODEL_TYPE%"=="ornith-vl" goto :start_ornithvl
 if "%MODEL_TYPE%"=="minicpm" goto :start_minicpm
 if "%MODEL_TYPE%"=="vl4" goto :start_vl4
 if "%MODEL_TYPE%"=="vl8" goto :start_vl8
@@ -48,22 +56,39 @@ if "%MODEL_TYPE%"=="asr" goto :start_asr
 goto :usage
 
 :usage
-echo Usage: start.bat [minicpm^|9b^|vl4^|vl8^|asr] [port]
+echo Usage: start.bat [minicpm^|9b^|ornith^|ornith-vl^|vl4^|vl8^|asr] [port]
 echo   minicpm - MiniCPM5-2B Q8 GPU full offload, 128K ctx [default; batch / long text / concurrency]
-echo   9b      - Qwen3.8-9B-Distill GPU full offload, 32K ctx [pi agent / hard tasks / code]
+echo   9b      - Qwen3.8-9B-Distill GPU full offload, 64K ctx [pi agent / hard tasks / code]
+echo   ornith  - Ornith-1.5-9B Q4_K_M GPU full offload, 64K ctx [9B-class alternative]
+echo   ornith-vl - same + mmproj, 32K ctx [text AND vision in one model]
 echo   vl4     - Qwen3-VL-4B Q4_K_M + mmproj F16, 16K ctx [vision, default vision model]
 echo   vl8     - Qwen3-VL-8B Q4_K_M + mmproj Q8_0, 8K ctx [vision fallback; only ~440 MiB VRAM left]
 echo   asr     - Qwen3-ASR-1.7B Q8_0 + mmproj BF16, 32K ctx [speech transcription]
 echo.
-echo Git Bash aliases:  llama = 2B,  llama9 = 9B
+echo Git Bash aliases:  llama = 2B,  llama9 = 9B,  llamaOT = ornith,  llamaOV = ornith-vl
 echo Idempotent: reuses the server if it already serves the target model.
 echo Thinking toggle: llama_chat.py [on by default; --no-think to disable]
 exit /b 1
 
 :start_9b
 set TARGET=%MODEL_9B%
-set BANNER=[START] Qwen3.8-9B-Distill GPU full offload, 32K ctx shared by 4 slots, ~55 tok/s
+set BANNER=[START] Qwen3.8-9B-Distill GPU full offload, 64K ctx shared by 4 slots, ~55 tok/s
 set EXTRA=--temp 0.6 --top-p 0.95 --top-k 20
+set CTX=65536
+goto :maybe_switch
+
+:start_ornith
+set TARGET=%MODEL_ORNITH%
+set BANNER=[START] Ornith-1.5-9B Q4_K_M GPU full offload, 64K ctx shared by 4 slots, ~56 tok/s
+set EXTRA=--temp 0.6 --top-p 0.95 --top-k 20
+set CTX=65536
+goto :maybe_switch
+
+:start_ornithvl
+set TARGET=%MODEL_ORNITH%
+set MMPROJ_ARG=--mmproj "%MMPROJ_ORNITH%"
+set BANNER=[START] Ornith-1.5-9B + mmproj GPU full offload, 32K ctx (text + vision)
+set EXTRA=--temp 0.7 --top-p 0.8
 set CTX=32768
 goto :maybe_switch
 
@@ -106,6 +131,16 @@ for /f "delims=" %%i in ('curl -s -m 3 http://127.0.0.1:%PORT%/v1/models 2^>nul'
 if "!BODY!"=="" goto :launch
 echo !BODY! | findstr /C:"MiniCPM" >nul && set RUNNING=minicpm
 echo !BODY! | findstr /C:"9B-Q4_K_M" >nul && set RUNNING=9b
+REM Ornith's basename ALSO contains "9B-Q4_K_M", and here the LAST match wins (these are
+REM sequential overwrites, not start.sh's first-match case) -- so this line must come
+REM AFTER the 9b line. Before it, an Ornith server would be misread as 9b forever.
+echo !BODY! | findstr /C:"Ornith" >nul && set RUNNING=ornith
+REM Both Ornith configs share the same GGUF basename, so /v1/models cannot tell them
+REM apart -- ask /props instead (modalities.vision is only true when mmproj is loaded).
+REM Goto form on purpose: no parenthesised block (see the NOTE at the top).
+if not "!RUNNING!"=="ornith" goto :ornith_vl_done
+curl -s -m 3 http://127.0.0.1:%PORT%/props 2>nul | findstr /R /C:"vision.:true" >nul && set RUNNING=ornith-vl
+:ornith_vl_done
 echo !BODY! | findstr /C:"Qwen3VL-4B" >nul && set RUNNING=vl4
 echo !BODY! | findstr /C:"Qwen3VL-8B" >nul && set RUNNING=vl8
 echo !BODY! | findstr /C:"Qwen3-ASR-1.7B" >nul && set RUNNING=asr

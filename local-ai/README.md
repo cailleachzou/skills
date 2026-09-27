@@ -22,12 +22,20 @@
 | 配置 | 整卡占用 | 余量 / 8151 MiB | 说明 |
 | --- | --- | --- | --- |
 | **2B Q8_0，128K ctx** | **6514 MiB** | ~1637 MiB | 日常默认，余量最舒服 |
-| **9B Q4_K_M，32K ctx** | **~6900 MiB** | ~1250 MiB | pi agent / 复杂任务 |
-| 9B Q4_K_M，256K ctx | 7561 MiB | ~590 MiB ⚠️ | **近满，速度掉 35%** |
+| **9B Q4_K_M，64K ctx** | **7228 MiB** | ~920 MiB | pi agent / 复杂任务（2026-09-24 起默认 64K）|
+| 9B Q4_K_M，256K ctx | 7561 MiB | ~590 MiB ⚠️ | **近满，速度掉约 30%** |
+| **Ornith-1.5-9B Q4_K_M，64K ctx** | **7112 MiB** | ~1040 MiB | 9B 级备选（见 §1.2）| 
+| **Ornith-1.5-9B + mmproj，32K ctx** | **7734 MiB** | ~420 MiB ⚠️ | `ornith-vl`：文本 + 视觉一个模型 |
 
-> **256K 那次是反面教材**：KV cache 几乎占满显存（7561 / 8151 MiB，余量 ~590 MiB），
-> decode 从 55 tok/s 掉到 37 tok/s —— **不报错，只是慢**。
-> **8GB 卡上不要贪上下文**，默认值（2B → 128K / 9B → 32K）已经是按显存算过的。
+> ⚠️ **表里是整卡占用（含桌面），而桌面占用本身会波动 ±500 MiB**：同一天 9B 在 64K 下
+> 测到过 7228 与 7701 两个值。2B 那一行还是 2026-09-11 的旧读数。
+> **别照抄绝对值**，判断余量永远以当下的 `nvidia-smi` 为准。
+>
+> **256K 仍是反面教材**：KV 几乎占满显存（7561 / 8151 MiB，余量 ~590 MiB），
+> decode 从 ~53 掉到 ~37 tok/s —— **不报错，只是慢**。
+> 但「不要贪上下文」这句在 2026-09-24 被实测**修正了一半**：**32K → 64K 是白送的**
+> （只多 620 MiB，decode 无差别），所以默认已提到 64K；真正的陡坡在 128K 以上
+> （Ornith 实测 131072 → 27.6 tok/s、262144 → 22.1 tok/s）。
 >
 > ⚠️ **别把 `failed to fit params ... n_gpu_layers already set to 99` 当成「掉 CPU」。**
 > 它是 auto-fit 例程的 **WARN** —— 因为用户显式钉了 `-ngl`（本机脚本一律 `-ngl 99`），
@@ -55,14 +63,28 @@
 | --- | --- | --- |
 | 权重文件 | 2.68 GB | 5.78 GB（5502 MiB） |
 | 磁盘位置 | `D:\models\gguf\minicpm5-2b\` | `D:\models\gguf\qwen3.8-9b-distill\` |
-| 默认上下文 | **131072（128K）** | **32768（32K）** |
-| decode 实测 | ~85–107 tok/s | ~55 tok/s（32K） |
-| Git Bash 别名 | `llama` | `llama9` |
+| 默认上下文 | **131072（128K）** | **65536（64K）** |
+| decode 实测 | ~85–107 tok/s | ~55 tok/s（64K） |
+| Git Bash 别名 | `llama` | `llama9`（`ornith` → `llamaOT`，`ornith-vl` → `llamaOV`）|
 | 定位 | 批量、长文本、并发、**pi agent 多步闭环** | 代码、长链推理这类真难的活 |
 
 **为什么 2B 反而当默认？** 不是"降级备用"。它有 tool use（pi 拿它跑 agent 成立），
 有 128K 上下文，覆盖面其实比 9B 更广；而且省下的 3GB 显存全给了 KV 池 ——
 **8GB 卡上，上下文宽度比参数量更稀缺**。
+
+**9B 级还有一个备选：`Ornith-1.5-9B`**（文本版 `start.sh ornith`、视觉版 `start.sh ornith-vl`，
+2026-09-24 接入）。和 9B-Distill **同为 `qwen35` 架构、同款 5.38 GiB Q4_K_M**，实测同速同量级
+（同条件 decode 34 vs 35 tok/s；16 条批量 11.1s vs 11.2s；中文任务 16/16 全对、格式合规打平）。
+**它不是"更强的 9B"，默认仍用 `9b`** —— 只在两处场景才选它：
+
+① **一个模型兼做文本 + 视觉**（`ornith-vl`，mmproj 879 MB）。**已实测**：拿官方评测图当测试，
+它答对全部 5 个对比模型名，SWE-bench Verified 报 70.6、TB2.1 报 47、对照组 69.4 / 53.2 / 73.4 / 52，
+与官方 README 表格逐项吻合。真正的价值是「agent 能看图」—— `9b` 没有视觉，`vl4`/`vl8` 没有
+tool use 和推理能力，而 `ornith-vl` 两者都有（代价是 ctx 只有 32K）。
+② **开思考时吐空率更低**（1/6 vs 9B 的 4/6）。
+
+选型细节、`ornith` 与 `ornith-vl` 的区分方式、以及「开思考吐空」这个既有毛病见
+[`SKILL.md`](SKILL.md) 第一节。
 
 **量化级别的选择也是显存逼出来的：**
 
@@ -80,7 +102,7 @@
 | 模型规模 | Q4_K_M 权重 | 8GB 上可行性 |
 | --- | --- | --- |
 | 2B–4B | 1.5–2.5 GB | ✅ 宽松，可上 Q8_0 + 128K ctx |
-| **7B–9B** | **4.5–6 GB** | ✅ **上限区间**，Q4_K_M + 32K ctx，余量紧 |
+| **7B–9B** | **4.5–6 GB** | ✅ **上限区间**，Q4_K_M + 64K ctx（qwen35 系实测），余量紧 |
 | 12B–14B | 7–9 GB | ❌ 权重就爆了，或只能极小 ctx + 大量层跑 CPU |
 | 30B+ | 18 GB+ | ❌ 免谈（MoE 例外，但本机未验证） |
 
@@ -123,7 +145,8 @@ RTX 5060 Laptop 是 **Blackwell（`sm_120` / CC 12.0）**，需要 **CUDA 12.8+*
 
 | 依赖 | 本机版本 | 作用 | 怎么装 |
 | --- | --- | --- | --- |
-| **Git Bash** | Git 2.55.0 (MSYS2) | 跑 `.sh` 脚本；别名 `llama` / `llama9` | Git for Windows 自带 |
+| **Git Bash** | Git 2.55.0 (MSYS2) | 跑 `.sh` 脚本；别名 `llama` / `llama9` / `llamaOT` / `llamaOV` | Git for Windows 自带 |
+| **PowerShell** | Windows PowerShell 5.1 | ⚠️ **不读 `~/.bashrc`**；同名函数在 `~/Documents/WindowsPowerShell/Microsoft.PowerShell_profile.ps1`，两边分开维护 | 系统自带 |
 | **pi CLI** | 0.85.1 | 本地 agent 层（自己读写文件、多步闭环） | `npm i -g @earendil-works/pi-coding-agent` |
 
 `pi` 的 provider 配置在 `~/.pi/agent/models.json`：
@@ -136,7 +159,9 @@ RTX 5060 Laptop 是 **Blackwell（`sm_120` / CC 12.0）**，需要 **CUDA 12.8+*
       "api": "openai-completions",
       "apiKey": "no-key",
       "models": [
-        { "id": "qwen3.8-9b-distill", "contextWindow": 32768,  "cost": { "input": 0, "output": 0 } },
+        { "id": "qwen3.8-9b-distill", "contextWindow": 65536,  "cost": { "input": 0, "output": 0 } },
+        { "id": "ornith",             "contextWindow": 65536,  "cost": { "input": 0, "output": 0 } },
+        { "id": "ornith-vl",          "contextWindow": 32768,  "input": ["text", "image"], "cost": { "input": 0, "output": 0 } },
         { "id": "minicpm5-2b",        "contextWindow": 131072, "cost": { "input": 0, "output": 0 } }
       ]
     }
@@ -174,6 +199,8 @@ nvidia-smi --query-gpu=name,driver_version,memory.total,memory.used --format=csv
 # 3. 放好模型文件
 ls -la "D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf"           # 2.68 GB（文本，默认）
 ls -la "D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf"   # 5.78 GB（文本，按需）
+ls -la "D:/models/gguf/ornith-1.5-9b/Ornith-1.5-9B-Q4_K_M.gguf"     # 5.78 GB（文本，9B 级备选）
+ls -la "D:/models/gguf/ornith-1.5-9b/mmproj-Ornith-1.5-9B-BF16.gguf" # 879 MB（`ornith-vl` 用；纯文本不必下）
 ls -la "D:/models/gguf/qwen3-vl-4b/Qwen3VL-4B-Instruct-Q4_K_M.gguf" # 2497 MB（+ mmproj 836 MB）
 ls -la "D:/models/gguf/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf" # 5028 MB（+ mmproj 752 MB）
 ls -la "D:/models/gguf/qwen3-asr-1.7b/Qwen3-ASR-1.7B-Q8_0.gguf"     # 2165 MB（+ mmproj 642 MB）
@@ -193,26 +220,47 @@ curl -s http://127.0.0.1:8080/v1/models       # 核对实际加载的模型
 
 ### 把脚本指向你自己的环境
 
-脚本里的绝对路径是**硬编码的**，换机器要么改脚本、要么建同样的目录：
+脚本里的绝对路径都有**内置默认值**（指本机安装位置），但**每一个都能用同名环境变量覆盖** ——
+换机器只需导出变量，不必改脚本：
 
-| 变量 | 位置 | 当前值 |
-| --- | --- | --- |
-| `LLAMA_DIR` | `start.sh` / `start.bat` | `C:/Users/caill/tools/llama-cpp/cuda-b10883` |
-| `MODEL_MINICPM` | `start.sh` / `start.bat` | `D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf` |
-| `MODEL_9B` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf` |
-| `MODEL_VL4` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-4b/Qwen3VL-4B-Instruct-Q4_K_M.gguf` |
-| `MMPROJ_VL4` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-4b/mmproj-Qwen3VL-4B-Instruct-F16.gguf` |
-| `MODEL_VL8` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf` |
-| `MMPROJ_VL8` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-8b/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf` |
-| `MODEL_ASR` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-asr-1.7b/Qwen3-ASR-1.7B-Q8_0.gguf` |
-| `MMPROJ_ASR` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-asr-1.7b/mmproj-Qwen3-ASR-1.7b-BF16.gguf` |
-| `UNLIMITED_OCR_DIR` | `ocr/ocr.py`（环境变量） | `D:/models/unlimited-ocr` |
-| `UNLIMITED_OCR_VENV` | `ocr/run.sh` + `ocr/ocr.py`（环境变量） | `D:/models/venvs/unlimited-ocr` |
+| 变量 | 位置 | 默认值 | 可覆盖 |
+| --- | --- | --- | --- |
+| `LLAMA_DIR` | `start.sh` / `start.bat` | `C:/Users/caill/tools/llama-cpp/cuda-b10883` | 是（导出同名环境变量即可） |
+| `MODEL_MINICPM` | `start.sh` / `start.bat` | `D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf` | 是（导出同名环境变量即可） |
+| `MODEL_9B` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3.8-9b-distill/Qwen3.8-9B-Q4_K_M.gguf` | 是（导出同名环境变量即可） |
+| `MODEL_ORNITH` | `start.sh` / `start.bat` | `D:/models/gguf/ornith-1.5-9b/Ornith-1.5-9B-Q4_K_M.gguf` | 是（导出同名环境变量即可） |
+| `MMPROJ_ORNITH` | `start.sh` / `start.bat` | `D:/models/gguf/ornith-1.5-9b/mmproj-Ornith-1.5-9B-BF16.gguf` | 是（导出同名环境变量即可） |
+| `MODEL_VL4` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-4b/Qwen3VL-4B-Instruct-Q4_K_M.gguf` | 是（导出同名环境变量即可） |
+| `MMPROJ_VL4` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-4b/mmproj-Qwen3VL-4B-Instruct-F16.gguf` | 是（导出同名环境变量即可） |
+| `MODEL_VL8` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-8b/Qwen3VL-8B-Instruct-Q4_K_M.gguf` | 是（导出同名环境变量即可） |
+| `MMPROJ_VL8` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-vl-8b/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf` | 是（导出同名环境变量即可） |
+| `MODEL_ASR` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-asr-1.7b/Qwen3-ASR-1.7B-Q8_0.gguf` | 是（导出同名环境变量即可） |
+| `MMPROJ_ASR` | `start.sh` / `start.bat` | `D:/models/gguf/qwen3-asr-1.7b/mmproj-Qwen3-ASR-1.7b-BF16.gguf` | 是（导出同名环境变量即可） |
+| `UNLIMITED_OCR_DIR` | `ocr/ocr.py`（环境变量） | `D:/models/unlimited-ocr` | 是（导出同名环境变量即可） |
+| `UNLIMITED_OCR_VENV` | `ocr/run.sh` + `ocr/ocr.py`（环境变量） | `D:/models/venvs/unlimited-ocr` | 是（导出同名环境变量即可） |
 
 换模型时把这些路径指到你的 GGUF / 仓库即可 —— 但**记得遵守 §1.3 的显存边界**：
 8GB 卡上不要超过 9B @ Q4_K_M，上下文按 §1.1 的表给。
 多模态还多一条：`vl4`/`vl8`/`asr` 必须**权重与 mmproj 成对**替换（mmproj 是图像/音频投影器，
 少了它 `start.sh` 会加载失败）。`ocr` 是独立栈，仓库与 venv 两个路径在 `ocr/` 里改。
+`ornith` / `ornith-vl` 共用同一份权重，只有 `ornith-vl` 需要 `MMPROJ_ORNITH`。
+
+### 装到别的路径 / Installing Elsewhere
+
+上面每个路径都能用**同名环境变量**覆盖，不必改脚本：
+
+```bash
+export LLAMA_DIR="C:/tools/llama-cpp/cuda-b10883"
+export MODEL_MINICPM="D:/models/gguf/minicpm5-2b/MiniCPM5-2B-Q8_0.gguf"
+```
+
+（写进 `~/.bashrc` 即可长期生效。）`start.bat` 用 `set VAR=...` 或系统环境变量。
+模型文件可走项目的 FTP 分发，拿到后放哪都行，**只要变量指对**。
+`ocr/` 的两个变量（`UNLIMITED_OCR_DIR` / `UNLIMITED_OCR_VENV`）本来就是这么设计的。
+
+> ⚠️ **`start.sh` 与 `start.bat` 的模型判别顺序是反的**（`case` 首匹配 vs 顺序覆盖后匹配），
+> 而 Ornith 的 basename 里含 `9B-Q4_K_M`。改这两段判别逻辑前先读 `start.sh` 里的注释 —— 
+> 顺序错了会静默用错模型，不报错。
 
 ---
 
@@ -226,7 +274,7 @@ curl -s http://127.0.0.1:8080/v1/models       # 核对实际加载的模型
 - 切换 = 重启 server（加载 2–4s，**前缀缓存全丢**）。**不要为单条任务来回切。**
 - 把这一轮所有该模型的活**攒在一起**跑完，再切。
 - 单条 / 少量任务**不为它切模型** —— 有什么用什么。
-- **要并发的任务、以及超过 32K 的单条任务，永远留在 2B** —— 9B 既不能并发，池子也只有 32K。
+- **要并发的任务、以及超过 64K 的单条任务，永远留在 2B** —— 9B 既不能并发，池子也只有 64K。
 
 `start.sh` 本身就是幂等的，切换不用手动停：
 
@@ -240,12 +288,12 @@ bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh 9b   # 需要 9B �
 
 要并发就切 2B。原因在于**KV 是共享池，不是每槽独享**：
 
-启动日志写得很清楚：`n_slots = 4, n_ctx_slot = 32768, kv_unified = 'true'`。
+启动日志写得很清楚：`n_slots = 4, n_ctx_slot = 65536, kv_unified = 'true'`。
 `kv_unified` 意味着 4 个 slot 从**同一个 KV 池**里取，不是各拿一份 ——
-`/slots` 会显示每槽 `n_ctx = 32768`，看着像 4 路各 32K，**其实不是**。
+`/slots` 会显示每槽 `n_ctx = 65536`，看着像 4 路各 64K，**其实不是**。
 
-- 9B（`-c 32768`）：整池就是 32K，4 个 slot 共享它。
-- 而且整卡也没余量了：实测 **6891 MiB / 8151**，其中模型权重本身占 5502 MiB，剩不到 1GB。
+- 9B（`-c 65536`）：整池就是 64K，4 个 slot 共享它。
+- 而且整卡也没余量了：实测 **7228 MiB / 8151**，其中模型权重本身占 5502 MiB，剩不到 1GB。
 - 2B（`-c 131072`）：池子 128K、每槽 32K，没这个问题。
 
 所以拿 9B 开并发，轻则互相挤、重则装不下。`llama_batch.py` 会在开跑前探测 server 上的模型，

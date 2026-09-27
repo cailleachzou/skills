@@ -9,10 +9,10 @@
 
 模型由 llama-server 启动时决定（客户端不能切换）:
     minicpm - MiniCPM5-2B Q8_0，纯文本 2.6B，128K ctx，轻量任务，~85-107 tok/s
-    9b      - Qwen3.8-9B-Distill Q4_K_M，代码/推理主力，32K ctx，~55 tok/s
+    9b      - Qwen3.8-9B-Distill Q4_K_M，代码/推理主力，64K ctx，~55 tok/s
 
 先启动 llama-server (CUDA, 本机 RTX 5060 Laptop / 8GB VRAM):
-    bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh minicpm
+    bash ~/.claude/skills/local-ai/scripts/start.sh minicpm
 
 思考控制 —— 走请求级参数（重要）:
     两个模型都是 thinking 模型。默认**开启思考**（本机主要用途是跑 pi coding agent
@@ -83,7 +83,7 @@ def chat_with_server(prompt: str, system: str = None, max_tokens: int = 512,
         resp = json.load(urllib.request.urlopen(req, timeout=300))
     except Exception as e:
         print(f"[错误] 连不上 llama-server: {e}\n"
-              f"  请先启动（GPU）：bash C:/Users/caill/.claude/skills/local-ai/scripts/start.sh minicpm\n"
+              f"  请先启动（GPU）：bash ~/.claude/skills/local-ai/scripts/start.sh minicpm\n"
               f"  或 Windows CMD：  start.bat minicpm", file=sys.stderr)
         sys.exit(1)
 
